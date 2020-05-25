@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import '../../css/Login.css';
 import Logo from '../../assets/4ctped.png';
 import { Row } from 'react-bootstrap';
-import firebase from '../../firebase';
+import Firebase from '../../Firebase';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert'; // Import
@@ -25,7 +25,7 @@ class Login extends Component {
     }
 
     componentDidMount() {
-        firebase.auth().onAuthStateChanged(user => {
+        Firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 this.props.history.push('/');
             }
@@ -35,23 +35,32 @@ class Login extends Component {
     onSubmit = e => {
         e.preventDefault()
         const { Email, Password } = this.state;
-        firebase.auth()
+        Firebase.auth()
             .signInWithEmailAndPassword(Email, Password)
             .then(response => {
                 console.log("login success");
                 this.props.history.push('/');
             })
             .catch(error => {
+                confirmAlert({
+                    title: 'เข้าสู่ระบบไม่สำเร็จ',
+                    message: ' กรุณาเช็คอีเมลและพาสเวิร์ดของท่าน',
+                    buttons: [
+                        {
+                            label: 'ตกลง',
+                        },
 
+                    ]
+                });
             })
     }
     onResetPassword = (e) => {
         e.preventDefault();
-        firebase.auth().sendPasswordResetEmail(this.state.Email)
+        Firebase.auth().sendPasswordResetEmail(this.state.Email)
             .then((doc) => {
                 confirmAlert({
                     title: 'ตั้งรหัสผ่านใหม่สำเร็จ',
-                    message: ' กรุณาเช็คอีเมลล์ของท่าน',
+                    message: ' กรุณาเช็คอีเมลของท่าน',
                     closeOnClickOutside: true,
                     buttons: [
                         {
@@ -71,7 +80,7 @@ class Login extends Component {
             .catch(error => {
                 confirmAlert({
                     title: 'ตั้งรหัสผ่านใหม่ไม่สำเร็จ',
-                    message: ' กรุณาเช็คอีเมลล์ของท่าน',
+                    message: ' กรุณาเช็คอีเมลของท่าน',
                     buttons: [
                         {
                             label: 'ตกลง',

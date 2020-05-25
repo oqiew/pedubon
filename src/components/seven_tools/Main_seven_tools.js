@@ -1,54 +1,50 @@
-import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
-import { Form, Row, Col, Container } from 'react-bootstrap';
-import { Map, GoogleApiWrapper, Marker, InfoWindow } from 'google-maps-react';
-import { MDBDataTable, } from 'mdbreact';
+import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
+import { MDBDataTable } from 'mdbreact';
 import React, { Component } from 'react';
-import TabST from './Tab_seven_tools';
-import { isEmptyValue } from '../methods';
-import firebase from "../../firebase";
-import Geolocation from '../seven_tools/Geolocation';
-import Topnav from '../top/Topnav';
-
-import '../../App.css';
-import Idelete from '../../assets/trash_can.png';
-import Iedit from '../../assets/pencil.png';
-import Izoom from '../../assets/zoom.png';
-
-import { GetCurrentDate } from '../methods';
-
-import home from '../../assets/home.png';
-import resource from '../../assets/resource.png';
-import organization from '../../assets/organization.png';
-import flag_good from '../../assets/flag_good.png';
-import flag_danger from '../../assets/flag_danger.png';
-import accident from '../../assets/accident.png';
+import { Col, Container, Form, Row } from 'react-bootstrap';
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
+import '../../App.css';
+import accident from '../../assets/accident.png';
+import flag_danger from '../../assets/flag_danger.png';
+import flag_good from '../../assets/flag_good.png';
+import home from '../../assets/home.png';
+import organization from '../../assets/organization.png';
+import Iedit from '../../assets/pencil.png';
+import resource from '../../assets/resource.png';
+import Idelete from '../../assets/trash_can.png';
+import Izoom from '../../assets/zoom.png';
+import data_provinces from '../../data/provinces.json';
+import Firebase from "../../Firebase";
+import { GetCurrentDate, isEmptyValue } from '../Methods';
+import Geolocation from '../seven_tools/Geolocation';
+import Topnav from '../top/Topnav';
+import TabST from './Tab_seven_tools';
+
+import { connect } from 'react-redux';
+import { fetch_user } from '../../actions';
+
 export class Main_seven_tools extends Component {
     constructor(props) {
         super(props);
-        this.tbSocialMap = firebase.firestore().collection('SOCIAL_MAPS');
+        this.tbSocialMap = Firebase.firestore().collection('SOCIAL_MAPS');
 
         this.state = {
-            Ban_name: '',
             showingInfoWindow: false,
             activeMarker: {},
             selectedPlace: {},
             position: { lat: 15.229399, lng: 104.857126 },
             zoomMap: 12,
-
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
             Geo_map_description: '', Informer_ID: '', Create_date: '', Map_iamge_URL: '',
-            uploaded: false,
+            //จุดดี เสี่ยง
+            Geo_map_result_description: '',
+            Geo_map_time: '',
             //input data profile
-            Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
-            Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
-            Province_ID: '', District_ID: '', Tumbon_ID: '', Email: '', Avatar_URL: '',
-            Add_date: '', Area_ID: '', Role: '', User_type_ID: '',
-            User_ID: '',
-
-            //add
+            ...this.props.fetchReducer.user,
+            //ad
             status_add: false,
             edit_ID: '',
             //list show
@@ -69,23 +65,10 @@ export class Main_seven_tools extends Component {
         this.getGeolocation = this.getGeolocation.bind(this);
     }
 
-    checkBansName(id) {
-        var docref = firebase.firestore().collection('BANS').doc(id);
-
-        docref.get().then((doc) => {
-
-            const { Name } = doc.data();
-            // console.log(Name);
-            this.setState({
-                Ban_name: Name
-            })
-        })
-
-
-    }
-
     componentDidMount() {
-        this.authListener();
+        const { Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
+        this.tbSocialMap.where('Area_ID', '==', Area_ID).where('Area_PID', '==', Area_PID)
+            .where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID).onSnapshot(this.ListMark);
     }
 
 
@@ -95,7 +78,7 @@ export class Main_seven_tools extends Component {
         let count = 0;
 
         querySnapshot.forEach((doc) => {
-            const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name } = doc.data();
+            const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
             const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;
             var icon_m = '';
             var name_type = '';
@@ -204,21 +187,35 @@ export class Main_seven_tools extends Component {
     }
 
     edit(data, id) {
-        this.setState({
-            Geo_map_name: data.Geo_map_name,
-            position: data.Geo_map_position,
-            Geo_map_type: data.Geo_map_type,
-            Geo_map_description: data.Geo_map_description,
-            Map_iamge_URL: data.Map_iamge_URL,
-            status_add: true, edit_ID: id, uploaded: true
-        })
+        if (data.Geo_map_type === "flag_good" || data.Geo_map_type === "flag_danger") {
+            this.setState({
+                Geo_map_name: data.Geo_map_name,
+                position: data.Geo_map_position,
+                Geo_map_type: data.Geo_map_type,
+                Geo_map_description: data.Geo_map_description,
+                Map_iamge_URL: data.Map_iamge_URL,
+                status_add: true, edit_ID: id,
+                Geo_map_time: data.Geo_map_time,
+                Geo_map_result_description: data.Geo_map_result_description
+            })
+        } else {
+            this.setState({
+                Geo_map_name: data.Geo_map_name,
+                position: data.Geo_map_position,
+                Geo_map_type: data.Geo_map_type,
+                Geo_map_description: data.Geo_map_description,
+                Map_iamge_URL: data.Map_iamge_URL,
+                status_add: true, edit_ID: id,
+            })
+        }
+
     }
     delete(id) {
-        const searchRef = firebase.firestore().collection('SOCIAL_MAPS').doc(id);
+        const searchRef = Firebase.firestore().collection('SOCIAL_MAPS').doc(id);
         searchRef.get().then((doc) => {
             if (this.state.User_ID === doc.data().Informer_ID) {
                 if (doc.exists && doc.data().Map_iamge_URL !== '') {
-                    var desertRef = firebase.storage().refFromURL(doc.data().Map_iamge_URL);
+                    var desertRef = Firebase.storage().refFromURL(doc.data().Map_iamge_URL);
                     desertRef.delete().then(function () {
                         console.log("delete geomap and image sucess");
                     }).catch(function (error) {
@@ -227,7 +224,7 @@ export class Main_seven_tools extends Component {
                 } else {
                     console.log("geomap image  No such document! " + id);
                 }
-                firebase.firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
+                Firebase.firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
                     console.log("Document successfully deleted!");
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
@@ -253,54 +250,8 @@ export class Main_seven_tools extends Component {
 
     }
 
-    getUser(id) {
-
-        firebase.firestore().collection('USERS').doc(id).get().then((doc) => {
-            if (doc.exists) {
-                const { Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
-
-                } = doc.data()
-                var d1 = new Date(Birthday.seconds * 1000);
-                let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-                this.checkBansName(Area_ID);
-                this.tbSocialMap.where('Geo_ban_ID', '==', Area_ID).onSnapshot(this.ListMark);
-
-                this.setState({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday: bd, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
 
 
-                })
-
-            }
-        }
-        );
-    }
-    authListener() {
-
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-
-                this.setState({
-                    statusLogin: true,
-                    authEmail: user.email,
-                    User_ID: user.uid
-                });
-
-                this.getUser(user.uid);
-
-            } else {
-                this.setState({ statusLogin: false, authEmail: '' });
-            }
-        });
-
-
-    }
     addCancel = (e) => {
         e.preventDefault();
         this.setState({
@@ -315,6 +266,7 @@ export class Main_seven_tools extends Component {
         })
     }
     onMarkMap(lat, lng) {
+        console.log(lat)
         this.setState({
             position: {
                 lat: lat,
@@ -336,18 +288,17 @@ export class Main_seven_tools extends Component {
         const lat = latLng.lat();
         const lng = latLng.lng();
 
-
         if (this.state.showingInfoWindow) {
             this.setState({
                 showingInfoWindow: false,
                 activeMarker: null
             })
         }
-        setTimeout(() => {
-            this.setState({
-                position: { lat, lng }
-            });
-        }, 100);
+
+        this.setState({
+            position: { lat, lng }
+        });
+
 
 
 
@@ -362,8 +313,8 @@ export class Main_seven_tools extends Component {
         console.error(error);
     };
     handleUploadSuccess = filename => {
-        this.setState({ progress: 100, isUploading: false, uploaded: true });
-        firebase
+        this.setState({ progress: 100, isUploading: false });
+        Firebase
             .storage()
             .ref("GeoMaps")
             .child(filename)
@@ -391,7 +342,9 @@ export class Main_seven_tools extends Component {
                 sflag_danger: false,
                 saccident: false,
             })
-            this.tbSocialMap.onSnapshot(this.ListMark);
+            const { Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
+            this.tbSocialMap.where('Area_ID', '==', Area_ID).where('Area_PID', '==', Area_PID)
+                .where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID).onSnapshot(this.ListMark);
 
         } else {
 
@@ -468,36 +421,42 @@ export class Main_seven_tools extends Component {
                     })
                 }
             }
-            this.tbSocialMap.onSnapshot(this.ListMark);
+            const { Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
+            this.tbSocialMap.where('Area_ID', '==', Area_ID).where('Area_PID', '==', Area_PID)
+                .where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID).onSnapshot(this.ListMark);
         }
     }
     onSubmit = (e) => {
         e.preventDefault();
-        const { position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Area_ID } = this.state;
+        const { position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description,
+            Geo_map_result_description, Geo_map_time,
+            Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
 
-        if (this.state.uploaded) {
+        if (this.state.Map_iamge_URL !== '') {
             if (this.state.edit_ID !== '') {
                 this.tbSocialMap.doc(this.state.edit_ID).update({
-                    Geo_map_position: position, Informer_name: this.state.Name, Geo_ban_ID: Area_ID, Create_date: GetCurrentDate('/'),
-                    Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID
+                    Geo_map_position: position, Informer_name: this.state.Name, Create_date: GetCurrentDate('/'),
+                    Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID,
+                    Geo_map_result_description, Geo_map_time,
                 }).then((result) => {
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
                         Geo_map_description: '', Informer_ID: '', Create_date: '', Map_iamge_URL: '',
-                        status_add: false, edit_ID: '',
+                        status_add: false, edit_ID: '', Geo_map_result_description: '', Geo_map_time: '',
                     })
                 }).catch((error) => {
                     console.log(error);
                 });
             } else {
                 this.tbSocialMap.add({
-                    Geo_map_position: position, Informer_name: this.state.Name, Geo_ban_ID: Area_ID, Create_date: GetCurrentDate('/'),
-                    Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID
+                    Geo_map_position: position, Informer_name: this.state.Name, Area_ID, Area_PID, Area_DID, Area_SDID, Create_date: GetCurrentDate('/'),
+                    Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID,
+                    Geo_map_result_description, Geo_map_time,
                 }).then((result) => {
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
                         Geo_map_description: '', Create_date: '', Map_iamge_URL: '',
-                        status_add: false, edit_ID: '',
+                        status_add: false, edit_ID: '', Geo_map_result_description: '', Geo_map_time: '',
                     })
                 }).catch((error) => {
                     console.log(error);
@@ -519,9 +478,9 @@ export class Main_seven_tools extends Component {
     }
 
     render() {
-        const { Ban_name } = this.state
+        const { Ban_name, Area_ID } = this.state
         const { Geo_map_name, Geo_map_type,
-            Geo_map_description, } = this.state;
+            Geo_map_description, Geo_map_result_description, Geo_map_time, } = this.state;
         const data = {
             columns: [
                 {
@@ -572,7 +531,7 @@ export class Main_seven_tools extends Component {
                 <Topnav></Topnav>
                 <div className='main_component'>
                     <Row>
-                        <h2><strong>ข้อมูลแผนที่เดินดิน : บ้าน{Ban_name}</strong> </h2>
+                        <h2><strong>ข้อมูลแผนที่เดินดิน : บ้าน {Ban_name}หมู่ที่{Area_ID + 1}</strong> </h2>
                     </Row>
                     <hr></hr>
                     <TabST></TabST>
@@ -620,7 +579,8 @@ export class Main_seven_tools extends Component {
                                                 เลือกพิกัดพื้นที่<label style={{ color: "red" }}>*</label>
                                             </Form.Label>
                                             <Form.Label column >
-                                                Latitude : {this.state.position.Lat} longitude : {this.state.position.Lng}
+
+                                                Latitude : {this.state.position.lat} longitude : {this.state.position.lng}
                                             </Form.Label>
                                             <Col>
 
@@ -652,29 +612,56 @@ export class Main_seven_tools extends Component {
                                             </Col>
 
                                         </Form.Group>
+                                        {Geo_map_type === "flag_good" || Geo_map_type === "flag_danger" ?
+                                            <div>
+                                                <Form.Group as={Row}>
+                                                    <Form.Label column sm="3">เวลาที่เกิดเหตุ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                                    <Col>
+                                                        <input type="time" className="form-control" name="Geo_map_time" value={Geo_map_time} onChange={this.onChange} required />
 
-                                        <Form.Group as={Row}>
-                                            <Form.Label column sm="3">คำอธิบาย: <label style={{ color: "red" }}>*</label></Form.Label>
-                                            <Col>
-                                                <textarea className="form-control" name="Geo_map_description" value={Geo_map_description} onChange={this.onChange}
-                                                    placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
-                                                    cols="80" rows="5" required>{Geo_map_description}</textarea>
-                                            </Col>
+                                                    </Col>
 
-                                        </Form.Group>
+                                                </Form.Group>
+                                                <Form.Group as={Row}>
+                                                    <Form.Label column sm="3">ลักษณะกิจกรรม: <label style={{ color: "red" }}>*</label></Form.Label>
+                                                    <Col>
+                                                        <textarea className="form-control" name="Geo_map_description" value={Geo_map_description} onChange={this.onChange}
+                                                            placeholder="ลักษณะกิจกรรมที่เกิดขึ้นบนพื้นที่"
+                                                            cols="80" rows="5" required>{Geo_map_description}</textarea>
+                                                    </Col>
+
+                                                </Form.Group>
+                                                <Form.Group as={Row}>
+                                                    <Form.Label column sm="3">ผลที่เกิดขึ้น: <label style={{ color: "red" }}>*</label></Form.Label>
+                                                    <Col>
+                                                        <textarea className="form-control" name="Geo_map_result_description" value={Geo_map_result_description} onChange={this.onChange}
+                                                            placeholder="จากกิจกรรมบนพื้นที่ มีผลที่เกิดขึ้นยังไงบ้าง เช่น การรวมตัวของวัยรุ่นหลังวัดที่เสพสารเสพติด ทำให้เกิดเด็กติดยาและเกิดการลักขโมย"
+                                                            cols="80" rows="5" required>{Geo_map_result_description}</textarea>
+                                                    </Col>
+
+                                                </Form.Group>
+                                            </div>
+                                            : <Form.Group as={Row}>
+                                                <Form.Label column sm="3">คำอธิบาย: <label style={{ color: "red" }}>*</label></Form.Label>
+                                                <Col>
+                                                    <textarea className="form-control" name="Geo_map_description" value={Geo_map_description} onChange={this.onChange}
+                                                        placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
+                                                        cols="80" rows="5" required>{Geo_map_description}</textarea>
+                                                </Col>
+
+                                            </Form.Group>}
+
 
 
                                         <center >
                                             <label >เพิ่มรูปพื้นที่ : <label style={{ color: "red" }}>*</label></label>
-
-
                                             {this.state.isUploading && <p>Progress: {this.state.progress}</p>}
                                             {this.state.Map_iamge_URL && <img className="imagearea" alt="mapURL" src={this.state.Map_iamge_URL} />}
                                             <br></br>
                                             <CustomUploadButton
                                                 accept="image/*"
                                                 filename={"geo" + Geo_map_name + (1 + Math.floor(Math.random() * (99)))}
-                                                storageRef={firebase.storage().ref('GeoMaps')}
+                                                storageRef={Firebase.storage().ref('GeoMaps')}
                                                 onUploadStart={this.handleUploadStart}
                                                 onUploadError={this.handleUploadError}
                                                 onUploadSuccess={this.handleUploadSuccess}
@@ -703,27 +690,27 @@ export class Main_seven_tools extends Component {
                                         // "flag_danger"=จุดเสี่ยง
                                         // "accident"=จุดอุบัติเหตุ */}
 
-                                        <Row style={{ margin: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Row style={{ margin: 10, alignItems: 'center' }}>
 
                                             <div style={!this.state.sall ? { justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: '#c0c0c0' } :
                                                 { justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }
-                                            } onClick={this.SelectGeoType.bind(this, "all")}><h4><strong>All</strong></h4></div>
-                                            <img alt="home" style={
+                                            } onClick={this.SelectGeoType.bind(this, "all")}><h4 style={{ padding: 2, alignItems: 'center   ' }}><strong>ทั้งหมด</strong></h4></div>
+                                            <img alt="home" title="บ้าน" style={
                                                 !this.state.shome ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={home} onClick={this.SelectGeoType.bind(this, "home")}></img>
-                                            <img alt="resource" style={
+                                            <img alt="resource" title="ทรัพยากร" style={
                                                 !this.state.sresource ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={resource} onClick={this.SelectGeoType.bind(this, "resource")}></img>
-                                            <img alt="organization" style={
+                                            <img alt="organization" title="องค์กร" style={
                                                 !this.state.sorganization ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={organization} onClick={this.SelectGeoType.bind(this, "organization")}></img>
-                                            <img alt="flag_good" style={
+                                            <img alt="flag_good" title="จุดดี" style={
                                                 !this.state.sflag_good ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={flag_good} onClick={this.SelectGeoType.bind(this, "flag_good")}></img>
-                                            <img alt="flag_danger" style={
+                                            <img alt="flag_danger" title="จุดเสี่ยง" style={
                                                 !this.state.sflag_danger ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={flag_danger} onClick={this.SelectGeoType.bind(this, "flag_danger")}></img>
-                                            <img alt="home" style={
+                                            <img alt="accident" title="อุบัติเหตุ" style={
                                                 !this.state.saccident ? { cursor: 'pointer', filter: 'grayscale(100%)' } : { cursor: 'pointer' }
                                             } src={accident} onClick={this.SelectGeoType.bind(this, "")}></img>
                                         </Row>
@@ -757,5 +744,18 @@ export class Main_seven_tools extends Component {
     }
 }
 // export default Main_seven_tools;
-export default (GoogleApiWrapper({ apiKey: ('AIzaSyAW8vZFU5JegwBg56DXH3fFzH_bRFY3tec'), language: 'th' }))(Main_seven_tools);
+// export default (GoogleApiWrapper({ apiKey: ('AIzaSyAz1FvLaAJGDrvPvRPbS_EITU30dNyd-eA'), language: 'th' }))(Main_seven_tools);
 
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+    fetchReducer: state.fetchReducer,
+});
+
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+    fetch_user,
+};
+
+export default
+    connect(mapStateToProps, mapDispatchToProps)
+        ((GoogleApiWrapper({ apiKey: ('AIzaSyAz1FvLaAJGDrvPvRPbS_EITU30dNyd-eA'), language: 'th' }))(Main_seven_tools));

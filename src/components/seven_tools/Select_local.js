@@ -1,158 +1,89 @@
-import React, { Component } from 'react';
-import firebase from '../../firebase';
+import React, { Component } from "react";
+import Firebase from "../../Firebase";
 import { Link } from "react-router-dom";
-import Topnav from '../top/Topnav';
-import '../../App.css';
+import Topnav from "../top/Topnav";
+import { fetch_user } from "../../actions";
+import { connect } from "react-redux";
+import data_provinces from "../../data/provinces.json";
+import { isEmptyValue } from "../Methods";
+import "../../App.css";
+import Main_map_admin from "./Main_map_admin";
+
 export class Select_local extends Component {
-    constructor(props) {
-        super(props);
-        this.tbLGOs = firebase.firestore().collection('LGOS');
-        this.state = {
-            //input data profile
-            Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
-            Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
-            Province_ID: '', District_ID: '', Tumbon_ID: '', Email: '', Avatar_URL: '',
-            Add_date: '', Area_ID: '', Role: '', User_type_ID: '',
-            User_ID: '',
+  constructor(props) {
+    super(props);
+    this.tbLGOs = Firebase.firestore().collection("LGOS");
+    this.state = {
+      ...this.props.fetchReducer.user,
+      LGOs: []
+    };
+  }
+  componentDidMount() {
 
-            ban: '',
-            LGOs: [],
+  }
+  render() {
+    const { Ban_name, Name } = this.state;
+    if (!isEmptyValue(Name)) {
+      return (
+        <div>
+          <Topnav></Topnav>
+          <div className="main_component">
+            <center>
+              {!isEmptyValue(Ban_name) ? (
+                <h2>
+                  <strong>
+                    บ้าน {Ban_name}หมู่ที่{this.state.Area_ID + 1}
+                  </strong>{" "}
+                </h2>
+              ) : (
+                  <h2>
+                    <strong>กรุณาเลือกหมู่บ้านที่ทำการสำรวจ</strong>{" "}
+                  </h2>
+                )}
 
-            step_ban: false,
+              <hr></hr>
 
-        }
-
-
-    }
-
-    componentDidMount() {
-        this.unsubscribe = this.tbLGOs.onSnapshot(this.getLGOs);
-        this.authListener();
-
-    }
-    getLGOs = (querySnapshot) => {
-        const LGOs = [];
-        querySnapshot.forEach(doc => {
-            const { Name, Type } = doc.data();
-
-            LGOs.push({
-                Key: doc.id,
-                Name: Type + Name,
-            });
-
-        });
-
-        this.setState({
-            LGOs
-        })
-    }
-    checkName(name, id) {
-        var result = '';
-        if (name === "l") {
-            this.state.LGOs.forEach(element => {
-                if (element.Key === id) {
-                    result = element.Name;
-                }
-            });
-        }
-        return result;
-    }
-    getUser(id) {
-
-        firebase.firestore().collection('USERS').doc(id).get().then((doc) => {
-            if (doc.exists) {
-                const { Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
-
-                } = doc.data();
-                var d1 = new Date(Birthday.seconds * 1000);
-                let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-                if (Area_ID !== '') {
-                    firebase.firestore().collection('BANS').doc(Area_ID).get().then((doc) => {
-                        if (doc.exists) {
-                            const { Name, LGO_ID } = doc.data();
-                            this.setState({
-                                ban: this.checkName('l', LGO_ID) + " บ้าน " + Name
-                            })
-
-
-                        }
-                    })
-                }
-
-
-
-                this.setState({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday: bd, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
-
-                })
-            }
-        }
-        );
-    }
-
-
-    authListener() {
-
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                this.setState({
-                    statusLogin: true,
-                    authEmail: user.email,
-                    User_ID: user.uid,
-                });
-
-                this.getUser(user.uid);
-
-            } else {
-                this.props.history.push('/');
-            }
-        });
-
+              {!isEmptyValue(Ban_name) ? (
+                <Link className="btn btn-success" to="/main_seven_tools">
+                  เปิดเครื่องมือ
+                </Link>
+              ) : (
+                  <div></div>
+                )}
+              <Link className="btn btn-success" to={`/select_ban`}>
+                เลือกหมู่บ้าน
+              </Link>
+              <hr></hr>
+              <Main_map_admin></Main_map_admin>
+            </center>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <Topnav></Topnav>
+          <div className="main_component">
+            <center>
+              <Main_map_admin></Main_map_admin>
+            </center>
+          </div>
+        </div>
+      );
 
     }
 
-    render() {
-        const { ban, } = this.state;
-        return (
-            <div>
-                <Topnav></Topnav>
-                <div className="main_component">
-                    <center>
-                        {ban !== '' ?
-                            <h2><strong>{ban}</strong> </h2>
-                            :
-                            <h2><strong>กรุณาเลือกหมู่บ้านที่ทำการสำรวจ</strong> </h2>
-                        }
-
-                        <hr></hr>
-
-                        {ban !== '' ?
-                            <Link className="btn btn-success" to="/main_seven_tools">เปิดเครื่องมือ</Link>
-                            :
-                            <div></div>
-                        }
-                        <Link className="btn btn-success" to={`/select_ban/${this.state.User_ID}`}>เลือกหมู่บ้าน</Link>
-                        <hr></hr>
-                    </center>
-
-                </div >
-            </div >
-
-
-        );
-    }
+  }
 }
 
-export default Select_local
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+  fetchReducer: state.fetchReducer
+});
 
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+  fetch_user
+};
 
-
-
-
-
+export default connect(mapStateToProps, mapDispatchToProps)(Select_local);

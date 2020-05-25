@@ -1,319 +1,350 @@
-
-import React, { Component } from 'react';
-import firebase from '../../firebase';
+import React, { Component } from "react";
+import Firebase from "../../Firebase";
 import { Link } from "react-router-dom";
 import { Form, Row, Col } from "react-bootstrap";
-import Topnav from '../top/Topnav';
-import '../../App.css';
-
-export default class Select_ban extends Component {
-    constructor(props) {
-        super(props);
-        this.tbProvinces = firebase.firestore().collection('PROVINCES');
-        this.tbDistricts = firebase.firestore().collection('DISTRICTS');
-        this.tbLGOs = firebase.firestore().collection('LGOS');
-        this.tbBANs = firebase.firestore().collection('BANS');
-        this.state = {
-            //input data profile
-            Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
-            Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
-            Province_ID: '', District_ID: '', Tumbon_ID: '', Email: '', Avatar_URL: '',
-            Add_date: '', Area_ID: '', Role: '', User_type_ID: '',
-            User_ID: '',
-
-
-
-            select_ban: '',
-            add_ban: '',
-            sProvince_ID: '',
-            sDistrict_ID: '',
-            sLGO_ID: '',
-            sBan_ID: '',
-            sBan: '',
-            Provinces: [],
-            Districts: [],
-            LGOs: [],
-            Bans: [],
-
-            alert_save: '',
-
-        }
-
+import Topnav from "../top/Topnav";
+import "../../App.css";
+import { confirmAlert } from "react-confirm-alert"; // Import
+import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
+import { fetch_user } from "../../actions";
+import { connect } from "react-redux";
+import data_provinces from "../../data/provinces.json";
+import { isEmptyValue } from "../Methods";
+class Select_ban extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.props.fetchReducer.user,
+      Provinces: [],
+      Districts: [],
+      Sub_districts: [],
+      Bans: []
+    };
+  }
+  getUArea() {
+    const { Area_ID, Area_PID, Area_DID, Area_SDID } = this.state;
+    this.listProvinces();
+    this.listDistrict(Area_PID);
+    this.listSub_district(Area_PID, Area_DID);
+    this.listBans(Area_PID, Area_DID, Area_SDID);
+  }
+  authListener() {
+    if (isEmptyValue(this.state.Area_ID)) {
+      this.listProvinces();
+    } else {
+      this.getUArea();
     }
-    getUser(id) {
+  }
+  componentDidMount() {
+    this.authListener();
+  }
+  listProvinces = () => {
+    const Provinces = [];
+    data_provinces.forEach((doc, i) => {
+      // console.log(doc)
+      Provinces.push({
+        Key: i,
+        value: doc[0]
+      });
+    });
+    this.setState({
+      Provinces
+    });
+  };
+  listDistrict = pid => {
+    const Districts = [];
 
-        firebase.firestore().collection('USERS').doc(id).get().then((doc) => {
-            if (doc.exists) {
-                const { Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
+    data_provinces[pid][1].forEach((doc, i) => {
+      //  console.log(doc)
+      Districts.push({
+        Key: i,
+        value: doc[0]
+      });
+    });
+    if (this.state.User_ID !== "") {
+      this.setState({
+        Districts
+      });
+    } else {
+      this.setState({
+        Districts,
+        Area_DID: "",
+        Area_SDID: ""
+      });
+    }
+  };
+  listSub_district = (pid, did) => {
+    const Sub_districts = [];
 
-                } = doc.data()
+    data_provinces[pid][1][did][2][0].forEach((doc, i) => {
+      Sub_districts.push({
+        Key: i,
+        value: doc[0]
+      });
+    });
+    if (this.state.User_ID !== "") {
+      this.setState({
+        Sub_districts
+      });
+    } else {
+      this.setState({
+        Sub_districts,
+        Area_SDID: ""
+      });
+    }
+  };
+  listBans = (pid, did, sdid) => {
+    const Bans = [];
 
-                var d1 = new Date(Birthday.seconds * 1000);
-                let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-                if (Area_ID !== '') {
-                    this.unsubscribe = this.tbDistricts.onSnapshot(this.getDistricts);
-                    this.unsubscribe = this.tbLGOs.onSnapshot(this.getLGOs);
-                    this.unsubscribe = this.tbBANs.onSnapshot(this.getBans);
-                    firebase.firestore().collection('BANS').doc(Area_ID).get().then((doc) => {
-                        if (doc.exists) {
-                            const { Province_ID, District_ID, LGO_ID } = doc.data();
-                            this.setState({
-                                sProvince_ID: Province_ID,
-                                sDistrict_ID: District_ID,
-                                sLGO_ID: LGO_ID,
-                                sBan_ID: doc.id,
-                            })
+    data_provinces[pid][1][did][2][0][sdid][1][0].forEach((doc, i) => {
+      Bans.push({
+        Key: i,
+        value: doc[1]
+      });
+    });
+    if (this.state.User_ID !== "") {
+      this.setState({
+        Bans
+      });
+    } else {
+      this.setState({
+        Bans,
+        Area_ID: ""
+      });
+    }
+  };
 
-                        }
-                    })
-                }
-                this.setState({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday: bd, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
+  onSelectProvince = e => {
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+    if (this.state.Area_PID === "") {
+      this.setState({
+        Districts: [],
+        Area_DID: "",
+        Sub_districts: [],
+        Area_SDID: "",
+        Bans: [],
+        Area_ID: ""
+      });
+    } else {
 
+      this.listDistrict(this.state.Area_PID);
+    }
+  };
+  onSelectDistrict = e => {
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+    if (this.state.Area_DID === "") {
+      this.setState({
+        Sub_districts: [],
+        Area_SDID: "",
+        Bans: [],
+        Area_ID: ""
+      });
+    } else {
+      this.listSub_district(this.state.Area_PID, this.state.Area_DID);
+    }
+  };
+  onSelectSub_district = e => {
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+    if (this.state.Area_SDID === "") {
+      this.setState({
+        Bans: [],
+        Area_ID: ""
+      });
+    } else {
+      this.listBans(
+        this.state.Area_PID,
+        this.state.Area_DID,
+        this.state.Area_SDID
+      );
+    }
+  };
+  onChange = e => {
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+  };
 
-                })
+  onSubmit = e => {
+    const {
+      User_ID, Province, District, Sub_district, User_type, bd,
+      Ban_name, Name, Last_name, Nickname, Sex, Phone_number, Line_ID,
+      Facebook, Birthday, Position, Department, Province_ID, District_ID,
+      Sub_district_ID, Email, Avatar_URL, Add_date, Role, Area_ID,
+      Area_PID, Area_DID, Area_SDID
+    } = this.state;
+    e.preventDefault();
+    Firebase.firestore()
+      .collection("USERS")
+      .doc(this.state.User_ID)
+      .update({
+        Area_ID: parseInt(Area_ID, 10),
+        Area_PID: parseInt(Area_PID, 10),
+        Area_DID: parseInt(Area_DID, 10),
+        Area_SDID: parseInt(Area_SDID, 10)
+      })
+      .then(doc => {
+        const Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1]
+        this.props.fetch_user({
+          User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
+          Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
+          District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
+
+          Area_ID: parseInt(Area_ID, 10),
+          Area_PID: parseInt(Area_PID, 10),
+          Area_DID: parseInt(Area_DID, 10),
+          Area_SDID: parseInt(Area_SDID, 10)
+        });
+        this.props.history.push('/main_seven_tools')
+      })
+      .catch(error => {
+        console.log(error);
+        confirmAlert({
+          title: "เลือกไม่สำเร็จ",
+          buttons: [
+            {
+              label: "ตกลง"
             }
-        }
-        );
-    }
-    authListener() {
-
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                this.setState({
-                    statusLogin: true,
-                    authEmail: user.email,
-                    User_ID: user.uid,
-                });
-
-                this.getUser(user.uid);
-
-            } else {
-                this.setState({ statusLogin: false, authEmail: '' });
-            }
+          ]
         });
+      });
+  };
 
+  render() {
+    const { Provinces, Districts, Sub_districts, Bans } = this.state;
+    const { Area_ID, User_ID, Area_PID, Area_DID, Area_SDID } = this.state;
+    return (
+      <div>
+        <Topnav></Topnav>
+        <div className="main_component">
+          <center>
+            <form onSubmit={this.onSubmit}>
+              <Form.Group as={Row}>
+                <Form.Label column sm="2">
+                  เลือก จังหวัด
+                </Form.Label>
+                <Col sm="10">
+                  <select
+                    className="form-control"
+                    id="sel1"
+                    name="Area_PID"
+                    value={Area_PID}
+                    onChange={this.onSelectProvince}
+                    required
+                  >
+                    <option key="0" value="">
+                      เลือก จังหวัด
+                    </option>
+                    {Provinces.map((data, i) => (
+                      <option key={i + 1} value={data.Key}>
+                        {data.value}
+                      </option>
+                    ))}
+                  </select>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Form.Label column sm="2">
+                  เลือก อำเภอ
+                </Form.Label>
+                <Col sm="10">
+                  <select
+                    className="form-control"
+                    id="sel1"
+                    name="Area_DID"
+                    value={Area_DID}
+                    onChange={this.onSelectDistrict}
+                    required
+                  >
+                    <option key="0" value="">
+                      เลือก อำเภอ
+                    </option>
+                    {Districts.map((data, i) => (
+                      <option key={i + 1} value={data.Key}>
+                        {data.value}
+                      </option>
+                    ))}
+                  </select>
+                </Col>
+              </Form.Group>
 
-    }
-    componentDidMount() {
-        this.authListener();
-        this.unsubscribe = this.tbProvinces.onSnapshot(this.getProvinces);
+              <Form.Group as={Row}>
+                <Form.Label column sm="2">
+                  เลือก ตำบล.
+                </Form.Label>
+                <Col sm="10">
+                  <select
+                    className="form-control"
+                    id="sel1"
+                    name="Area_SDID"
+                    value={Area_SDID}
+                    onChange={this.onSelectSub_district}
+                    required
+                  >
+                    <option key="0" value="">
+                      เลือก ตำบล.
+                    </option>
+                    {Sub_districts.map((data, i) => (
+                      <option key={i + 1} value={data.Key}>
+                        {data.value}
+                      </option>
+                    ))}
+                  </select>
+                </Col>
+              </Form.Group>
 
-    }
-    onChange = (e) => {
-        const state = this.state
-        state[e.target.name] = e.target.value;
-        this.setState(state);
-
-    }
-    getProvinces = (querySnapshot) => {
-        const Provinces = [];
-        querySnapshot.forEach(doc => {
-            const { Name, } = doc.data();
-
-            Provinces.push({
-                Key: doc.id,
-                Name,
-            });
-
-        });
-
-        this.setState({
-            Provinces
-        })
-    }
-    getDistricts = (querySnapshot) => {
-        const Districts = [];
-        querySnapshot.forEach(doc => {
-            const { Name, } = doc.data();
-
-            Districts.push({
-                Key: doc.id,
-                Name,
-            });
-
-        });
-
-        this.setState({
-            Districts
-        })
-    }
-    getLGOs = (querySnapshot) => {
-        const LGOs = [];
-        querySnapshot.forEach(doc => {
-            const { Name, Type } = doc.data();
-
-            LGOs.push({
-                Key: doc.id,
-                Name: Type + Name,
-            });
-
-        });
-
-        this.setState({
-            LGOs
-        })
-    }
-    getBans = (querySnapshot) => {
-        const Bans = [];
-        querySnapshot.forEach(doc => {
-            const { Name } = doc.data();
-
-            Bans.push({
-                Key: doc.id,
-                Name: Name,
-            });
-
-        });
-
-        this.setState({
-            Bans
-        })
-    }
-    onSelectProvince = (e) => {
-        const state = this.state
-        state[e.target.name] = e.target.value;
-        this.setState(state);
-        console.log(this.state.sProvince_ID)
-        this.unsubscribe = this.tbDistricts.where('Province_ID', '==', this.state.sProvince_ID).onSnapshot(this.getDistricts);
-    }
-    onSelectDistrict = (e) => {
-        const state = this.state
-        state[e.target.name] = e.target.value;
-        this.setState(state);
-        this.unsubscribe = this.tbLGOs.where('District_ID', '==', this.state.sDistrict_ID).onSnapshot(this.getLGOs);
-    }
-    onSelectLGO = (e) => {
-        const state = this.state
-        state[e.target.name] = e.target.value;
-        this.setState(state);
-        this.unsubscribe = this.tbBANs.where('LGO_ID', '==', this.state.sLGO_ID).onSnapshot(this.getBans);
-    }
-    onSubmit = (e) => {
-        e.preventDefault();
-        if (this.state.add_ban) {
-            const { sProvince_ID, sDistrict_ID, sLGO_ID, sBan } = this.state;
-            firebase.firestore().collection('BANS').add({
-                Province_ID: sProvince_ID, District_ID: sDistrict_ID, LGO_ID: sLGO_ID, Name: sBan
-            }).then((doc) => {
-                this.setState({ alert_save: "บันทึกสำเร็จ" })
-            }).catch((error) => {
-                this.setState({ alert_save: "บันทึกไม่สำเร็จ" })
-            })
-        } else {
-            firebase.firestore().collection('USERS').doc(this.props.match.params.id).update({
-                Area_ID: this.state.sBan_ID,
-            }).then((doc) => {
-                this.setState({ alert_save: "เลือกสำเร็จ" })
-            }).catch((error) => {
-                this.setState({ alert_save: "เลือกไม่สำเร็จ" })
-            })
-        }
-
-    }
-
-    render() {
-        const { Provinces, Districts, LGOs, Bans } = this.state;
-        const { sProvince_ID, sDistrict_ID, sLGO_ID, sBan_ID, sBan } = this.state;
-        return (
-            <div>
-                <Topnav></Topnav>
-                <div className="main_component">
-                    <center>
-                        <form onSubmit={this.onSubmit}>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="2">เลือก จังหวัด</Form.Label>
-                                <Col sm="10">
-                                    <select className="form-control" id="sel1" name="sProvince_ID" value={sProvince_ID} onChange={this.onSelectProvince} required>
-                                        <option key='0' value="">เลือก จังหวัด</option>
-                                        {Provinces.map((data, i) =>
-                                            <option key={i + 1} value={data.Key}>{data.Name}</option>
-                                        )}
-
-                                    </select>
-                                </Col>
-
-                            </Form.Group>
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="2">เลือก อำเภอ</Form.Label>
-                                <Col sm="10">
-                                    <select className="form-control" id="sel1" name="sDistrict_ID" value={sDistrict_ID} onChange={this.onSelectDistrict} required>
-                                        <option key='0' value="">เลือก อำเภอ</option>
-                                        {Districts.map((data, i) =>
-                                            <option key={i + 1} value={data.Key}>{data.Name}</option>
-                                        )}
-
-                                    </select>
-                                </Col>
-
-                            </Form.Group>
-
-                            <Form.Group as={Row}>
-                                <Form.Label column sm="2">เลือก อปท.</Form.Label>
-                                <Col sm="10">
-                                    <select className="form-control" id="sel1" name="sLGO_ID" value={sLGO_ID} onChange={this.onSelectLGO} required>
-                                        <option key='0' value="">เลือก อปท.</option>
-                                        {LGOs.map((data, i) =>
-                                            <option key={i + 1}
-                                                value={data.Key}>{data.Name}</option>
-                                        )}
-
-                                    </select>
-                                </Col>
-                            </Form.Group>
-
-                            {this.state.add_ban ?
-                                <div>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">ชื่อหมู่บ้าน</Form.Label>
-                                        <Col sm="10">
-                                            <input type="text" className="form-control" name="sBan" placeholder="ไม่ต้องใส่ บ้าน"
-                                                value={sBan} onChange={this.onChange} required />
-                                        </Col>
-
-
-                                    </Form.Group>
-                                    <button type="submit" className="btn btn-success" >เพิ่มหมู่บ้าน</button>
-                                    <button type="button" onClick={() => this.setState({ add_ban: false })} className="btn btn-danger" >กลับ</button>
-                                </div>
-                                :
-                                <div>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">เลือกหมู่บ้าน</Form.Label>
-                                        <Col sm="10">
-                                            <select className="form-control" id="sel1" name="sBan_ID" value={sBan_ID} onChange={this.onChange} required>
-                                                <option key='0' value="">เลือก หมู่บ้าน</option>
-                                                {Bans.map((data, i) =>
-                                                    <option key={i + 1} value={data.Key}>{data.Name}</option>
-                                                )}
-
-                                            </select>
-                                        </Col>
-
-
-                                    </Form.Group>
-                                    <button type="submit" className="btn btn-success" >เลือกหมู่บ้าน</button>
-                                    <button type="button" onClick={() => this.setState({ add_ban: true })} className="btn btn-success" >เพิ่มหมู่บ้าน</button>
-                                    <Link to={`/select_local`} className="btn btn-danger">กลับ</Link>
-                                </div>
-                            }
-                            <h4>{this.state.alert_save}</h4>
-
-
-                        </form>
-                    </center>
-                </div>
-            </div>
-
-        )
-
-
-    }
+              <div>
+                <Form.Group as={Row}>
+                  <Form.Label column sm="2">
+                    เลือกหมู่บ้าน
+                  </Form.Label>
+                  <Col sm="10">
+                    <select
+                      className="form-control"
+                      id="sel1"
+                      name="Area_ID"
+                      value={Area_ID}
+                      onChange={this.onChange}
+                      required
+                    >
+                      <option key="0" value="">
+                        เลือก หมู่บ้าน
+                      </option>
+                      {Bans.map((data, i) => (
+                        <option key={i + 1} value={data.Key}>
+                          {data.value} หมู่ที่ {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </Col>
+                </Form.Group>
+                <button type="submit" className="btn btn-success">
+                  เลือกหมู่บ้าน
+                </button>
+                <Link to={`/select_local`} className="btn btn-danger">
+                  กลับ
+                </Link>
+              </div>
+            </form>
+          </center>
+        </div>
+      </div>
+    );
+  }
 }
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+  fetchReducer: state.fetchReducer
+});
+
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+  fetch_user
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Select_ban);

@@ -1,169 +1,184 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 import {
-    MDBNavbarNav, MDBNavItem, MDBDropdown,
-    MDBDropdownToggle, MDBDropdownMenu,
-} from 'mdbreact';
-import { Nav, NavDropdown, Navbar } from 'react-bootstrap';
-import firebase from '../../firebase';
-import '../../App.css';
-
-import { isEmptyValue } from '../methods';
-import Spin from '../Spin';
-
-import { connect } from 'react-redux';
+  MDBNavbarNav,
+  MDBNavItem,
+  MDBDropdown,
+  MDBDropdownToggle,
+  MDBDropdownMenu
+} from "mdbreact";
+import { Nav, NavDropdown, Navbar } from "react-bootstrap";
+import Firebase from "../../Firebase";
+import "../../App.css";
+import { fetch_user } from "../../actions";
+import { connect } from "react-redux";
+import { isEmptyValue } from "../Methods";
+import Avatar_user from '../../assets/user.png'
 class Topnav extends Component {
-    constructor(props) {
-        super(props);
-        this.unsubscribe = null;
-        this.state = {
-            Name: '', User_ID: '', Role: '', Avatar_URL: '',
-        }
+  constructor(props) {
+    super(props);
+    this.unsubscribe = null;
+    this.state = {
+      ...this.props.fetchReducer.user
+    };
+  }
+  logout = e => {
+    this.props.fetch_user({});
+    Firebase.auth()
+      .signOut()
+      .then(() => this.props.history.push("/"));
+  };
+  render() {
+    const { Name, User_ID, Avatar_URL, Role } = this.state;
 
 
+    return (
+      <div className="fixed-top">
+        {/* <button onClick={() => this.props.setName("test name")}>changeName</button> */}
+        <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
+          <Navbar.Brand href="/">
+            {" "}
+            <strong className="white-text">4CTPED</strong>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+          <Navbar.Collapse id="responsive-navbar-nav">
+            <Nav className="mr-auto">
+              <Nav.Link href="/list_user" className="white-text">
+                ข้อมูลทำเนียบ
+                </Nav.Link>
+              <Nav.Link href="/select_local" className="white-text">
+                {!isEmptyValue(Role) && Role === 'admin' ? 'เครื่องมือชุมชน' : 'แผนที่ข้อมูลชุมชน'}
+              </Nav.Link>
+              {!isEmptyValue(Name) ?
+                <NavDropdown title="ข้อมูลพื้นที่" id="collasible-nav-dropdown">
+                  <NavDropdown.Item href="/area">จัดการข้อมูลพื้นที่</NavDropdown.Item>
+                  {!isEmptyValue(Role) && Role === 'admin' &&
+                    <NavDropdown.Item href="/projects">ตรวจสอบโครงการ</NavDropdown.Item>}
 
-        // this.logout = this.logout.bind(this);
+                </NavDropdown>
+                :
+                <Nav.Link href="/area_public" className="white-text">
+                  ข้อมูลพื้นที่
+              </Nav.Link>
+              }
 
+              <Nav.Link href="/activity" className="white-text">
+                กิจกรรม
+                </Nav.Link>
+              <Nav.Link href="/course" className="white-text">
+                คลังความรู้
+                </Nav.Link>
+              {!isEmptyValue(Role) && Role === 'admin' &&
+                <>
+                  <NavDropdown title="องค์กร" id="collasible-nav-dropdown">
+                    <NavDropdown.Item href="/orgc_manage">เพิ่มองค์กร</NavDropdown.Item>
+                    <NavDropdown.Item href="/orgcs">องค์กร</NavDropdown.Item>
 
-    }
+                  </NavDropdown>
+                  <NavDropdown title="จัดการข้อมูล" id="collasible-nav-dropdown">
+                    <NavDropdown.Item href="/import_user">เพิ่มบัญชีผู้ใช้</NavDropdown.Item>
+                  </NavDropdown>
+                </>}
+              <Nav.Link href="/cdata_manage" className="white-text">
+                สุขภาวะ
+                </Nav.Link>
+              {/* <Nav.Link href="/map_all" className="white-text">
+                  แผนที่
+                </Nav.Link> */}
 
-
-    componentDidMount() {
-        this.authListener();
-        // const { Name, User_ID, Role, Avatar_URL } = this.props.user;
-
-
-        // this.setState({
-        //     Name, User_ID, Role, Avatar_URL,
-        // })
-    }
-
-    getUser(id) {
-
-        firebase.firestore().collection('USERS').doc(id).get().then((doc) => {
-
-            if (doc.exists) {
-                const { Name, Last_name, Role, Avatar_URL } = doc.data();
-
-                this.setState({
-                    Name, Last_name, Role, Avatar_URL
-                })
-            }
-
-        }
-        );
-
-    }
-    authListener() {
-        firebase.auth().onAuthStateChanged((user) => {
-
-            if (user) {
-
-
-                this.setState({
-                    user,
-                    statusLogin: true,
-                    User_ID: user.uid,
-                });
-                this.getUser(user.uid);
-
-            } else {
-                this.setState({ user: null, statusLogin: false });
-            }
-        });
-
-    }
-    logout = e => {
-        e.preventDefault();
-        firebase.auth().signOut().then(response => {
-            console.log("log out success");
-        });
-
-    }
-    render() {
-        const { Name, User_ID, Role, Avatar_URL } = this.state;
-
-
-
-        return (
-            <div className='fixed-top' >
-                {/* <button onClick={() => this.props.setName("test name")}>changeName</button> */}
-                <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark" >
-
-                    <Navbar.Brand href="/"> <strong className="white-text">4CTPED</strong></Navbar.Brand>
-                    <Navbar.Toggle aria-controls="responsive-navbar-nav" />
-                    <Navbar.Collapse id="responsive-navbar-nav">
-                        <Nav className="mr-auto">
-                            <Nav.Link href="/list_user" className="white-text">ข้อมูลทำเนียบ</Nav.Link>
-                            <Nav.Link href="/select_local" className="white-text">เครื่องมือเรียนรู้ชุมชน</Nav.Link>
-                            <Nav.Link href="/children_data" className="white-text">ข้อมูลเด็กและเยาวชน</Nav.Link>
-                            {/* <NavDropdown title="ข้อมูลระบบ" id="collasible-nav-dropdown">
-                                    <NavDropdown.Item href="/import_data">นำเข้าข้อมูล</NavDropdown.Item>
-                                    <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
-                                    <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-                                    <NavDropdown.Divider />
-                                    <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
-                                </NavDropdown> */}
-                        </Nav>
-
-                        <MDBNavbarNav right style={User_ID !== '' ? { display: 'flex' } : { display: 'none' }}>
-                            <MDBNavItem>
-                                <Navbar.Brand className="waves-effect waves-light">
-                                    <h4 style={{ color: '#ffffff', justifyContent: 'center' }}>{Name}</h4>
-                                </Navbar.Brand>
-                            </MDBNavItem>
-                            <MDBNavItem>
-                                <MDBDropdown>
-                                    <MDBDropdownToggle nav caret>
-                                        <img className="avatar" alt="avatar" style={{ width: 23, height: 23 }} src={Avatar_URL}></img>
-                                    </MDBDropdownToggle>
-                                    <MDBDropdownMenu className="dropdown-default">
-                                        <NavDropdown.Item href="/profile">โปรไฟล์</NavDropdown.Item>
+              {/* <Nav.Link href="/children_data" className="white-text">ข้อมูลเด็กและเยาวชน</Nav.Lin */}
+              {/* <NavDropdown title="ข้อมูลระบบ" id="collasible-nav-dropdown">
+                                        <NavDropdown.Item href="/import_data">นำเข้าข้อมูล</NavDropdown.Item>
+                                        <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
+                                        <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
                                         <NavDropdown.Divider />
-                                        <NavDropdown.Item href="/" onClick={this.logout.bind(this)}>ออกจากระบบ</NavDropdown.Item>
-                                    </MDBDropdownMenu>
-                                </MDBDropdown>
-                            </MDBNavItem>
+                                        <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
+                                    </NavDropdown> */}
+            </Nav>
 
-                        </MDBNavbarNav >
-                        <MDBNavbarNav right style={User_ID !== '' ? { display: 'none' } : { display: 'inline' }}>
-                            <Navbar.Brand href="/login"> <strong className="white-text">เข้าสู่ระบบ</strong></Navbar.Brand>
-                            <Navbar.Brand href="/register_email"> <strong className="white-text">สมัครสมาชิก</strong></Navbar.Brand>
-                        </MDBNavbarNav >
-                    </Navbar.Collapse>
+            <MDBNavbarNav
+              right
+              style={
+                isEmptyValue(User_ID)
+                  ? { display: "none" }
+                  : { display: "flex" }
+              }
+            >
+              <MDBNavItem>
+                <Navbar.Brand className="waves-effect waves-light">
+                  <h4 style={{ color: "#ffffff", justifyContent: "center" }}>
+                    {Name}
+                  </h4>
+                </Navbar.Brand>
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBDropdown>
+                  <MDBDropdownToggle nav caret>
+                    {isEmptyValue(Avatar_URL) ?
+                      <img
+                        className="avatar"
+                        alt="avatar"
+                        style={{ width: 23, height: 23 }}
+                        src={Avatar_user}
+                      ></img>
+                      :
+                      <img
+                        className="avatar"
+                        alt="avatar"
+                        style={{ width: 23, height: 23 }}
+                        src={Avatar_URL}
+                      ></img>
+                    }
 
-                </Navbar>
+                  </MDBDropdownToggle>
+                  <MDBDropdownMenu className="dropdown-default">
+                    <NavDropdown.Item href="/profile">
+                      โปรไฟล์
+                      </NavDropdown.Item>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item
+                      href="/"
+                      onClick={this.logout.bind(this)}
+                    >
+                      ออกจากระบบ
+                      </NavDropdown.Item>
+                  </MDBDropdownMenu>
+                </MDBDropdown>
+              </MDBNavItem>
+            </MDBNavbarNav>
+            <MDBNavbarNav
+              right
+              style={
+                isEmptyValue(User_ID)
+                  ? { display: "inline" }
+                  : { display: "none" }
+              }
+            >
+              <Navbar.Brand href="/login">
+                {" "}
+                <strong className="white-text">เข้าสู่ระบบ</strong>
+              </Navbar.Brand>
+              <Navbar.Brand href="/register_email">
+                {" "}
+                <strong className="white-text">สมัครสมาชิก</strong>
+              </Navbar.Brand>
+            </MDBNavbarNav>
+          </Navbar.Collapse>
+        </Navbar>
+      </div>
+    );
 
 
-            </div >
-        );
-
-
-    }
-
-
-
+  }
 }
-// const mapStatetoProps = (state) => {
-//     return {
-//         User: state.User
-//     }
-// }
-// const mapDispatchProps = (dispatch) => {
-//     return {
-//         setName: (Name) => {
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+  fetchReducer: state.fetchReducer
+});
 
-//             dispatch({
-//                 type: "SetUser",
-//                 state: {
-//                     Name: "heool"
-//                 }
-//             })
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+  fetch_user
+};
 
-//         }
-//     }
-// }
-// export default connect(mapStatetoProps, mapDispatchProps)(Topnav);
-// export default connect(mapStatetoProps)(Topnav);
-export default Topnav;
-
+export default connect(mapStateToProps, mapDispatchToProps)(Topnav);

@@ -2,7 +2,7 @@ import { Row } from 'react-bootstrap';
 import React, { Component } from 'react'
 
 
-import firebase from '../../firebase';
+import Firebase from '../../Firebase';
 
 import Topnav from '../top/Topnav';
 
@@ -12,6 +12,8 @@ import '../../css/Login.css';
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { fetch_user } from "../../actions";
+import { connect } from "react-redux";
 export class Register_email extends Component {
     constructor(props) {
         super(props);
@@ -38,7 +40,7 @@ export class Register_email extends Component {
         if (Password !== Confirm_password) {
             console.log(Password + "!=" + Confirm_password)
             this.setState({
-                alert_password: 'รหัสผ่านไม่ตงกัน'
+                alert_password: 'รหัสผ่านไม่ตรงกัน'
             })
         } else {
             this.setState({
@@ -54,8 +56,12 @@ export class Register_email extends Component {
 
         const { Email, Password } = this.state;
         if (this.state.alert_password === '') {
-            firebase.auth().createUserWithEmailAndPassword(Email, Password)
+            Firebase.auth().createUserWithEmailAndPassword(Email, Password)
                 .then(doc => {
+                    this.props.fetch_user({
+                        User_ID: doc.user.uid,
+                        Email: doc.user.email
+                    });
                     confirmAlert({
                         title: 'บันทึกสำเร็จ',
                         message: 'ไปยังหน้าเพิ่มข้อมูลโปรไฟล์',
@@ -72,7 +78,7 @@ export class Register_email extends Component {
                 }).catch(error => {
                     confirmAlert({
                         title: 'บันทึกไม่สำเร็จ',
-                        message: ' อีเมลล์ถูกใช้งานแล้ว',
+                        message: ' อีเมลถูกใช้งานแล้ว',
                         closeOnClickOutside: true,
                         buttons: [
                             {
@@ -172,4 +178,14 @@ export class Register_email extends Component {
     }
 }
 
-export default Register_email
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+    fetchReducer: state.fetchReducer
+});
+
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+    fetch_user
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Register_email);

@@ -1,5 +1,5 @@
 {
-  "name": "cydubon",
+  "name": "pedubon",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -17,6 +17,7 @@
     "react-geolocated": "^3.0.1",
     "react-graph-vis": "^1.0.5",
     "react-icons": "^3.8.0",
+    "react-image-mapper": "0.0.15",
     "react-loading": "^2.0.3",
     "react-orgchart": "^1.0.5",
     "react-redux": "^7.1.3",
@@ -24,6 +25,8 @@
     "react-scripts": "^3.3.0",
     "react-vis": "^1.11.7",
     "redux": "^4.0.5",
+    "redux-persist": "^6.0.0",
+    "redux-thunk": "^2.3.0",
     "vertical-timeline-component-for-react": "^1.0.6",
     "xlsx": "^0.15.3"
   },

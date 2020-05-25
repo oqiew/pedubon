@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 
 import ReactExport from "react-export-excel";
-import firebase from '../../firebase';
-import { GetTypeUser } from '../methods'
+import Firebase from '../../Firebase';
+
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
@@ -11,12 +11,11 @@ export class Export_data extends Component {
         super(props);
         this.state = {
             List_user: [],
-            user_types: GetTypeUser(),
         }
     }
     componentDidMount() {
 
-        firebase.firestore().collection('communityCalendars').onSnapshot(this.ListUsers);
+        Firebase.firestore().collection('communityCalendars').onSnapshot(this.ListUsers);
 
     }
     ListCollection = (querySnapshot) => {

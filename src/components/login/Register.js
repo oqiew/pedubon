@@ -1,160 +1,171 @@
 import { confirmAlert } from 'react-confirm-alert'; // Import
-import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
-import DatePicker from "react-datepicker";
-import { Form, Col, Row } from 'react-bootstrap';
-import React, { Component } from 'react'
-
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
+import DatePicker, { registerLocale } from "react-datepicker";
+import { Form, Col, Row } from 'react-bootstrap';
+import React, { Component } from 'react';
 import "react-datepicker/dist/react-datepicker.css"
-
-import firebase from '../../firebase';
-import { GetTypeUser, GetCurrentDate } from '../methods';
+import Firebase from '../../Firebase';
+import { isEmptyValue, GetCurrentDate, alert_status } from '../Methods';
 import Topnav from '../top/Topnav';
-
 import '../../App.css';
-
 //img
 import user from '../../assets/user.png';
+import { fetch_user } from "../../actions";
+import { connect } from "react-redux";
+import data_provinces from "../../data/provinces.json";
+import th from 'date-fns/locale/th';
+registerLocale('th', th);
 export class Register extends Component {
     constructor(props) {
         super(props);
-        this.tbUsers = firebase.firestore().collection('USERS');
-        this.tbProvinces = firebase.firestore().collection('PROVINCES');
-        this.tbDistricts = firebase.firestore().collection('DISTRICTS');
-        this.tbTumbons = firebase.firestore().collection('TUMBONS');
-        this.state = {
-            User_ID: '',
-            //input data profile
-            Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
-            Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
-            Province_ID: '', District_ID: '', Tumbon_ID: '', Email: '', Avatar_URL: '',
-            Add_date: '', Area_ID: '', Role: '', User_type_ID: '',
+        this.tbUsers = Firebase.firestore().collection('USERS');
+        if (!isEmptyValue(this.props.fetchReducer.user.Name)) {
+            this.state = {
+                ...this.props.fetchReducer.user,
+                Provinces: [],
+                Districts: [],
+                Sub_districts: [],
+                //
+                profile: true,
+                Birthday: '',
+            }
+        } else {
+            this.state = {
+                User_ID: this.props.fetchReducer.user.User_ID,
+                Email: this.props.fetchReducer.user.Email,
+                Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
+                Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
+                Avatar_URL: '',
+                Add_date: '', Area_ID: '', Role: '', Zip_code: '',
+                Area_PID: '', Area_DID: '', Area_SDID: '', User_type: '',
 
-            //List Data
-            Provinces: [],
-            Districts: [],
-            Tumbons: [],
-            User_types: GetTypeUser(),
-
-            //
-            profile: false
-        }
-    }
-    getUser(id) {
-
-        firebase.firestore().collection('USERS').doc(id).get().then((doc) => {
-            if (doc.exists) {
-                const { Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID,
-
-                } = doc.data()
-                var d1 = new Date(Birthday.seconds * 1000);
-                this.setState({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday: d1, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date, Area_ID, Role, User_type_ID, uploaded: true, profile: true
-                })
-                this.unsubscribe = this.tbProvinces.onSnapshot(this.getProvinces);
-                this.unsubscribe = this.tbDistricts.where('Province_ID', '==', Province_ID).onSnapshot(this.getDistricts);
-                this.unsubscribe = this.tbTumbons.where('District_ID', '==', District_ID).onSnapshot(this.getTumbons);
-            } else {
-                this.unsubscribe = this.tbProvinces.onSnapshot(this.getProvinces);
-                this.setState({
-                    profile: false
-                })
+                // table data
+                Province_ID: '', District_ID: '', Sub_district_ID: '',
+                //List Data
+                Provinces: [],
+                Districts: [],
+                Sub_districts: [],
+                //
+                profile: false
             }
         }
-        );
-    }
-    authListener() {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
+        // console.log(this.state)
 
-                this.setState({
-                    statusLogin: true,
-                    Email: user.email,
-                    User_ID: user.uid,
-
-                });
-                this.getUser(user.uid);
-            } else {
-                this.props.history.push('/');
-            }
-        });
     }
+
+
     selectDate = date => {
         this.setState({
             Birthday: date,
         });
     };
     componentDidMount() {
-
-        this.authListener();
+        if (isEmptyValue(this.state.Name)) {
+            this.listProvinces();
+        } else {
+            const { Province_ID, District_ID } = this.state;
+            this.listProvinces();
+            this.listDistrict(Province_ID);
+            this.listSub_district(Province_ID, District_ID);
+            if (!isEmptyValue(this.props.fetchReducer.user.Name)) {
+                // console.log(new Date(this.props.fetchReducer.user.Birthday.seconds * 1000))
+                this.setState({
+                    Birthday: new Date(this.props.fetchReducer.user.Birthday.seconds * 1000)
+                })
+            }
+        }
 
     }
-    getProvinces = (querySnapshot) => {
+
+    listProvinces = () => {
         const Provinces = [];
-        querySnapshot.forEach(doc => {
-            const { Name, } = doc.data();
-
+        data_provinces.forEach((doc, i) => {
+            // console.log(doc)
             Provinces.push({
-                Key: doc.id,
-                Name,
-            });
-
-        });
-
+                Key: i,
+                value: doc[0]
+            })
+        })
         this.setState({
-            Provinces
+            Provinces,
+
         })
     }
-    getDistricts = (querySnapshot) => {
+    listDistrict = (pid) => {
         const Districts = [];
-        querySnapshot.forEach(doc => {
-            const { Name, } = doc.data();
 
+        data_provinces[pid][1].forEach((doc, i) => {
+            //  console.log(doc)
             Districts.push({
-                Key: doc.id,
-                Name,
-            });
-
-        });
-
-        this.setState({
-            Districts
+                Key: i,
+                value: doc[0]
+            })
         })
+        if (this.state.Name !== '') {
+            this.setState({
+                Districts,
+
+            })
+        } else {
+            this.setState({
+                Districts,
+                District_ID: '',
+                Sub_district_ID: '',
+            })
+        }
+
     }
-    getTumbons = (querySnapshot) => {
-        const Tumbons = [];
-        querySnapshot.forEach(doc => {
-            const { Name } = doc.data();
+    listSub_district = (pid, did) => {
+        const Sub_districts = [];
 
-            Tumbons.push({
-                Key: doc.id,
-                Name: Name,
-            });
+        data_provinces[pid][1][did][2][0].forEach((doc, i) => {
 
-        });
-
-        this.setState({
-            Tumbons
+            Sub_districts.push({
+                Key: i,
+                value: doc[0]
+            })
         })
+        if (this.state.Name !== '') {
+            this.setState({
+                Sub_districts,
+
+            })
+        } else {
+            this.setState({
+                Sub_districts,
+                Sub_district_ID: '',
+            })
+        }
     }
+
     onSelectProvince = (e) => {
         const state = this.state
         state[e.target.name] = e.target.value;
         this.setState(state);
-        this.unsubscribe = this.tbDistricts.where('Province_ID', '==', this.state.Province_ID).onSnapshot(this.getDistricts);
+        if (this.state.Province_ID === '') {
+            this.setState({
+                Districts: [],
+                District_ID: '',
+                Sub_districts: [],
+                Sub_district_ID: '',
+            })
+        } else {
+            this.listDistrict(this.state.Province_ID);
+        }
     }
     onSelectDistrict = (e) => {
         const state = this.state
         state[e.target.name] = e.target.value;
         this.setState(state);
-        console.log(this.state.District_ID);
-        this.unsubscribe = this.tbTumbons.where('District_ID', '==', this.state.District_ID).onSnapshot(this.getTumbons);
+        if (this.state.District_ID === '') {
+            this.setState({
+                Sub_districts: [],
+                Sub_district_ID: '',
+            })
+        } else {
+            this.listSub_district(this.state.Province_ID, this.state.District_ID);
+        }
     }
     handleChangeUsername = event =>
         this.setState({ username: event.target.value });
@@ -166,7 +177,7 @@ export class Register extends Component {
     };
     handleUploadSuccess = filename => {
         this.setState({ Avatar_name: filename, progress: 100, isUploading: false, uploaded: true });
-        firebase
+        Firebase
             .storage()
             .ref("Avatar")
             .child(filename)
@@ -182,68 +193,67 @@ export class Register extends Component {
 
     onSubmit = (e) => {
         e.preventDefault();
-        const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position, Department,
-            Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-            Area_ID, Role, User_type_ID,
+        const { User_ID, Province, District, Sub_district, User_type, bd,
+            Ban_name, Name, Last_name, Nickname, Sex, Phone_number, Line_ID,
+            Facebook, Birthday, Position, Department, Province_ID, District_ID,
+            Sub_district_ID, Email, Avatar_URL, Add_date, Role, Area_ID,
+            Area_PID, Area_DID, Area_SDID,
         } = this.state;
 
-        if (this.state.uploaded) {
-            if (!this.state.profile) {
+        if (Avatar_URL) {
+            if (this.state.profile) {
+                this.tbUsers.doc(this.state.User_ID).update({
+                    Name, Last_name, Nickname, Sex, Phone_number,
+                    Line_ID, Facebook, Birthday, Position, Department,
+                    Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
+                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID,
+                }).then((docRef) => {
+                    this.props.fetch_user({
+                        User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
+                        Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
+                        District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
+                    });
+                    alert_status('update');
+
+                })
+                    .catch((error) => {
+                        alert_status('noupdate');
+                        console.error("Error adding document: ", error);
+                    });
+            } else {
                 //add data user 
                 this.tbUsers.doc(this.state.User_ID).set({
                     Name, Last_name, Nickname, Sex, Phone_number,
                     Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type_ID,
+                    Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
+                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID,
 
                 }).then((docRef) => {
-                    confirmAlert({
-                        title: 'บันทึกสำเร็จ',
-                        message: 'คุณต้องการกลับไปหน้าแรก หรือไม่',
-                        buttons: [
-                            {
-                                label: 'ใช่',
-                                onClick: () => this.props.history.push('/')
-                            },
-                            {
-                                label: 'ไม่ใช่',
-
-                            }
-                        ]
+                    this.props.fetch_user({
+                        User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
+                        Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
+                        District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
+                        Area_ID: parseInt(Area_ID, 10),
+                        Area_PID: parseInt(Area_PID, 10),
+                        Area_DID: parseInt(Area_DID, 10),
+                        Area_SDID: parseInt(Area_SDID, 10)
                     });
+                    this.setState({
+                        profile: true
+                    })
+                    alert_status('add');
                 })
                     .catch((error) => {
-                        this.setState({
-                            statusSave: '3',
-                        });
+                        alert_status('noadd');
                         console.error("Error adding document: ", error);
                     });
 
 
-            } else {
-
-                this.tbUsers.doc(this.state.User_ID).update({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Tumbon_ID, Email, Avatar_URL,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type_ID,
-                }).then((docRef) => {
-                    this.props.history.push('/');
-                })
-                    .catch((error) => {
-                        this.setState({
-                            statusSave: '3',
-                        });
-                        console.error("Error adding document: ", error);
-                    });
 
             }
 
         } else {
-            this.setState({
-                statusSave: '4',
-            });
+            alert_status('notupload');
         }
 
     }
@@ -253,28 +263,19 @@ export class Register extends Component {
         //User Profile
         const { Name, Last_name, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday, Position, Department,
-            Province_ID, District_ID, Tumbon_ID,
-            Role, User_type_ID,
+            Province_ID, District_ID, Sub_district_ID,
+            Role, User_type,
         } = this.state;
+
         //List data
-        const { Provinces, Districts, Tumbons, User_types } = this.state;
+        const { Provinces, Districts, Sub_districts } = this.state;
         const style = {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center'
         }
-        let showStatus;
 
-        if (this.state.statusSave === '2') {
-            showStatus = <h6 className="text-success">บันทึกสำเร็จ</h6>;
-        } else if (this.state.statusSave === '3') {
-            showStatus = <h6 className="text-danger">บันทึกไม่สำเร็จ</h6>;
-        } else if (this.state.statusSave === '4') {
-            showStatus = <h6 className="text-danger">บันทึกไม่สำเร็จ โปรดอัพรูปภาพ</h6>;
-        } else {
-            showStatus = "";
-        }
 
         return (
             <div>
@@ -296,7 +297,7 @@ export class Register extends Component {
                                     <CustomUploadButton
                                         accept="image/*"
                                         filename={"user" + this.state.User_ID}
-                                        storageRef={firebase.storage().ref('Avatar')}
+                                        storageRef={Firebase.storage().ref('Avatar')}
                                         onUploadStart={this.handleUploadStart}
                                         onUploadError={this.handleUploadError}
                                         onUploadSuccess={this.handleUploadSuccess}
@@ -327,7 +328,7 @@ export class Register extends Component {
                                     <Col>
 
                                         <div>
-                                        <input type="radio" name="Sex" value="ชาย" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'ชาย'} />ชาย
+                                            <input type="radio" name="Sex" value="ชาย" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'ชาย'} />ชาย
                                         <input type="radio" name="Sex" value="หญิง" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'หญิง'} />หญิง
                                         <input type="radio" name="Sex" value="อื่นๆ" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'อื่นๆ'} />อื่นๆ
                                         </div>
@@ -343,8 +344,10 @@ export class Register extends Component {
 
                                         <div className="form-control">
                                             <DatePicker
+                                                locale="th"
                                                 dateFormat="dd/MM/yyyy"
                                                 selected={Birthday}
+                                                maxDate={new Date()}
                                                 onChange={this.selectDate}
                                                 placeholderText="วัน/เดือน/ปี(ค.ศ.)"
 
@@ -354,11 +357,12 @@ export class Register extends Component {
                                     </Col>
                                     <Form.Label column sm="2">ประเภทผู้ใช้: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
-                                        <select className="form-control" id="User_type_ID" name="User_type_ID" value={User_type_ID} onChange={this.onChange} required>
+                                        <select className="form-control" id="User_type" name="User_type" value={User_type} onChange={this.onChange} required>
                                             <option value=""></option>
-                                            {User_types.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.Name}</option>
-                                            )}
+                                            <option value="ผู้บริหาร">ผู้บริหาร</option>
+                                            <option value="พี่เลี้ยง">พี่เลี้ยง</option>
+                                            <option value="แกนนำเด็ก">แกนนำเด็ก</option>
+
                                         </select>
                                     </Col>
                                 </Form.Group>
@@ -369,7 +373,7 @@ export class Register extends Component {
                                         <input type="tel" pattern="0[0-9]{1}[0-9]{8}" maxLength="10" size="10" placeholder="0XXXXXXXXX"
                                             className="form-control" name="Phone_number" value={Phone_number} onChange={this.onChange} required />
                                     </Col>
-                                    <Form.Label column sm="2">Facebook: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Form.Label column sm="2">Facebook: </Form.Label>
                                     <Col>
                                         <input type="text" className="form-control" name="Facebook" value={Facebook} onChange={this.onChange} />
                                     </Col>
@@ -377,7 +381,7 @@ export class Register extends Component {
 
 
                                 <Form.Group as={Row}>
-                                    <Form.Label column sm="2">LIne ID: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Form.Label column sm="2">LIne ID: </Form.Label>
                                     <Col>
                                         <input type="text" className="form-control" name="Line_ID" value={Line_ID} onChange={this.onChange} />
                                     </Col>
@@ -401,7 +405,7 @@ export class Register extends Component {
                                         <select className="form-control" id="Province_ID" name="Province_ID" value={Province_ID} onChange={this.onSelectProvince} required>
                                             <option key='0' value=""></option>
                                             {Provinces.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.Name}</option>
+                                                <option key={i + 1} value={data.Key}>{data.value}</option>
                                             )}
 
                                         </select>
@@ -413,17 +417,17 @@ export class Register extends Component {
                                         <select className="form-control" id="District_ID" name="District_ID" value={District_ID} onChange={this.onSelectDistrict} required>
                                             <option key='0' value=""></option>
                                             {Districts.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.Name}</option>
+                                                <option key={i + 1} value={data.Key}>{data.value}</option>
                                             )}
 
                                         </select>
                                     </Col>
                                     <Form.Label column sm="2">ตำบล: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
-                                        <select className="form-control" id="Tumbon_ID" name="Tumbon_ID" value={Tumbon_ID} onChange={this.onChange} required>
+                                        <select className="form-control" id="Sub_district_ID" name="Sub_district_ID" value={Sub_district_ID} onChange={this.onChange} required>
                                             <option key='0' value=""></option>
-                                            {Tumbons.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.Name}</option>
+                                            {Sub_districts.map((data, i) =>
+                                                <option key={i + 1} value={data.Key}>{data.value}</option>
 
                                             )}
 
@@ -431,7 +435,8 @@ export class Register extends Component {
                                     </Col>
                                 </Form.Group>
 
-                                {this.state.roleAccess === "admin" ?
+
+                                {this.state.Role === "admin" ?
                                     <Form.Group as={Row}>
 
                                         <Form.Label column sm="2">บทบาท: <label style={{ color: "red" }}>*</label></Form.Label>
@@ -454,7 +459,7 @@ export class Register extends Component {
                         <center><br />
                             <button type="submit" className="btn btn-success">บันทึก</button>
                             <br></br><br></br>
-                            {showStatus}</center>
+                        </center>
                     </form>
 
                 </div>
@@ -463,4 +468,15 @@ export class Register extends Component {
     }
 }
 
-export default Register
+
+//Used to add reducer's into the props
+const mapStateToProps = state => ({
+    fetchReducer: state.fetchReducer
+});
+
+//used to action (dispatch) in to props
+const mapDispatchToProps = {
+    fetch_user
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Register);
