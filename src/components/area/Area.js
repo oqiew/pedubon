@@ -12,6 +12,9 @@ import { Link } from "react-router-dom";
 import XLSX from 'xlsx';
 import { make_cols } from '../excel/MakeColumns';
 import SheetJSFT from '../excel/Excel_type';
+import { Modal, Button } from 'antd';
+import { database } from "firebase";
+// ทำเพิ่มหมู่บ้าน เข้ากับ อปท
 export class Area extends Component {
   constructor(props) {
     super(props);
@@ -20,14 +23,17 @@ export class Area extends Component {
       c1: [],
       c2: [],
       c3: [],
+      addAllcomponent: '',
       list_area: [],
       add_status: false,
       Provinces: [],
       Districts: [],
+      SubDistricts: [],
       // data Area
       Area_name: '',
       AProvince_ID: 0,
       ADistrict_ID: '',
+      ASubDistrict_ID: '',
       Dominance: '',
       Area_type: '',
       LGO_ID: '',
@@ -35,6 +41,14 @@ export class Area extends Component {
       Projects: [],
       file: [],
       iarea: [],
+
+      // model add ban
+      visible: false,
+      selectLocalData: {},
+      list_bans: '',
+      bans: [false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,],
 
     };
   }
@@ -81,6 +95,26 @@ export class Area extends Component {
     }
 
   }
+  listSubDistrict = (pid, did) => {
+    const SubDistricts = [];
+
+    data_provinces[pid][1][did][2][0].forEach((doc, i) => {
+      SubDistricts.push({
+        Key: i,
+        value: doc[0]
+      });
+    });
+    if (this.state.User_ID !== "") {
+      this.setState({
+        SubDistricts
+      });
+    } else {
+      this.setState({
+        SubDistricts,
+        Area_SDID: ""
+      });
+    }
+  };
 
 
   onSelectProvince = (e) => {
@@ -96,8 +130,22 @@ export class Area extends Component {
       this.listDistrict(this.state.AProvince_ID);
     }
   }
+  onSelectDistrict = e => {
+    const state = this.state;
+    state[e.target.name] = e.target.value;
+    this.setState(state);
+    if (this.state.ADistrict_ID === "") {
+      this.setState({
+        SubDistricts: [],
+        ASubDistrict_ID: "",
+      });
+    } else {
+      this.listSubDistrict(this.state.AProvince_ID, this.state.ADistrict_ID);
+    }
+  };
   edit(data, id) {
     this.listDistrict(data.AProvince_ID);
+    this.listSubDistrict(data.AProvince_ID, data.ADistrict_ID);
     this.setState({ ...data, LGO_ID: id })
   }
   onChange = (e) => {
@@ -105,6 +153,122 @@ export class Area extends Component {
     state[e.target.name] = e.target.value;
     this.setState(state);
   }
+  handleCancel = e => {
+    this.setState({
+      visible: false,
+      addAllcomponent: '',
+      selectLocalData: {},
+      list_bans: '',
+      bans: [false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false,],
+    });
+  };
+  handleOk = e => {
+    var temp_bans = [];
+    //ข้อมูลพื้นที่ ที่กดเปิด
+    const { selectLocalData } = this.state;
+    if (selectLocalData.ID !== undefined || selectLocalData.ID !== '') {
+      Firebase.firestore().collection('AREAS').doc(selectLocalData.ID).update({
+        bans: this.state.bans
+      }).then((r) => {
+        this.setState({
+          visible: false,
+          addAllcomponent: '',
+          selectLocalData: {},
+          list_bans: '',
+          bans: [false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false,],
+        });
+        console.log("update ban sucess");
+      }).catch((error) => {
+        console.log("error update ban");
+      })
+    }
+
+  };
+
+  Tempbans = (index) => {
+    var tempstate = this.state.bans;
+    tempstate[index] = !tempstate[index];
+
+    this.setState({
+      bans: tempstate,
+      list_bans: <>
+        {data_provinces[this.state.selectLocalData.AProvince_ID][1][this.state.selectLocalData.ADistrict_ID][2][0][this.state.selectLocalData.ASubDistrict_ID][1][0].map((element, i) =>
+          <Row>
+            <Col>หมู่ที่ {element[2]}</Col>
+            <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
+            <Col>
+              <Button onClick={this.Tempbans.bind(this, i)} style={tempstate[i] ? { color: 'red' } : { color: 'green' }}>{(tempstate[i]) ? "ลบ" : "เพิ่ม"}</Button>
+            </Col>
+          </Row>
+
+        )}
+      </>
+    })
+    console.log(this.state.bans)
+  }
+  addBansAll(size) {
+    console.log(size)
+    var tempstate = this.state.bans;
+    for (let index = 0; index < size; index++) {
+      tempstate[index] = true;
+
+    }
+    console.log(tempstate)
+    this.setState({
+      bans: tempstate,
+      list_bans: <>
+        {data_provinces[this.state.selectLocalData.AProvince_ID][1][this.state.selectLocalData.ADistrict_ID][2][0][this.state.selectLocalData.ASubDistrict_ID][1][0].map((element, i) =>
+          <Row>
+            <Col>หมู่ที่ {element[2]}</Col>
+            <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
+            <Col>
+              <Button onClick={this.Tempbans.bind(this, i)} style={tempstate[i] ? { color: 'red' } : { color: 'green' }}>{(tempstate[i]) ? "ลบ" : "เพิ่ม"}</Button>
+            </Col>
+          </Row>
+
+        )}
+      </>
+    })
+  }
+  handleOpen = (data) => {
+    // console.log(data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0])
+    // console.log(data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0], data.ASubDistrict_ID)
+    if (data.ASubDistrict_ID !== "" && data.ASubDistrict_ID !== undefined) {
+      var tb = this.state.bans;
+
+      if (data.bans !== "" && data.bans !== undefined) {
+
+        tb = data.bans;
+
+      }
+
+      this.setState({
+        visible: true,
+        selectLocalData: data,
+        bans: tb,
+        addAllcomponent: <Button onClick={this.addBansAll.bind(this, data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0].length)}>เพิ่มทั้งหมด</Button>,
+        list_bans: <>
+          {data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0].map((element, i) =>
+            <Row>
+              <Col>หมู่ที่ {element[2]}</Col>
+              <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
+              <Col>
+
+                <Button onClick={this.Tempbans.bind(this, i)} style={tb[i] ? { color: 'red' } : { color: 'green' }}>{tb[i] ? "ลบ" : "เพิ่ม"}</Button>
+              </Col>
+            </Row>
+
+          )}
+        </>
+      })
+    }
+  };
+
   getModuleC = querySnapshot => {
     const c1 = [];
     const c2 = [];
@@ -114,14 +278,29 @@ export class Area extends Component {
       const Province = data_provinces[doc.data().AProvince_ID][0];
       const District = data_provinces[doc.data().AProvince_ID][1][doc.data().ADistrict_ID][0];
 
+      var stb = 0;
+      if (doc.data().bans !== undefined) {
+        doc.data().bans.forEach((d) => {
+          if (d) {
+            stb++;
+          }
+        })
+      }
 
       list_area.push({
         ID: doc.id,
         Province,
         District,
         ...doc.data(),
+        nban: stb,
         edit: (
           <div>
+            <button
+              className="btn btn-pimary"
+              onClick={this.handleOpen.bind(this, { ID: doc.id, Province, District, ...doc.data() })}
+            >
+              เปิด
+          </button>
             <button
               className="btn btn-success"
               onClick={this.edit.bind(this, doc.data(), doc.id)}
@@ -138,12 +317,14 @@ export class Area extends Component {
 
         )
       })
+
       if (doc.data().Area_type === 'พื้นที่พัฒนา') {
         c1.push({
           ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
           edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
 
         });
       } else if (doc.data().Area_type === 'พื้นที่นำร่อง') {
@@ -152,6 +333,7 @@ export class Area extends Component {
           edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
         });
       } else if (doc.data().Area_type === 'พื้นที่ต้นแบบ') {
         c3.push({
@@ -159,9 +341,11 @@ export class Area extends Component {
           edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
           course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
         });
       }
     });
+
     this.setState({
       c1, c2, c3, list_area
     })
@@ -306,9 +490,9 @@ export class Area extends Component {
   }
   onSubmit = (e) => {
     e.preventDefault();
-    const { AProvince_ID, ADistrict_ID, Dominance, Area_type, Name, User_ID, LGO_ID, Area_name, } = this.state;
+    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Dominance, Area_type, Name, User_ID, LGO_ID, Area_name, } = this.state;
     Firebase.firestore().collection('AREAS').doc(LGO_ID).set({
-      AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: GetCurrentDate("/"),
+      AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: GetCurrentDate("/"), ASubDistrict_ID,
       Informer_name: Name, Informer_ID: User_ID, Area_name, Address: '', Zip_code: ''
     }).then((doc) => {
       console.log('insert success');
@@ -339,8 +523,9 @@ export class Area extends Component {
   }
 
   render() {
-    const { c1, c2, c3, Role } = this.state;
-    const { AProvince_ID, ADistrict_ID, Provinces, Districts, Dominance, Area_type, Area_name, LGO_ID } = this.state;
+    const { c1, c2, c3, Role, selectLocalData } = this.state;
+    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Provinces, Districts, SubDistricts,
+      Dominance, Area_type, Area_name, LGO_ID } = this.state;
     const data = {
       columns: [
         {
@@ -359,7 +544,7 @@ export class Area extends Component {
           sort: "asc"
         },
         {
-          label: "ประเภทการปกครอง",
+          label: "การปกครอง",
           field: "Dominance",
           sort: "asc"
         },
@@ -371,6 +556,11 @@ export class Area extends Component {
         {
           label: "ประเภทพื้นที่",
           field: "Area_type",
+          sort: "asc"
+        },
+        {
+          label: "หมู่บ้าน",
+          field: "nban",
           sort: "asc"
         },
         {
@@ -413,6 +603,11 @@ export class Area extends Component {
           field: "course",
           sort: "asc"
         },
+        {
+          label: "ข้อมูลพื้นที่",
+          field: "edit3",
+          sort: "asc"
+        },
       ],
       rows: this.state.c1
     };
@@ -448,6 +643,11 @@ export class Area extends Component {
           field: "course",
           sort: "asc"
         },
+        {
+          label: "ข้อมูลพื้นที่",
+          field: "edit3",
+          sort: "asc"
+        },
       ],
       rows: this.state.c2
     };
@@ -481,6 +681,11 @@ export class Area extends Component {
         {
           label: "หลักสูตร",
           field: "course",
+          sort: "asc"
+        },
+        {
+          label: "ข้อมูลพื้นที่",
+          field: "edit3",
           sort: "asc"
         },
       ],
@@ -552,6 +757,18 @@ export class Area extends Component {
                      </button> */}
             </Row>
             <hr></hr>
+            <Modal
+              title={selectLocalData.Dominance + selectLocalData.Area_name}
+              visible={this.state.visible}
+              onOk={this.handleOk}
+              onCancel={this.handleCancel}
+            >
+              <div>
+                {this.state.addAllcomponent}
+                {this.state.list_bans}
+              </div>
+
+            </Modal>
             <form onSubmit={this.onSubmit} >
               <Form.Group as={Row}>
                 <Form.Label column sm="2" style={{ padding: 5 }}>จังหวัด: </Form.Label>
@@ -566,13 +783,29 @@ export class Area extends Component {
                 </Col>
                 <Form.Label column sm="2" style={{ padding: 5 }}>อำเภอ: </Form.Label>
                 <Col>
-                  <select className="form-control" id="ADistrict_ID" name="ADistrict_ID" value={ADistrict_ID} onChange={this.onChange} required>
+                  <select className="form-control" id="ADistrict_ID" name="ADistrict_ID" value={ADistrict_ID} onChange={this.onSelectDistrict} required>
                     <option key='0' value=""></option>
                     {Districts.map((data, i) =>
                       <option key={i + 1} value={data.Key}>{data.value}</option>
                     )}
 
                   </select>
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Form.Label column sm="2" style={{ padding: 5 }}>ตำบล: </Form.Label>
+                <Col>
+                  <select className="form-control" id="ASubDistrict_ID" name="ASubDistrict_ID" value={ASubDistrict_ID} onChange={this.onChange} required>
+                    <option key='0' value=""></option>
+                    {SubDistricts.map((data, i) =>
+                      <option key={i + 1} value={data.Key}>{data.value}</option>
+                    )}
+
+                  </select>
+                </Col>
+                <Form.Label column sm="2" style={{ padding: 5 }}> </Form.Label>
+                <Col>
+
                 </Col>
               </Form.Group>
               <Form.Group as={Row}>
@@ -613,6 +846,7 @@ export class Area extends Component {
                 <button type="submit" className="btn btn-success">บันทึก</button>
                 <br></br>
               </center>
+
             </form>
             <hr></hr>
             <Row>

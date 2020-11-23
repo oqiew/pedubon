@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Form, Col, Row } from 'react-bootstrap';
 import Firebase from '../../Firebase';
 import data from './data.json';
+import { confirmAlert } from 'react-confirm-alert'; // Import
 export class Add_cdata extends Component {
     constructor(props) {
         super(props);
@@ -18,57 +19,59 @@ export class Add_cdata extends Component {
             y24: '',
             y25: '',
             Key: '',
-            upadate: false
+            year: '',
+
         }
+
 
     }
     componentDidMount() {
-        Firebase.firestore().collection('CDATAS')
-            .where('title_id', '==', this.props.title_id)
-            .where('num_id', '==', this.props.num_id)
-            .onSnapshot(this.list_cdata);
-    }
-    list_cdata = (querySnapshot) => {
-        let ly15 = 0;
-        let y16 = 0;
-        let y17 = 0;
-        let y18 = 0;
-        let y19 = 0;
-        let y20 = 0;
-        let y21 = 0;
-        let y22 = 0;
-        let y23 = 0;
-        let y24 = 0;
-        let y25 = 0;
-        let Key = '';
-        if (querySnapshot.size !== 0) {
-            querySnapshot.forEach(doc => {
-                Key = doc.id;
-                ly15 = doc.data().ly15;
-                y16 = doc.data().y16;
-                y17 = doc.data().y17;
-                y18 = doc.data().y18;
-                y19 = doc.data().y19;
-                y20 = doc.data().y20;
-                y21 = doc.data().y21;
-                y22 = doc.data().y22;
-                y23 = doc.data().y23;
-                y24 = doc.data().y24;
-                y25 = doc.data().y25;
-            });
-            this.setState({
-                ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, update: true, Key
+        if (this.props.status === 'edit' && (this.props.id !== undefined && this.props.id !== '')) {
+            Firebase.firestore().collection('CDATAS').doc(this.props.id).get().then((doc) => {
+                this.setState({
+                    ...doc.data(),
+                    Key: doc.id
+                })
             })
         }
 
     }
+    deleteData(id) {
+        confirmAlert({
+            title: "ลบ",
+            message: "คุณต้องการลบข้อมูลใช่หรือไม่",
+            buttons: [
+                {
+                    label: "ใช่",
+                    onClick: (() => {
+                        Firebase.firestore().collection("CDATAS").doc(id).delete().then(() => {
+                            this.props.back()
+                        }).catch(() => {
+                            confirmAlert({
+                                title: "ลบไม่สำเร็จ",
+                                buttons: [
+                                    {
+                                        label: "ตกลง"
+                                    }
+                                ]
+                            });
+                        })
+                    })
+                },
+                {
+                    label: "ไม่ใช่"
+                },
+            ]
+        });
+    }
     onSubmit = (e) => {
         e.preventDefault();
-        const { ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, Key, update } = this.state;
-        if (update) {
+        const { ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, Key, year } = this.state;
+        const temp_year = parseInt(year, 10);
+        if (this.props.status === 'edit') {
             Firebase.firestore().collection('CDATAS').doc(Key).update({
                 ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25,
-                title_id: this.props.title_id,
+                title_id: this.props.title_id, year: temp_year,
                 num_id: this.props.num_id,
             }).then((doc) => {
                 this.props.back();
@@ -78,7 +81,7 @@ export class Add_cdata extends Component {
         } else {
             Firebase.firestore().collection('CDATAS').add({
                 ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25,
-                title_id: this.props.title_id,
+                title_id: this.props.title_id, year: temp_year,
                 num_id: this.props.num_id,
             }).then((doc) => {
                 this.props.back();
@@ -94,11 +97,17 @@ export class Add_cdata extends Component {
         this.setState(state);
     }
     render() {
-        const { ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, } = this.state;
+        const { ly15, y16, y17, y18, y19, y20, y21, y22, y23, y24, y25, year } = this.state;
         return (
             <div>
                 <center><h1>{data[this.props.title_id][this.props.num_id][0]}</h1></center>
                 <form onSubmit={this.onSubmit}>
+                    <Form.Group as={Row}>
+                        <Form.Label column sm="4">ปี พ.ศ.: <label style={{ color: "red" }}>*</label></Form.Label>
+                        <Col>
+                            <input type="number" className="form-control" name="year" value={year} onChange={this.onChange} required />
+                        </Col>
+                    </Form.Group>
                     <Form.Group as={Row}>
                         <Form.Label column sm="4">อายุต่ำกว่า 15 ปี: <label style={{ color: "red" }}>*</label></Form.Label>
                         <Col>
@@ -167,6 +176,7 @@ export class Add_cdata extends Component {
                     </Form.Group>
                     <center>
                         <button type="submit" className="btn btn-success">บันทึก</button>
+                        <button type="button" className="btn btn-danger" onClick={this.deleteData.bind(this, this.props.id)}>ลบ</button>
                         <button type="button" className="btn btn-danger" onClick={() => this.props.back()}>กลับ</button>
 
                     </center>

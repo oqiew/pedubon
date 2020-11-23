@@ -20,7 +20,9 @@ export class Register extends Component {
     constructor(props) {
         super(props);
         this.tbUsers = Firebase.firestore().collection('USERS');
+        console.log(this.props.fetchReducer.user)
         if (!isEmptyValue(this.props.fetchReducer.user.Name)) {
+
             this.state = {
                 ...this.props.fetchReducer.user,
                 Provinces: [],
@@ -28,8 +30,11 @@ export class Register extends Component {
                 Sub_districts: [],
                 //
                 profile: true,
-                Birthday: '',
+                Birthday2: new Date(this.props.fetchReducer.user.Birthday.seconds * 1000),
+
             }
+
+
         } else {
             this.state = {
                 User_ID: this.props.fetchReducer.user.User_ID,
@@ -37,8 +42,9 @@ export class Register extends Component {
                 Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
                 Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
                 Avatar_URL: '',
-                Add_date: '', Area_ID: '', Role: '', Zip_code: '',
-                Area_PID: '', Area_DID: '', Area_SDID: '', User_type: '',
+                Add_date: '', Role: '', Zip_code: '',
+                User_type: '',
+
 
                 // table data
                 Province_ID: '', District_ID: '', Sub_district_ID: '',
@@ -57,10 +63,13 @@ export class Register extends Component {
 
     selectDate = date => {
         this.setState({
-            Birthday: date,
+            Birthday2: date,
+            Birthday: { nanoseconds: 0, seconds: date.getTime() / 1000 },
         });
+        console.log({ nanoseconds: 0, seconds: date.getTime() / 1000 })
     };
     componentDidMount() {
+
         if (isEmptyValue(this.state.Name)) {
             this.listProvinces();
         } else {
@@ -68,12 +77,7 @@ export class Register extends Component {
             this.listProvinces();
             this.listDistrict(Province_ID);
             this.listSub_district(Province_ID, District_ID);
-            if (!isEmptyValue(this.props.fetchReducer.user.Name)) {
-                // console.log(new Date(this.props.fetchReducer.user.Birthday.seconds * 1000))
-                this.setState({
-                    Birthday: new Date(this.props.fetchReducer.user.Birthday.seconds * 1000)
-                })
-            }
+
         }
 
     }
@@ -193,28 +197,34 @@ export class Register extends Component {
 
     onSubmit = (e) => {
         e.preventDefault();
-        const { User_ID, Province, District, Sub_district, User_type, bd,
+        const { User_ID, Province, District, Sub_district, User_type,
             Ban_name, Name, Last_name, Nickname, Sex, Phone_number, Line_ID,
             Facebook, Birthday, Position, Department, Province_ID, District_ID,
             Sub_district_ID, Email, Avatar_URL, Add_date, Role, Area_ID,
-            Area_PID, Area_DID, Area_SDID,
+            Area_PID, Area_DID, Area_SDID, Birthday2,
         } = this.state;
+        var d1 = new Date(Birthday.seconds * 1000);
+        let bd =
+            d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
 
-        if (Avatar_URL) {
+        if (Avatar_URL !== '') {
             if (this.state.profile) {
                 this.tbUsers.doc(this.state.User_ID).update({
                     Name, Last_name, Nickname, Sex, Phone_number,
                     Line_ID, Facebook, Birthday, Position, Department,
                     Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID,
+                    Add_date: GetCurrentDate("/"), Role, User_type, Area_ID, Area_PID, Area_DID, Area_SDID,
                 }).then((docRef) => {
                     this.props.fetch_user({
                         User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
                         Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
                         District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
+                        Area_ID: parseInt(Area_ID, 10),
+                        Area_PID: parseInt(Area_PID, 10),
+                        Area_DID: parseInt(Area_DID, 10),
+                        Area_SDID: parseInt(Area_SDID, 10)
                     });
                     alert_status('update');
-
                 })
                     .catch((error) => {
                         alert_status('noupdate');
@@ -226,20 +236,24 @@ export class Register extends Component {
                     Name, Last_name, Nickname, Sex, Phone_number,
                     Line_ID, Facebook, Birthday, Position, Department,
                     Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID,
+                    Add_date: GetCurrentDate("/"), Role, User_type, Area_ID: '', Area_PID: '', Area_DID: '', Area_SDID: '',
 
                 }).then((docRef) => {
+                    const Province2 = data_provinces[Province_ID][0];
+                    const District2 = data_provinces[Province_ID][1][District_ID][0];
+
+                    const Sub_district2 = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
                     this.props.fetch_user({
-                        User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
+                        User_ID, Province: Province2, District: District2, Sub_district: Sub_district2,
+                        User_type, bd, Ban_name, Name, Last_name,
                         Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
-                        District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
-                        Area_ID: parseInt(Area_ID, 10),
-                        Area_PID: parseInt(Area_PID, 10),
-                        Area_DID: parseInt(Area_DID, 10),
-                        Area_SDID: parseInt(Area_SDID, 10)
+                        District_ID, Sub_district_ID, Email,
+                        Avatar_URL, Add_date, Role,
+                        Area_ID: '', Area_PID: '', Area_DID: '', Area_SDID: '',
+
                     });
                     this.setState({
-                        profile: true
+                        profile: true,
                     })
                     alert_status('add');
                 })
@@ -262,11 +276,10 @@ export class Register extends Component {
         const { Email, } = this.state;
         //User Profile
         const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position, Department,
+            Line_ID, Facebook, Birthday2, Position, Department,
             Province_ID, District_ID, Sub_district_ID,
-            Role, User_type,
+            Role, User_type, Expertise
         } = this.state;
-
         //List data
         const { Provinces, Districts, Sub_districts } = this.state;
         const style = {
@@ -275,6 +288,7 @@ export class Register extends Component {
             alignItems: 'center',
             justifyContent: 'center'
         }
+        // console.log(new Date(this.props.fetchReducer.user.Birthday.seconds * 1000))
 
 
         return (
@@ -346,11 +360,14 @@ export class Register extends Component {
                                             <DatePicker
                                                 locale="th"
                                                 dateFormat="dd/MM/yyyy"
-                                                selected={Birthday}
+                                                selected={Birthday2}
                                                 maxDate={new Date()}
                                                 onChange={this.selectDate}
                                                 placeholderText="วัน/เดือน/ปี(ค.ศ.)"
-
+                                                peekNextMonth
+                                                showMonthDropdown
+                                                showYearDropdown
+                                                dropdownMode="select"
                                             />
                                         </div>
 
@@ -362,7 +379,6 @@ export class Register extends Component {
                                             <option value="ผู้บริหาร">ผู้บริหาร</option>
                                             <option value="พี่เลี้ยง">พี่เลี้ยง</option>
                                             <option value="แกนนำเด็ก">แกนนำเด็ก</option>
-
                                         </select>
                                     </Col>
                                 </Form.Group>
@@ -436,7 +452,7 @@ export class Register extends Component {
                                 </Form.Group>
 
 
-                                {this.state.Role === "admin" ?
+                                {this.state.Role === "admin" &&
                                     <Form.Group as={Row}>
 
                                         <Form.Label column sm="2">บทบาท: <label style={{ color: "red" }}>*</label></Form.Label>
@@ -451,7 +467,7 @@ export class Register extends Component {
                                         </Col>
 
 
-                                    </Form.Group> : ""}
+                                    </Form.Group>}
                             </Col>
 
 

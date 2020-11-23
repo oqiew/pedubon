@@ -19,6 +19,7 @@ export class Register extends Component {
     constructor(props) {
         super(props);
 
+        console.log(this.props.fetchReducer.user)
         this.state = {
             ...this.props.fetchReducer.user,
         }
@@ -27,8 +28,8 @@ export class Register extends Component {
     render() {
 
         //User Profile
-        const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, bd, Position, Department,
+        const { Email, Name, Last_name, Nickname, Sex, Phone_number,
+            Line_ID, Facebook, bd, Position, Department, Role,
             Avatar_URL,
 
         } = this.state;
@@ -43,6 +44,7 @@ export class Register extends Component {
                             {Avatar_URL && <img className="avatar" alt="avatar" style={{ marginRight: 30 }} src={Avatar_URL} />}
                         </div>
                         <div style={{ flexDirection: 'column' }}>
+                            <h4 style={{ padding: 5 }}>{Email} : {Role === 'admin' && <b style={{ color: 'red' }}>{Role}</b>}</h4>
                             <h4 style={{ padding: 5 }}><strong>ชื่อ : </strong>{Name} {Last_name}<strong> ชื่อเล่น : </strong>{Nickname}<strong> เพศ : </strong>{Sex}<strong>  วันเกิด : </strong>{bd}</h4>
                             <h4 style={{ padding: 5 }}><strong>ประเภทผู้ใช้ : </strong>{User_type}<strong>  เบอร์โทรศัพท์มือถือ : </strong>{Phone_number}</h4>
                             <h4 style={{ padding: 5 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h4>

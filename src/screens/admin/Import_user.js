@@ -1,27 +1,28 @@
 import React, { Component } from 'react'
-import Topnav from '../components/top/Topnav'
+import Topnav from '../../components/top/Topnav'
 import XLSX from 'xlsx';
-import { make_cols } from '../components/excel/MakeColumns';
-import SheetJSFT from '../components/excel/Excel_type';
-import Firebase from '../Firebase';
-import data_provinces from "../data/provinces.json";
-import { GetCurrentDate, isEmptyValue } from '../components/Methods';
+import { make_cols } from '../../components/excel/MakeColumns';
+import SheetJSFT from '../../components/excel/Excel_type';
+import Firebase from '../../Firebase';
+import data_provinces from "../../data/provinces.json";
+import { GetCurrentDate, isEmptyValue } from '../../components/Methods';
 import { Form, Col, Row } from 'react-bootstrap';
 import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
-import user from '../assets/user.png';
+import user from '../../assets/user.png';
 export class Import_user extends Component {
     constructor(props) {
         super(props);
+        console.log(new Date(1936, 7, 28))
         this.state = {
             file: {},
             list_users: [],
-
             Email: '',
             Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
             Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
             Avatar_URL: '',
             Add_date: '', Area_ID: '', Role: '',
             Area_PID: '', Area_DID: '', Area_SDID: '', User_type: '',
+            Birthday: '',
             Provinces: [],
             Districts: [],
             Sub_districts: [],
@@ -29,12 +30,12 @@ export class Import_user extends Component {
             Province_ID: 0,
             tumbon: '',
             count: 0,
+            massage: '',
         }
     }
     componentDidMount() {
         this.listProvinces();
         this.listDistrict(0);
-        console.log(data_provinces)
     }
     listProvinces = () => {
         const Provinces = [];
@@ -140,7 +141,8 @@ export class Import_user extends Component {
             .ref("Avatar")
             .child(filename)
             .getDownloadURL()
-            .then(url => this.setState({ Avatar_URL: url }));
+            .then(url => this.setState({ Avatar_URL: url, massage: <p style={{ color: 'green' }}>อัพโหลดรูปสำเร็จ</p> }));
+
     };
     handleChange(e) {
         const files = e.target.files;
@@ -174,18 +176,23 @@ export class Import_user extends Component {
                 this.state.data.forEach((element, i) => {
 
                     list_users.push({
-                        Email: element.email, Name: element.name, Last_name: element.lname, Nickname: "", Sex: element.Sex, Phone_number: "0" + element.phone,
-                        Line_ID: element.lineID || '', Facebook: element.facebook || '', Position: element.userPosition, Department: element.department,
+                        Email: element.Email, Name: element.Name, Last_name: element.Last_name,
+                        Nickname: element.Nickname, Sex: element.Sex, Phone_number: "0" + element.Phone_number,
+                        Line_ID: element.lineID || '', Facebook: element.Facebook || '',
+                        Position: element.Position, Department: element.Department,
                         // Province_ID:element., District_ID:element., Sub_district_ID:element., 
-                        Avatar_URL: element.avatarURL,
-                        Birthday: new Date(),
+                        Avatar_URL: '',
+                        Birthday: element.Birthday,
                         Add_date: GetCurrentDate('/'),
                         Area_ID: '',
                         Role: '',
-                        User_type: element.typeUser, Area_PID: '', Area_DID: '', Area_SDID: '',
-                        district: element.district,
+                        User_type: element.User_type,
+                        Area_PID: '',
+                        Area_DID: '',
+                        Area_SDID: '',
+                        district: element.District,
                         tumbon: element.tumbon,
-                        Avatar_name: element.nameAvatar,
+                        Avatar_name: '',
 
                     })
                 });
@@ -211,32 +218,47 @@ export class Import_user extends Component {
     onSubmit = (e) => {
         e.preventDefault();
         const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Position, Department, Password,
+            Line_ID, Facebook, Position, Department, Password, Birthday,
             Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
             Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID
         } = this.state;
 
-        console.log(this.state)
-        if (!isEmptyValue(this.state.User_ID)) {
-            Firebase.firestore().collection('USERS').doc(this.state.User_ID).set({
-                Birthday: new Date(),
-                Name, Last_name, Nickname, Sex, Phone_number,
-                Line_ID, Facebook, Position, Department,
-                Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                Add_date: GetCurrentDate("/"), Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID,
-            }).then((d) => {
+        // if (Avatar_URL !== '' || Avatar_URL !== undefined) {
 
-                Firebase.auth()
-                    .signOut()
-                    .then(() => {
-                        this.setState({
-                            User_ID: ''
-                        })
+        if (Sex != '') {
+            if (!isEmptyValue(this.state.User_ID)) {
+                // if (true) {
+                // var temp_list_avatar_url = Avatar_URL.split(this.state.User_ID
+                // );
+                // var temp_avatar_url = temp_list_avatar_url[0] + this.state.User_ID
+                //     + "_200x200" + temp_list_avatar_url[1];
+                Firebase.firestore().collection('USERS').add({
+                    Birthday,
+                    Name, Last_name, Nickname, Sex, Phone_number,
+                    Line_ID, Facebook, Position, Department,
+                    Province_ID, District_ID, Sub_district_ID, Email,
+                    // Avatar_URL: temp_avatar_url,
+                    Add_date: GetCurrentDate("/"), Area_ID, Role,
+                    User_type, Area_PID, Area_DID, Area_SDID,
+                }).then((d) => {
 
-                    }
-                    );
-            }).catch(error => {
-                console.log('error', error)
+                    Firebase.auth()
+                        .signOut()
+                        .then(() => {
+                            this.setState({
+                                User_ID: '',
+                                massage: <p style={{ color: 'green' }}>สำเร็จ</p>
+                            })
+                        }
+                        );
+                }).catch(error => {
+                    console.log('error', error)
+                })
+            }
+
+        } else {
+            this.setState({
+                massage: <p style={{ color: 'red' }}>ข้อมูลไม่ครบ</p>
             })
         }
     }
@@ -246,7 +268,8 @@ export class Import_user extends Component {
         Firebase.auth().createUserWithEmailAndPassword(Email, '12345678')
             .then(doc => {
                 this.setState({
-                    User_ID: doc.user.uid
+                    User_ID: doc.user.uid,
+                    massage: <p style={{ color: 'green' }}>เข้าสู่ระบบ{doc.user.uid} </p>
                 })
             }).catch(error => {
                 console.log('error', error)
@@ -272,13 +295,12 @@ export class Import_user extends Component {
                 district: list_users[num].district,
                 tumbon: list_users[num].tumbon,
                 // District_ID: list_users[num].Name,
-                district: list_users[num].district,
+                // district: list_users[num].district,
                 User_type: list_users[num].User_type,
-                Avatar_URL: list_users[num].Avatar_URL,
-                Avatar_name: list_users[num].Avatar_name,
+                Avatar_URL: '',
+                Avatar_name: '',
                 count: num + 1,
-
-
+                massage: ''
             })
         }
     }
@@ -317,7 +339,7 @@ export class Import_user extends Component {
                         <h3>{Email}</h3>
                         <hr></hr>
                         <Row>
-                            <Col>
+                            {/* <Col>
                                 <div style={style}>
                                     <label >เลือกรูปโปรไฟล์: <label style={{ color: "red" }}>*</label></label>
 
@@ -339,8 +361,9 @@ export class Import_user extends Component {
                                     >
                                         เลือกไฟล์
                     </CustomUploadButton>
+                                    {this.state.massage}
                                 </div>
-                            </Col>
+                            </Col> */}
                             <Col sm={9}>
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="2">ชื่อ: <label style={{ color: "red" }}>*</label></Form.Label>
@@ -353,19 +376,28 @@ export class Import_user extends Component {
                                     </Col>
                                 </Form.Group>
                                 <Form.Group as={Row}>
+                                    <Form.Label column sm="2">ชื่อเล่น: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Nickname" value={Nickname} onChange={this.onChange} required />
+                                    </Col>
                                     <Form.Label column sm="2">เพศ: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
 
                                         <div>
-                                            <input type="radio" name="Sex" value="ชาย" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'ชาย'} />ชาย
+                                            <input type="radio" name="Sex" value="ชาย" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'ชาย'} required />ชาย
                                         <input type="radio" name="Sex" value="หญิง" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'หญิง'} />หญิง
                                         <input type="radio" name="Sex" value="อื่นๆ" style={{ margin: 5 }} onChange={this.onChange} checked={Sex === 'อื่นๆ'} />อื่นๆ
                                         </div>
-
-
-
                                     </Col>
-
+                                </Form.Group>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="2">วันเกิด: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Birthday" value={Birthday} onChange={this.onChange} required />
+                                    </Col>
+                                    <Form.Label column sm="2"></Form.Label>
+                                    <Col>
+                                    </Col>
                                 </Form.Group>
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="2">ประเภทผู้ใช้: <label style={{ color: "red" }}>*</label></Form.Label>
@@ -441,9 +473,7 @@ export class Import_user extends Component {
                                             <option key='0' value=""></option>
                                             {Sub_districts.map((data, i) =>
                                                 <option key={i + 1} value={data.Key}>{data.value}</option>
-
                                             )}
-
                                         </select>
                                     </Col>
                                 </Form.Group>
@@ -470,6 +500,7 @@ export class Import_user extends Component {
 
                         </Row>
                         <center><br />
+                            {this.state.massage}
                             <button type="submit" className="btn btn-success">บันทึก</button>
                             <br></br><br></br>
                         </center>

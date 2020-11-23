@@ -271,7 +271,7 @@ export class Orgc_manage extends Component {
                             </Col>
                         </Form.Group>
                         <Form.Group as={Row}>
-                            <Form.Label column sm="4">เว็บไซต์: <label style={{ color: "red" }}>*</label></Form.Label>
+                            <Form.Label column sm="4">เว็บไซต์: </Form.Label>
                             <Col>
                                 <input type="text" className="form-control" name="O_web_url" value={O_web_url} onChange={this.onChange} />
                             </Col>
@@ -306,4 +306,4 @@ const mapDispatchToProps = {
 };
 export default
     connect(mapStateToProps, mapDispatchToProps)
-        ((GoogleApiWrapper({ apiKey: ('AIzaSyAz1FvLaAJGDrvPvRPbS_EITU30dNyd-eA'), language: 'th' }))(Orgc_manage));
+        ((GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Orgc_manage));

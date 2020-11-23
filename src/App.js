@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-
+import 'antd/dist/antd.css';
 // page
 import Home from "./components/Home";
 //data
@@ -49,13 +49,22 @@ import Course from "./components/area/Course";
 import Course_manage from "./components/area/Course_manage";
 import Projects from "./components/area/Projects";
 import Orgcs from "./components/org/Orgcs";
+import Data_area from "./components/area/Data_area";
+
+
 
 
 // admin
-import Import_user from "./ba/Import_user";
+import Import_user from "./screens/admin/Import_user";
 
 // ประเด็นข้อมูล
 import Cdata_manage from "./components/cdata/Cdata_manage";
+import DocsManage from "./screens/pdfview/DocsManage";
+import Checker from "./screens/pdfview/Checker";
+import AdminCheck from "./screens/pdfview/AdminCheck";
+// coach
+import Coach from "./screens/coach/Coach";
+
 
 
 
@@ -108,6 +117,13 @@ export class App extends Component {
         <Route path="/course_manage/:id" component={Course_manage}></Route>
         <Route path="/Projects" component={Projects}></Route>
         <Route path="/cdata_manage" component={Cdata_manage}></Route>
+        <Route path="/docsManage" component={DocsManage}></Route>
+        <Route path="/checker/:email" component={Checker}></Route>
+        <Route path="/adminCheck" component={AdminCheck}></Route>
+        <Route path="/data_area/:area_id" component={Data_area}></Route>
+
+        {/* coach */}
+        <Route path="/coach" component={Coach}></Route>
         {/* </Switch> */}
       </Router>
     );

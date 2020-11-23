@@ -82,6 +82,18 @@ class Topnav extends Component {
               <Nav.Link href="/cdata_manage" className="white-text">
                 สุขภาวะ
                 </Nav.Link>
+              <Nav.Link href="/coach" className="white-text">
+                <b>coach</b>
+              </Nav.Link>
+              {!isEmptyValue(Role) && Role === 'admin' ?
+                <Nav.Link href="/adminCheck" className="white-text">
+                  ตรวจสอบเอกสาร
+                </Nav.Link>
+                : <Nav.Link href="/docsManage" className="white-text">
+                  ตรวจสอบเอกสาร
+</Nav.Link>
+              }
+
               {/* <Nav.Link href="/map_all" className="white-text">
                   แผนที่
                 </Nav.Link> */}
@@ -114,22 +126,6 @@ class Topnav extends Component {
               <MDBNavItem>
                 <MDBDropdown>
                   <MDBDropdownToggle nav caret>
-                    {isEmptyValue(Avatar_URL) ?
-                      <img
-                        className="avatar"
-                        alt="avatar"
-                        style={{ width: 23, height: 23 }}
-                        src={Avatar_user}
-                      ></img>
-                      :
-                      <img
-                        className="avatar"
-                        alt="avatar"
-                        style={{ width: 23, height: 23 }}
-                        src={Avatar_URL}
-                      ></img>
-                    }
-
                   </MDBDropdownToggle>
                   <MDBDropdownMenu className="dropdown-default">
                     <NavDropdown.Item href="/profile">

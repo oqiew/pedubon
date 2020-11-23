@@ -1,6 +1,8 @@
+import React, { Component } from 'react'
+import Topnav from "../top/Topnav";
+
 import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
 import { MDBDataTable } from 'mdbreact';
-import React, { Component } from 'react';
 import { Col, Container, Form, Row } from 'react-bootstrap';
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -19,24 +21,22 @@ import data_provinces from '../../data/provinces.json';
 import Firebase from "../../Firebase";
 import { GetCurrentDate, isEmptyValue } from '../Methods';
 import Geolocation from '../seven_tools/Geolocation';
-import Topnav from '../top/Topnav';
-import TabST from './Tab_seven_tools';
+
 
 import { connect } from 'react-redux';
 import { fetch_user } from '../../actions';
-
-export class Main_map_admin extends Component {
+export class Data_area extends Component {
     constructor(props) {
         super(props);
         this.tbSocialMap = Firebase.firestore().collection('SOCIAL_MAPS');
+        this.tbArea = Firebase.firestore().collection('AREAS');
         this.unsubscribe = null;
-        console.log(this.props)
         this.state = {
             showingInfoWindow: false,
             activeMarker: {},
             selectedPlace: {},
             position: { lat: 15.229399, lng: 104.857126 },
-            zoomMap: 9,
+            zoomMap: 8,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
             Geo_map_description: '', Informer_ID: '', Create_date: '', Map_iamge_URL: '',
@@ -59,6 +59,7 @@ export class Main_map_admin extends Component {
             sflag_good: false,
             sflag_danger: false,
             saccident: false,
+            area: {}
 
         }
         this.onMarkerClick = this.onMarkerClick.bind(this);
@@ -66,7 +67,25 @@ export class Main_map_admin extends Component {
     }
 
     componentDidMount() {
-        this.unsubscribe = this.tbSocialMap.onSnapshot(this.ListMark);
+        if (this.props.match.params.area_id !== undefined) {
+
+            this.tbArea.doc(this.props.match.params.area_id).get().then((doc) => {
+                const { AProvince_ID, ADistrict_ID, ASubDistrict_ID } = doc.data();
+                console.log(doc.data())
+                this.setState({
+                    area: doc.data()
+                })
+                if (doc.data().bans !== undefined) {
+                    this.unsubscribe = this.tbSocialMap
+                        .where('Area_PID', '==', AProvince_ID)
+                        .where('Area_DID', '==', ADistrict_ID)
+                        .onSnapshot(this.ListMark);
+                }
+
+            })
+
+
+        }
     }
     componentWillUnmount() {
         this.unsubscribe = null;
@@ -76,100 +95,110 @@ export class Main_map_admin extends Component {
         const geoMaps = [];
         const listshowMarker = [];
         let count = 0;
-
-        querySnapshot.forEach((doc) => {
-            const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
-            const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;
-            var icon_m = '';
-            var name_type = '';
-            // "home"=บ้าน
-            // "resource"=แหล่งทรัพยากร
-            // "organization"=องค์กร
-            // "flag_good"=จุดดี
-            // "flag_danger"=จุดเสี่ยง
-            // "accident"=จุดอุบัติเหตุ
-            let add = false;
-            if (Geo_map_type === 'home') {
-                if (shome) {
-                    add = true;
+        const nbans = [];
+        if (this.state.area.bans !== undefined) {
+            this.state.area.bans.forEach((element, i) => {
+                if (element) {
+                    nbans.push(i)
                 }
-            } else if (Geo_map_type === 'resource') {
-                if (sresource) {
-                    add = true;
-                }
-            } else if (Geo_map_type === 'organization') {
-                if (sorganization) {
-                    add = true;
-                }
-            } else if (Geo_map_type === 'flag_good') {
-                if (sflag_good) {
-                    add = true;
-                }
-            } else if (Geo_map_type === 'flag_danger') {
-                if (sflag_danger) {
-                    add = true;
-                }
-            } else if (Geo_map_type === 'accident') {
-                if (saccident) {
-                    add = true;
-                }
-            }
+            })
+            console.log(nbans)
+            querySnapshot.forEach((doc) => {
+                console.log(doc.data())
+                nbans.forEach((element) => {
+                    if (element === doc.data().Area_SDID) {
 
-            if (sall) {
-                add = true;
-            }
+                        const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
+                        const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;
+                        var icon_m = '';
+                        var name_type = '';
+                        // "home"=บ้าน
+                        // "resource"=แหล่งทรัพยากร
+                        // "organization"=องค์กร
+                        // "flag_good"=จุดดี
+                        // "flag_danger"=จุดเสี่ยง
+                        // "accident"=จุดอุบัติเหตุ
+                        let add = false;
+                        if (Geo_map_type === 'home') {
+                            if (shome) {
+                                add = true;
+                            }
+                        } else if (Geo_map_type === 'resource') {
+                            if (sresource) {
+                                add = true;
+                            }
+                        } else if (Geo_map_type === 'organization') {
+                            if (sorganization) {
+                                add = true;
+                            }
+                        } else if (Geo_map_type === 'flag_good') {
+                            if (sflag_good) {
+                                add = true;
+                            }
+                        } else if (Geo_map_type === 'flag_danger') {
+                            if (sflag_danger) {
+                                add = true;
+                            }
+                        } else if (Geo_map_type === 'accident') {
+                            if (saccident) {
+                                add = true;
+                            }
+                        }
 
-
-            if (add) {
-
-                if (Geo_map_type === 'home') {
-                    icon_m = home; name_type = 'บ้าน';
-                } else if (Geo_map_type === 'resource') {
-                    icon_m = resource; name_type = 'แหล่งทรัพยากร';
-                } else if (Geo_map_type === 'organization') {
-                    icon_m = organization; name_type = 'องค์กร';
-                } else if (Geo_map_type === 'flag_good') {
-                    icon_m = flag_good; name_type = 'จุดดี';
-                } else if (Geo_map_type === 'flag_danger') {
-                    icon_m = flag_danger; name_type = 'จุดเสี่ยง';
-                } else if (Geo_map_type === 'accident') {
-                    icon_m = accident; name_type = 'จุดอุบัติเหตุ';
-                }
-                if (!isEmptyValue(Geo_map_position)) {
-                    listshowMarker.push(
-
-                        <Marker key={count}
-                            onClick={this.onMarkerClick}
-                            name={Geo_map_name + ""}
-                            position={Geo_map_position}
-                            description={Geo_map_description}
-                            image={Map_iamge_URL}
-                            icon={icon_m}
-                        // animation={this.props.google.maps.Animation.DROP}
-                        // label={count}
-                        />
-
-                    );
-                    geoMaps.push({
-                        Geo_map_name,
-                        name_type,
-                        Informer_name,
-                        edit:
-                            <div>
-                                <img style={{ widtha: 20, height: 20, cursor: 'pointer' }} alt="zoom" src={Izoom} onClick={this.onFocusMarker.bind(this, Geo_map_position.lat, Geo_map_position.lng)}></img>
-                            </div>
-                    });
-                }
+                        if (sall) {
+                            add = true;
+                        }
 
 
+                        if (add) {
 
+                            if (Geo_map_type === 'home') {
+                                icon_m = home; name_type = 'บ้าน';
+                            } else if (Geo_map_type === 'resource') {
+                                icon_m = resource; name_type = 'แหล่งทรัพยากร';
+                            } else if (Geo_map_type === 'organization') {
+                                icon_m = organization; name_type = 'องค์กร';
+                            } else if (Geo_map_type === 'flag_good') {
+                                icon_m = flag_good; name_type = 'จุดดี';
+                            } else if (Geo_map_type === 'flag_danger') {
+                                icon_m = flag_danger; name_type = 'จุดเสี่ยง';
+                            } else if (Geo_map_type === 'accident') {
+                                icon_m = accident; name_type = 'จุดอุบัติเหตุ';
+                            }
+                            if (!isEmptyValue(Geo_map_position)) {
+                                listshowMarker.push(
 
-            }
+                                    <Marker key={count}
+                                        onClick={this.onMarkerClick}
+                                        name={Geo_map_name + ""}
+                                        position={Geo_map_position}
+                                        description={Geo_map_description}
+                                        image={Map_iamge_URL}
+                                        icon={icon_m}
+                                    // animation={this.props.google.maps.Animation.DROP}
+                                    // label={count}
+                                    />
 
+                                );
+                                geoMaps.push({
+                                    Geo_map_name,
+                                    name_type,
+                                    Informer_name,
+                                    edit:
+                                        <div>
+                                            <img style={{ widtha: 20, height: 20, cursor: 'pointer' }} alt="zoom" src={Izoom} onClick={this.onFocusMarker.bind(this, Geo_map_position.lat, Geo_map_position.lng)}></img>
+                                        </div>
+                                });
+                            }
+                        }
+                        count++;
+                    } else {
+                        console.log(element + "!=" + doc.data().Area_SDID)
+                    }
+                })
 
-            count++;
-        });
-
+            });
+        }
         this.setState({
             geoMaps, listshowMarker
         });
@@ -316,7 +345,7 @@ export class Main_map_admin extends Component {
     }
 
     render() {
-        const { Ban_name, Area_ID } = this.state
+        const { Ban_name, Area_ID, area } = this.state
         const { Geo_map_name, Geo_map_type,
             Geo_map_description, Geo_map_result_description, Geo_map_time, } = this.state;
         const data = {
@@ -363,12 +392,14 @@ export class Main_map_admin extends Component {
 
 
 
-
         return (
-            <div>
-                <div className='main_component'>
+            <center>
+                <Topnav></Topnav>
+                <div className="area_detail">
+                    <div>
+                        <h2>{area.Dominance + area.Area_name} : {area.Area_type} </h2>
+                    </div>
                     <Container>
-
                         <Row>
                             <Col sm={8} style={{ height: 500, alignItems: 'center' }}>
                                 <Map google={this.props.google}
@@ -450,9 +481,9 @@ export class Main_map_admin extends Component {
                     </Container>
 
 
-                </div>
 
-            </div >
+                </div >
+            </center>
         )
     }
 }
@@ -471,4 +502,4 @@ const mapDispatchToProps = {
 
 export default
     connect(mapStateToProps, mapDispatchToProps)
-        ((GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Main_map_admin));
+        ((GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Data_area));

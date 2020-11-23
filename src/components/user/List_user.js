@@ -11,6 +11,8 @@ import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
+import { Button, Modal } from "antd";
+
 
 export class List_user extends Component {
   constructor(props) {
@@ -19,7 +21,9 @@ export class List_user extends Component {
     this.state = {
       ...this.props.fetchReducer.user,
       List_users: [],
-      SUser_type: ""
+      SUser_type: "",
+      visible: false,
+      view_data: ''
     };
   }
 
@@ -30,9 +34,10 @@ export class List_user extends Component {
     if (isEmptyValue(this.state.Role)) {
       querySnapshot.forEach(doc => {
         const {
-          Name, Last_name, Nickname, Position, Department,
+          Name, Last_name, Nickname, Position, Department, Email,
           Province_ID, District_ID, Sub_district_ID, Avatar_URL, User_type
         } = doc.data();
+
         const Province = data_provinces[Province_ID][0];
         const District = data_provinces[Province_ID][1][District_ID][0];
         const Sub_district =
@@ -54,17 +59,31 @@ export class List_user extends Component {
         });
       });
     } else if (this.state.Role === 'admin') {
+
       querySnapshot.forEach(doc => {
         const {
-          Name, Last_name, Nickname, Position, Department,
+          Name, Last_name, Nickname, Position, Department, Email, Birthday,
           Province_ID, District_ID, Sub_district_ID, Avatar_URL, User_type
         } = doc.data();
+
+
         const Province = data_provinces[Province_ID][0];
         const District = data_provinces[Province_ID][1][District_ID][0];
+        if (Birthday === undefined) {
+          console.log(doc.data())
+        }
+        var d1 = new Date(Birthday.seconds * 1000);
+        let bd =
+          d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
         const Sub_district =
           data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
+        if (doc.data().Province_ID === undefined) {
+          console.log(doc.id)
+        }
         List_users.push({
+          // ...doc.data()
           number: count++,
+          bd,
           Avatar_URL: (
             <img
               style={{ widtha: 50, height: 50, cursor: "pointer" }}
@@ -75,8 +94,9 @@ export class List_user extends Component {
           Name: Name + " " + Last_name + "(" + Nickname + ")",
           User_type,
           work: Position + ":" + Department,
-          District,
-          Sub_district,
+          // District,
+          // Sub_district,
+          check: <p onClick={() => this.setState({ visible: true, view_data: { ...doc.data(), District, Province, Sub_district, bd } })} style={{ cursor: 'pointer' }}>ตรวจสอบ</p>,
           edit: (<div>
             <button><MdAccountBox size="30" color="#ef03dd" onClick={this.approveRole.bind(this, doc.id, Name)} /></button>
             <button><MdDeleteForever size="30" color="#ff0000" onClick={this.deleteuser.bind(this, doc.id, Name)} /></button>
@@ -186,6 +206,7 @@ export class List_user extends Component {
     }
   };
   render() {
+    const { view_data } = this.state;
     const data = {
       columns: [
         {
@@ -218,17 +239,17 @@ export class List_user extends Component {
           sort: "asc",
           width: 200
         },
+        // {
+        //   label: "อำเภอ",
+        //   field: "District",
+        //   sort: "asc",
+        //   width: 150
+        // },
         {
-          label: "อำเภอ",
-          field: "District",
+          label: "ตรวจสอบ",
+          field: "check",
           sort: "asc",
-          width: 150
-        },
-        {
-          label: "ตำบล",
-          field: "Sub_district",
-          sort: "asc",
-          width: 150
+          width: 60
         },
         {
           label: "แก้ไข",
@@ -260,8 +281,32 @@ export class List_user extends Component {
               <option value="ผู้บริหาร">ผู้บริหาร</option>
               <option value="พี่เลี้ยง">พี่เลี้ยง</option>
               <option value="แกนนำเด็ก">แกนนำเด็ก</option>
+              <option value="coach">coach</option>
             </select>
           </center>
+          <Modal
+            title={view_data.Name + " " + view_data.Last_name + "(" + view_data.Nickname + ")"}
+            visible={this.state.visible}
+            onOk={() => this.setState({ visible: false, view_data: '' })}
+            onCancel={() => this.setState({ visible: false, view_data: '' })}
+          >
+            <img
+              style={{ widtha: 50, height: 50, cursor: "pointer" }}
+              alt="avatar"
+              src={view_data.Avatar_URL}
+            ></img>
+            <p>ตำแหน่ง :{view_data.Position}  หน่วยงาน :{view_data.Department}</p>
+            <p>ตำบล {view_data.Sub_district} อำเภอ {view_data.District} จังหวัด {view_data.Province}</p>
+            {this.state.Role === 'admin' &&
+              <>
+                <p>Email :{view_data.Email} เบอร์โทร :{view_data.Number_phone}</p>
+                <p>ประเภทผู้ใช้ :{view_data.User_type} วันเกิด :{view_data.bd}</p>
+                <p>Facebok :{view_data.Facebook} Line ID :{view_data.Line_ID}</p>
+
+
+              </>
+            }
+          </Modal>
           <MDBDataTable
             striped
             bordered

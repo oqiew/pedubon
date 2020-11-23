@@ -10,15 +10,15 @@
   border: 1px solid #ddd;
 }
 .project_detail{
-  padding: 50px;
-  margin-top: 30vh;
-  width: 80%;
+  padding: 30px;
+  margin-top: 20vh;
+  width: 90%;
   height: 100%;
   box-shadow: 0 30px 50px rgba(0,0,0,.2);
 }
 .area_detail{
   padding: 50px;
-  width: 80%;
+  width: 95%;
   height: 100%;
   margin-top: 5vh;
   box-shadow: 0 30px 50px rgba(0,0,0,.2);

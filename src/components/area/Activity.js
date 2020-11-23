@@ -373,7 +373,7 @@ export class Activity extends Component {
     }
 }
 // export default Main_seven_tools;
-// export default (GoogleApiWrapper({ apiKey: ('AIzaSyAz1FvLaAJGDrvPvRPbS_EITU30dNyd-eA'), language: 'th' }))(Main_seven_tools);
+// export default (GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Main_seven_tools);
 
 //Used to add reducer's into the props
 const mapStateToProps = state => ({
@@ -387,4 +387,4 @@ const mapDispatchToProps = {
 
 export default
     connect(mapStateToProps, mapDispatchToProps)
-        ((GoogleApiWrapper({ apiKey: ('AIzaSyAz1FvLaAJGDrvPvRPbS_EITU30dNyd-eA'), language: 'th' }))(Activity));
+        ((GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Activity));

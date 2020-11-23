@@ -94,15 +94,16 @@ export class Home extends Component {
                   src={logo4ctped}
                   className="support_logo"
                   alt="logo1"
+                  style={{ minWidth: 50 }}
                 ></img>
               </Col>
               <Col>
-                <img src={sss} className="support_logo" alt="logo1"></img>
+                <img src={sss} className="support_logo" style={{ minWidth: 50 }} alt="logo1"></img>
               </Col>
               <Col>
                 <img
                   src={silc}
-                  style={{ width: "100%", height: "100%" }}
+                  style={{ minWidth: 50, width: '100%', height: '100%' }}
                   alt="logo1"
                 ></img>
               </Col>

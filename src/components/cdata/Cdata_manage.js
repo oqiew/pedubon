@@ -11,6 +11,7 @@ import { isEmptyValue } from '../Methods';
 import Firebase from '../../Firebase';
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
+import { confirmAlert } from 'react-confirm-alert'; // Import
 export class Cdata_manage extends Component {
     constructor(props) {
         super(props);
@@ -21,29 +22,35 @@ export class Cdata_manage extends Component {
             selected_data: [],
             view: false,
             ...this.props.fetchReducer.user,
+            action: 'null',
+            edit_id: ''
         }
     }
     onSelect(id) {
         if (id === 1) {
             this.setState({
-                selected: 1
+                selected: 1,
+                title_id: '', add_id: '', view: false, action: 'null'
             })
         } else if (id === 2) {
             this.setState({
-                selected: 2
+                selected: 2,
+                title_id: '', add_id: '', view: false, action: 'null'
             })
         } else if (id === 3) {
             this.setState({
-                selected: 3
+                selected: 3,
+                title_id: '', add_id: '', view: false, action: 'null'
             })
         } else if (id === 4) {
             this.setState({
-                selected: 4
+                selected: 4,
+                title_id: '', add_id: '', view: false, action: 'null'
             })
         }
     }
     show_detail(id, id2) {
-        Firebase.firestore().collection('CDATAS').onSnapshot(this.list_view_cdata)
+        Firebase.firestore().collection('CDATAS').where('num_id', '==', id2).where('title_id', '==', id).onSnapshot(this.list_view_cdata)
         this.setState({
             view: true,
             title_id: id,
@@ -55,7 +62,7 @@ export class Cdata_manage extends Component {
         const selected_data = []
         if (querySnapshot.size !== 0) {
             querySnapshot.forEach(doc => {
-                selected_data.push({ ...doc.data() })
+                selected_data.push({ Key: doc.id, ...doc.data() })
             });
         }
         this.setState({
@@ -76,8 +83,19 @@ export class Cdata_manage extends Component {
             title_id: id,
             add_id: id2,
             view: false,
+            action: 'add'
         })
     }
+    edit_action(id, id2, edit_id) {
+        this.setState({
+            title_id: id,
+            add_id: id2,
+            view: false,
+            action: 'edit',
+            edit_id: edit_id
+        })
+    }
+
     render() {
         const { selected, view, title_id, add_id, selected_data, Role } = this.state;
 
@@ -86,9 +104,9 @@ export class Cdata_manage extends Component {
                 <Topnav></Topnav>
                 <div className="area_detail">
                     <Row>
-                        <Col>
+                        <Col onClick={this.onSelect.bind(this, 1)}>
                             <img alt="body" src={body} style={{ width: 100, height: 100, cursor: 'pointer' }}
-                                onClick={this.onSelect.bind(this, 1)}></img>
+                            ></img>
 
                             {selected === 1 ?
                                 <div style={{ borderStyle: 'solid', borderColor: '#ff0000', borderRadius: 20 }}>
@@ -135,13 +153,12 @@ export class Cdata_manage extends Component {
                                     <Row style={{ width: '100%' }}>
                                         <div style={{ width: '60%' }}>
                                             <p style={{ textAlign: 'left', marginLeft: 30 }}>{element[0]}</p>
+                                            <p style={{ textAlign: 'left', marginLeft: 30 }}>ที่มา:<a href={element[2]} target="_blank"> {element[2]}</a></p>
                                         </div>
                                         <div style={{ width: '40%' }}>
                                             <button type="button" className="btn btn-success" onClick={this.show_detail.bind(this, 0, element[1])}>เปิดข้อมูล</button>
                                             {Role === "admin" && <button type="button" className="btn btn-success" onClick={this.add_action.bind(this, 0, element[1])}>เพิ่มข้อมูล</button>}
                                         </div>
-
-
                                     </Row>
                                     <hr></hr>
                                 </div>
@@ -153,6 +170,7 @@ export class Cdata_manage extends Component {
                                     <Row style={{ width: '100%' }}>
                                         <div style={{ width: '60%' }}>
                                             <p style={{ textAlign: 'left', marginLeft: 30 }}>{element[0]}</p>
+                                            <p style={{ textAlign: 'left', marginLeft: 30 }}>ที่มา: {element[2]}</p>
                                         </div>
                                         <div style={{ width: '40%' }}>
                                             <button type="button" className="btn btn-success" onClick={this.show_detail.bind(this, 1, element[1])}>เปิดข้อมูล</button>
@@ -170,6 +188,7 @@ export class Cdata_manage extends Component {
                                     <Row style={{ width: '100%' }}>
                                         <div style={{ width: '60%' }}>
                                             <p style={{ textAlign: 'left', marginLeft: 30 }}>{element[0]}</p>
+                                            <p style={{ textAlign: 'left', marginLeft: 30 }}>ที่มา: {element[2]}</p>
                                         </div>
                                         <div style={{ width: '40%' }}>
                                             <button type="button" className="btn btn-success" onClick={this.show_detail.bind(this, 2, element[1])}>เปิดข้อมูล</button>
@@ -187,6 +206,7 @@ export class Cdata_manage extends Component {
                                     <Row style={{ width: '100%' }}>
                                         <div style={{ width: '60%' }}>
                                             <p style={{ textAlign: 'left', marginLeft: 30 }}>{element[0]}</p>
+                                            <p style={{ textAlign: 'left', marginLeft: 30 }}>ที่มา: {element[2]}</p>
                                         </div>
                                         <div style={{ width: '40%' }}>
                                             <button type="button" className="btn btn-success" onClick={this.show_detail.bind(this, 3, element[1])}>เปิดข้อมูล</button>
@@ -200,12 +220,13 @@ export class Cdata_manage extends Component {
                         }
                         {view &&
                             <div style={{ width: '100%' }}>
-                                <Row style={{ justifyContent: 'center' }}><h3 >{data[title_id][(add_id - 1)][0]}</h3></Row>
+                                <Row style={{ justifyContent: 'center' }}><h3 >{data[title_id][(add_id - 1)][0]} </h3></Row>
                                 <Row style={{ justifyContent: 'center' }}>
-                                    <button style={{ right: 0 }} className="btn btn-danger" onClick={() => this.setState({ title_id: '', add_id: '', view: false })}>กลับ</button>
+                                    <button style={{ right: 0 }} className="btn btn-danger" onClick={() => this.setState({ title_id: '', add_id: '', view: false, action: 'null' })}>กลับ</button>
                                 </Row>
                                 <hr></hr>
                                 <Row>
+                                    <Col>พ.ศ.</Col>
                                     <Col>ต่ำกว่า {'\n'}15 ปี</Col>
                                     <Col>16 ปี</Col>
                                     <Col>17 ปี</Col>
@@ -217,22 +238,26 @@ export class Cdata_manage extends Component {
                                     <Col>23 ปี</Col>
                                     <Col>24 ปี</Col>
                                     <Col>25 ปี</Col>
+                                    <Col>แก้ไข</Col>
                                 </Row>
                                 <hr></hr>
                                 {selected_data.map((element, i) =>
                                     <Row key={i}>
-                                        <Col>{element.ly15}</Col>
-                                        <Col>{element.y16}</Col>
-                                        <Col>{element.y17}</Col>
-                                        <Col>{element.y18}</Col>
-                                        <Col>{element.y19}</Col>
-                                        <Col>{element.y20}</Col>
-                                        <Col>{element.y21}</Col>
-                                        <Col>{element.y22}</Col>
-                                        <Col>{element.y23}</Col>
-                                        <Col>{element.y24}</Col>
-                                        <Col>{element.y25}</Col>
-
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.year}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.ly15}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y16}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y17}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y18}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y19}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y20}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y21}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y22}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y23}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y24}</Col>
+                                        <Col style={{ display: "grid", alignItems: 'center' }}>{element.y25}</Col>
+                                        {this.state.Role === 'admin' && <Col><button type="button" className="btn btn-success"
+                                            onClick={this.edit_action.bind(this, element.title_id, element.num_id, element.Key)}>
+                                            แก้ไข</button></Col>}
                                     </Row>
                                 )}
                             </div>
@@ -240,7 +265,8 @@ export class Cdata_manage extends Component {
                         }
                         {!isEmptyValue(add_id) && !view &&
                             <div style={{ width: '100%' }}>
-                                <Add_cdata title_id={this.state.title_id} num_id={this.state.add_id} back={this.back}></Add_cdata>
+                                <Add_cdata title_id={this.state.title_id} num_id={this.state.add_id} status={this.state.action}
+                                    id={this.state.edit_id} back={this.back}></Add_cdata>
                             </div>
                         }
                     </Row>
