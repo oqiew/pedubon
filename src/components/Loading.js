@@ -2,7 +2,7 @@ import ReactLoading from 'react-loading';
 
 import React, { Component } from 'react'
 
-export default class Spin extends Component {
+export default class Loading extends Component {
     render() {
         return (
             <div style={{ marginLeft: '45vw', marginTop: '40vh' }}>

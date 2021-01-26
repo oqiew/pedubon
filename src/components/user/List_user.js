@@ -12,37 +12,53 @@ import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
 import { Button, Modal } from "antd";
+import { tableName } from "../../database/TableConstant";
 
 
 export class List_user extends Component {
   constructor(props) {
     super(props);
-    this.tbUsers = Firebase.firestore().collection("USERS");
+    this.tbUsers = Firebase.firestore().collection(tableName.Users);
     this.state = {
       ...this.props.fetchReducer.user,
-      List_users: [],
+      list_user: [],
+      query_list_users: [],
       SUser_type: "",
       visible: false,
-      view_data: ''
+      view_data: {
+        Area: {
+          Dominance: '',
+          Area_name: '',
+          District_name: '',
+          Province_name: ''
+        }
+      }
     };
   }
 
-
-  getUsers = querySnapshot => {
-    const List_users = [];
+  setArea = async (Area_ID) => {
+    return new Promise((resolve, reject) => {
+      Firebase.firestore().collection(tableName.Areas).doc(Area_ID).get().then((doc) => {
+        if (doc.exists) {
+          resolve({ ID: doc.id, ...doc.data() })
+        } else {
+          reject('')
+        }
+      })
+    })
+  }
+  getUsers = async (querySnapshot) => {
+    const query_list_users = [];
     let count = 1;
-    if (isEmptyValue(this.state.Role)) {
-      querySnapshot.forEach(doc => {
+    const users = querySnapshot.docs;
+    for (const user of users) {
+      if (isEmptyValue(this.state.Role)) {
         const {
-          Name, Last_name, Nickname, Position, Department, Email,
-          Province_ID, District_ID, Sub_district_ID, Avatar_URL, User_type
-        } = doc.data();
-
-        const Province = data_provinces[Province_ID][0];
-        const District = data_provinces[Province_ID][1][District_ID][0];
-        const Sub_district =
-          data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-        List_users.push({
+          Name, Lastname, Nickname, Position, Department, Email,
+          Avatar_URL, User_type, Area_ID
+        } = user.data();
+        const Area = await this.setArea(Area_ID);
+        query_list_users.push({
           number: count++,
           Avatar_URL: (
             <img
@@ -51,37 +67,23 @@ export class List_user extends Component {
               src={Avatar_URL}
             ></img>
           ),
-          Name: Name + " " + Last_name + "(" + Nickname + ")",
+          Name: Name + " " + Lastname + "(" + Nickname + ")",
           User_type,
-          work: Position + ":" + Department,
-          District,
-          Sub_district,
+          Position: Position + " :: " + Area.Dominance + Area.Area_name,
         });
-      });
-    } else if (this.state.Role === 'admin') {
 
-      querySnapshot.forEach(doc => {
+      } else if (this.state.Role === 'admin') {
         const {
-          Name, Last_name, Nickname, Position, Department, Email, Birthday,
-          Province_ID, District_ID, Sub_district_ID, Avatar_URL, User_type
-        } = doc.data();
-
-
-        const Province = data_provinces[Province_ID][0];
-        const District = data_provinces[Province_ID][1][District_ID][0];
-        if (Birthday === undefined) {
-          console.log(doc.data())
-        }
+          Name, Lastname, Nickname, Position, Department, Email, Birthday,
+          Avatar_URL, User_type, Area_ID
+        } = user.data();
+        const Area = await this.setArea(Area_ID);
         var d1 = new Date(Birthday.seconds * 1000);
         let bd =
           d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-        const Sub_district =
-          data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-        if (doc.data().Province_ID === undefined) {
-          console.log(doc.id)
-        }
-        List_users.push({
-          // ...doc.data()
+
+        query_list_users.push({
+          // ...user.data()
           number: count++,
           bd,
           Avatar_URL: (
@@ -91,35 +93,46 @@ export class List_user extends Component {
               src={Avatar_URL}
             ></img>
           ),
-          Name: Name + " " + Last_name + "(" + Nickname + ")",
+          Name: Name + " " + Lastname + "(" + Nickname + ")",
           User_type,
-          work: Position + ":" + Department,
-          // District,
-          // Sub_district,
-          check: <p onClick={() => this.setState({ visible: true, view_data: { ...doc.data(), District, Province, Sub_district, bd } })} style={{ cursor: 'pointer' }}>ตรวจสอบ</p>,
+          Position: Position + " :: " + Area.Dominance + Area.Area_name,
+          check: <p onClick={() => this.setState({ visible: true, view_data: { ...user.data(), bd, Area } })} style={{ cursor: 'pointer' }}>ตรวจสอบ</p>,
           edit: (<div>
-            <button><MdAccountBox size="30" color="#ef03dd" onClick={this.approveRole.bind(this, doc.id, Name)} /></button>
-            <button><MdDeleteForever size="30" color="#ff0000" onClick={this.deleteuser.bind(this, doc.id, Name)} /></button>
+            <button><MdAccountBox size="30" color="#ef03dd" onClick={this.approveRole.bind(this, user.id, Name)} /></button>
+            <button><MdDeleteForever size="30" color="#ff0000" onClick={this.deleteuser.bind(this, user.id, Name)} /></button>
           </div>)
         });
-      });
+
+      }
     }
 
-
     this.setState({
-      List_users
+      query_list_users,
+      list_user: query_list_users
     });
   };
+  onViewCancel() {
+    this.setState({
+      visible: false,
+      view_data: {
+        Area: {
+          Dominance: '',
+          Area_name: '',
+          District_name: '',
+          Province_name: ''
+        }
+      }
+    })
+  }
   approveRole = (id, name) => {
     confirmAlert({
       title: "การอนุญาติผู้ใช้",
       message: name + "(admin)",
       buttons: [
-
         {
           label: "อนุญาติ",
           onClick: () => {
-            Firebase.firestore().collection("USERS").doc(id).update({
+            this.tbUsers.doc(id).update({
               Role: "admin"
             })
           }
@@ -127,7 +140,7 @@ export class List_user extends Component {
         {
           label: "ปฏิเสธ",
           onClick: () => {
-            Firebase.firestore().collection("USERS").doc(id).update({
+            this.tbUsers.doc(id).update({
               Role: ""
             })
           },
@@ -144,7 +157,6 @@ export class List_user extends Component {
       title: "ลบผู้ใช้",
       message: "คุณต้องการลบ" + name,
       buttons: [
-
         {
           label: "ยืนยัน",
           onClick: () => {
@@ -167,10 +179,6 @@ export class List_user extends Component {
               }).catch((error) => {
                 console.error("Error removing document: ", error);
               });
-
-
-
-
             });
           }
         },
@@ -189,24 +197,30 @@ export class List_user extends Component {
     });
   };
   componentDidMount() {
-    this.unsubscribe = this.tbUsers.onSnapshot(this.getUsers);
+    this.tbUsers.onSnapshot(this.getUsers);
+  }
+  changeUserType(name) {
+    const { query_list_users } = this.state;
+    const regex = new RegExp(`${name.trim()}`, 'i');
+    const users = query_list_users.filter(name => name.User_type.search(regex) >= 0)
+    this.setState({
+      list_user: users
+    })
   }
   onChange = e => {
     const state = this.state;
     state[e.target.name] = e.target.value;
     this.setState(state);
-
     if (this.state.SUser_type === "") {
-      this.unsubscribe = this.tbUsers.onSnapshot(this.getUsers);
+      this.setState({
+        list_user: this.state.query_list_users
+      })
     } else {
-      const ref = Firebase.firestore()
-        .collection("USERS")
-        .where("User_type", "==", this.state.SUser_type);
-      this.unsubscribe = ref.onSnapshot(this.getUsers);
+      this.changeUserType(e.target.value);
     }
   };
   render() {
-    const { view_data } = this.state;
+    const { view_data, list_user } = this.state;
     const data = {
       columns: [
         {
@@ -214,51 +228,39 @@ export class List_user extends Component {
           field: "number",
           sort: "asc",
           width: 50
-        },
-        {
+        }, {
           label: "รูป",
           field: "Avatar_URL",
           sort: "asc",
           width: 50
-        },
-        {
+        }, {
           label: "ชื่อ",
           field: "Name",
           sort: "asc",
           width: 270
-        },
-        {
+        }, {
           label: "หน้าที่",
           field: "User_type",
           sort: "asc",
           width: 270
-        },
-        {
-          label: "ตำแหน่ง : หน่วยงาน",
-          field: "work",
+        }, {
+          label: "ตำแหน่ง :: อปท",
+          field: "Position",
           sort: "asc",
           width: 200
-        },
-        // {
-        //   label: "อำเภอ",
-        //   field: "District",
-        //   sort: "asc",
-        //   width: 150
-        // },
-        {
+        }, {
           label: "ตรวจสอบ",
           field: "check",
           sort: "asc",
           width: 60
-        },
-        {
+        }, {
           label: "แก้ไข",
           field: "edit",
           sort: "asc",
           width: 150
         }
       ],
-      rows: this.state.List_users
+      rows: this.state.list_user
     };
     const { SUser_type, User_types } = this.state;
     return (
@@ -281,29 +283,26 @@ export class List_user extends Component {
               <option value="ผู้บริหาร">ผู้บริหาร</option>
               <option value="พี่เลี้ยง">พี่เลี้ยง</option>
               <option value="แกนนำเด็ก">แกนนำเด็ก</option>
-              <option value="coach">coach</option>
             </select>
           </center>
           <Modal
-            title={view_data.Name + " " + view_data.Last_name + "(" + view_data.Nickname + ")"}
+            title={view_data.Name + " " + view_data.Lastname + "(" + view_data.Nickname + ")"}
             visible={this.state.visible}
-            onOk={() => this.setState({ visible: false, view_data: '' })}
-            onCancel={() => this.setState({ visible: false, view_data: '' })}
+            onOk={this.onViewCancel.bind(this)}
+            onCancel={this.onViewCancel.bind(this)}
           >
             <img
-              style={{ widtha: 50, height: 50, cursor: "pointer" }}
+              style={{ widtha: 100, height: 100, cursor: "pointer" }}
               alt="avatar"
               src={view_data.Avatar_URL}
             ></img>
-            <p>ตำแหน่ง :{view_data.Position}  หน่วยงาน :{view_data.Department}</p>
-            <p>ตำบล {view_data.Sub_district} อำเภอ {view_data.District} จังหวัด {view_data.Province}</p>
+            <p>ตำแหน่ง :{view_data.Position}  หน่วยงาน :{view_data.Area.Dominance + view_data.Area.Area_name}</p>
+            <p>อำเภอ {view_data.Area.District_name} จังหวัด {view_data.Area.Province_name}</p>
             {this.state.Role === 'admin' &&
               <>
-                <p>Email :{view_data.Email} เบอร์โทร :{view_data.Number_phone}</p>
+                <p>Email :{view_data.Email} เบอร์โทร :{view_data.Phone_number}</p>
                 <p>ประเภทผู้ใช้ :{view_data.User_type} วันเกิด :{view_data.bd}</p>
                 <p>Facebok :{view_data.Facebook} Line ID :{view_data.Line_ID}</p>
-
-
               </>
             }
           </Modal>

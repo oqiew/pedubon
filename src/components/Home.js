@@ -9,9 +9,10 @@ import sss from "../assets/sss.png";
 import data_provinces from "../data/provinces";
 import Firebase from "../Firebase";
 
-import Spin from "./Spin";
+import Loading from "./Loading";
 import Topnav from "./top/Topnav";
 import { isEmptyValue } from "./Methods";
+import { tableName } from "../database/TableConstant";
 
 export class Home extends Component {
   constructor(props) {
@@ -27,54 +28,54 @@ export class Home extends Component {
     });
     Firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        console.log(user.email)
-        Firebase.firestore()
-          .collection("USERS").doc(user.uid).get().then(doc => {
-            if (doc.exists) {
-              const { Province_ID, District_ID, Sub_district_ID, Birthday, Area_PID,
-                Area_DID, Area_SDID, Area_ID } = doc.data();
-              console.log(doc.data());
-              var Ban_name = '';
-              const Province = data_provinces[Province_ID][0];
-              const District = data_provinces[Province_ID][1][District_ID][0];
-              if (!isEmptyValue(Area_ID)) {
-                Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
-              }
-              const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-              var d1 = new Date(Birthday.seconds * 1000);
-              let bd =
-                d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-
-              this.props.fetch_user({
-                User_ID: user.uid, Province, District, Sub_district,
-                bd, Ban_name, ...doc.data()
-              });
-              if (!this.props.fetchReducer.isFectching) {
-                this.setState({
-                  loading: false
-                });
-              }
-            } else {
-              this.props.fetch_user({ User_ID: user.uid, Email: user.email });
+        Firebase.firestore().collection(tableName.Users).doc(user.uid).get().then(async (doc) => {
+          if (doc.exists) {
+            const temp_bd = new Date(doc.data().Birthday.seconds * 1000);
+            const area_name = await this.setArea(doc.data().Area_ID)
+            this.props.fetch_user({
+              uid: user.uid, email: user.email, ...doc.data(),
+              bd: temp_bd.getDate() + "/" + (parseInt(temp_bd.getMonth(), 10) + 1) + "/" + temp_bd.getFullYear(),
+              area_name
+            });
+            if (!this.props.fetchReducer.isFectching) {
               this.setState({
                 loading: false
               });
             }
+          } else {
+            this.props.fetch_user({ uid: user.uid, email: user.email });
+            this.setState({
+              loading: false
+            });
+          }
 
-
-
-          });
+        });
       } else {
         console.log("cann't login");
+        this.props.fetch_user({});
+        Firebase.auth()
+          .signOut()
+          .then(() => this.props.history.push("/"));
         this.setState({
           loading: false
         });
       }
     });
   }
+  setArea = async (Area_ID) => {
+    return new Promise((resolve, reject) => {
+      Firebase.firestore().collection(tableName.Areas).doc(Area_ID).get().then((doc) => {
+        if (doc.exists) {
+          resolve(doc.data().Dominance + " " + doc.data().Area_name + "(" + doc.data().Area_type + ")")
+        } else {
+          reject('')
+        }
+      })
+    })
+  }
   render() {
     if (this.state.loading) {
-      return <Spin></Spin>;
+      return <Loading></Loading>;
     } else {
       return (
         <center>

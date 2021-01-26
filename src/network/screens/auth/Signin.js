@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
-import '../../css/Signup.css';
-import Logo from '../../assets/4ctped.png';
+import '../../../css/Signup.css';
 import { Row } from 'react-bootstrap';
-import Firebase from '../../Firebase';
+import Firebase from '../../../Firebase';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Link } from 'react-router-dom';
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
-class Login extends Component {
+import { routeName } from '../../../route/RouteConstant';
+class Signin extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -27,7 +27,7 @@ class Login extends Component {
     componentDidMount() {
         Firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                this.props.history.push('/');
+                this.props.history.push(routeName.HomeNetworks);
             }
         })
     }
@@ -39,7 +39,7 @@ class Login extends Component {
             .signInWithEmailAndPassword(Email, Password)
             .then(response => {
                 console.log("login success");
-                this.props.history.push('/');
+                this.props.history.push(routeName.HomeNetworks);
             })
             .catch(error => {
                 confirmAlert({
@@ -120,7 +120,8 @@ class Login extends Component {
                     <div className="wrap-login100">
                         {/* <h4>เสริมสร้างสุขภาวะเด็กและเยาวชน จังหวัดอุบลราชธานี</h4> */}
                         <div className="login100-pic js-tilt" data-tilt>
-                            <img src={Logo} alt="IMG"></img>
+                            {/* <img src={Logo} alt="IMG"></img> */}
+                            <h1>ข้อมูลเครือข่ายงานด้านเด็กและเยาวชน จังหวัดอุบลราชธานี</h1>
                         </div>
 
                         {this.state.login ?
@@ -198,4 +199,4 @@ class Login extends Component {
         );
     }
 }
-export default Login;
+export default Signin;

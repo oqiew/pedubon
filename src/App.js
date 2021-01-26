@@ -1,7 +1,10 @@
 import React, { Component } from "react";
 
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { routeName } from "./route/RouteConstant";
 import 'antd/dist/antd.css';
+
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 // page
 import Home from "./components/Home";
 //data
@@ -51,9 +54,6 @@ import Projects from "./components/area/Projects";
 import Orgcs from "./components/org/Orgcs";
 import Data_area from "./components/area/Data_area";
 
-
-
-
 // admin
 import Import_user from "./screens/admin/Import_user";
 
@@ -66,7 +66,17 @@ import AdminCheck from "./screens/pdfview/AdminCheck";
 import Coach from "./screens/coach/Coach";
 
 
+// screen network
+import Signin from "./network/screens/auth/Signin";
+import SignupNetwork from "./network/screens/auth/Signup";
+import Networks from "./network/screens/Networks";
+import Network from "./network/screens/Network";
+import HomeNetworks from "./network/screens/HomeNetworks";
+import ProfileNetwork from './network/screens/auth/Profile'
+import AdminNetwork from "./network/screens/AdminNetwork";
 
+// user
+import PowerUser from "./screens/user/PowerUser";
 
 
 export class App extends Component {
@@ -125,6 +135,17 @@ export class App extends Component {
         {/* coach */}
         <Route path="/coach" component={Coach}></Route>
         {/* </Switch> */}
+        {/* screen network */}
+        <Route path={routeName.SignupNetwork} component={SignupNetwork}></Route>
+        <Route path={routeName.SigninNetwork} component={Signin}></Route>
+        <Route path={routeName.Networks} component={Networks}></Route>
+        <Route path={routeName.Network} component={Network}></Route>
+        <Route path={routeName.HomeNetworks} component={HomeNetworks}></Route>
+        <Route path={routeName.ProfileNetwork} component={ProfileNetwork}></Route>
+        <Route path={routeName.AdminNetwork} component={AdminNetwork}></Route>
+        {/* user */}
+        <Route path={routeName.PowerUser} component={PowerUser}></Route>
+
       </Router>
     );
   }

@@ -1,16 +1,12 @@
 import { Row } from 'react-bootstrap';
 import React, { Component } from 'react'
-
-
 import Firebase from '../../Firebase';
-
 import Topnav from '../top/Topnav';
-
 import '../../App.css';
-import '../../css/Login.css';
+import '../../css/Signup.css';
 //img
 import { confirmAlert } from 'react-confirm-alert'; // Import
-import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
@@ -105,7 +101,6 @@ export class Register_email extends Component {
             })
         }
 
-
     }
     render() {
         //step create Email
@@ -130,7 +125,6 @@ export class Register_email extends Component {
                         </Row>
                         <Row className="wrap-inputRow">
                             <div className="wrap-input100 validate-input" data-validate="Password is requir d">
-
                                 <input className="input100" type={this.state.hiden_pass} name="Password"
                                     placeholder="Password" maxLength="8" onChange={this.passOnChange} value={Password} />
 

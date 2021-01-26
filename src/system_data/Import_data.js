@@ -170,6 +170,15 @@ class Import_data extends Component {
 
                         // }
 
+                    } else if (this.state.Tb_name === 'Areas') {
+                        tb.doc(element.ID.toString()).update({
+                            District_name: element.District_name,
+                            Province_name: element.Province_name,
+                            Zip_code: element.Zip_code
+
+                        }).then((docref) => {
+                            console.log('import database success')
+                        })
                     }
 
 
@@ -212,6 +221,7 @@ class Import_data extends Component {
                             {/* <option value="PROVINCES">จังหวัด</option> */}
                             <option value="USERS">ผู้ใช้</option>
                             <option value="PROVINCES">ตารางจังหวัด</option>
+                            <option value="Areas">อปท</option>
                         </select>
                     </Col>
 

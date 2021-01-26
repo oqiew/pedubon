@@ -14,10 +14,12 @@ import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import { isEmptyValue } from "../Methods";
 import Avatar_user from '../../assets/user.png'
+import { routeName } from "../../route/RouteConstant";
 class Topnav extends Component {
   constructor(props) {
     super(props);
     this.unsubscribe = null;
+    // console.log(this.props.fetchReducer)
     this.state = {
       ...this.props.fetchReducer.user
     };
@@ -29,7 +31,7 @@ class Topnav extends Component {
       .then(() => this.props.history.push("/"));
   };
   render() {
-    const { Name, User_ID, Avatar_URL, Role } = this.state;
+    const { Name, uid, Avatar_URL, Role } = this.state;
 
 
     return (
@@ -111,7 +113,7 @@ class Topnav extends Component {
             <MDBNavbarNav
               right
               style={
-                isEmptyValue(User_ID)
+                isEmptyValue(uid)
                   ? { display: "none" }
                   : { display: "flex" }
               }
@@ -145,7 +147,7 @@ class Topnav extends Component {
             <MDBNavbarNav
               right
               style={
-                isEmptyValue(User_ID)
+                isEmptyValue(uid)
                   ? { display: "inline" }
                   : { display: "none" }
               }
