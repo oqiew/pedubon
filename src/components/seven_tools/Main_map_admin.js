@@ -24,7 +24,7 @@ import TabST from './Tab_seven_tools';
 
 import { connect } from 'react-redux';
 import { fetch_user } from '../../actions';
-
+import google_api from '../../'
 export class Main_map_admin extends Component {
     constructor(props) {
         super(props);
