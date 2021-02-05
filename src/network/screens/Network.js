@@ -40,7 +40,7 @@ export class Network extends Component {
                 step: 2,
                 laoding: false,
                 ...this.props.fetchReducer.user_network,
-                P_year: '',
+                P_year: 2564,
                 P_plan: '',
                 P_activity: '',
                 P_type: ['', '', '', '', '', '', ''],
@@ -68,6 +68,17 @@ export class Network extends Component {
         this.setState({
             loading: true
         })
+        if (!isEmptyValue(this.state.Agency_ID)) {
+            this.getAgency();
+        } else {
+            this.setState({
+                step: 1,
+                loading: false
+            })
+        }
+
+    }
+    getAgency() {
         this.tbAgency.doc(this.state.Agency_ID).get().then((doc) => {
             this.setState({
                 Agency_name: doc.data().Agency_name,
@@ -152,16 +163,19 @@ export class Network extends Component {
                 });
                 this.setState({
                     loading: false,
-                    step: 2
+                    step: 2,
+                    Agency_ID: result.id,
                 })
+
                 confirmAlert({
                     title: 'บันทึกสำเร็จ',
                     message: '',
                     closeOnClickOutside: true,
+
                     buttons: [
                         {
                             label: 'ตกลง',
-
+                            onClick: () => this.getAgency()
                         },
 
                     ]
@@ -217,7 +231,10 @@ export class Network extends Component {
         if (this.state.changeP_date) {
             temp_date = P_date2
         } else {
-            temp_date = P_date
+            if (!isEmptyValue(P_date)) {
+                temp_date = P_date
+            }
+
         }
         this.tbPlanNetwork.add({
             P_year, P_plan, P_activity, P_type, P_date: temp_date, P_other,
@@ -227,10 +244,10 @@ export class Network extends Component {
             Create_By_ID: this.state.uid
         }).then(() => {
             this.setState({
-                P_year: '',
+                P_year: 2564,
                 P_plan: '',
                 P_activity: '',
-                P_type: '',
+                P_type: ['', '', '', '', '', '', ''],
                 P_date2: '',
                 P_other: '',
                 add_Plan: false,
@@ -262,10 +279,10 @@ export class Network extends Component {
     }
     onCancelPlan = () => {
         this.setState({
-            P_year: '',
+            P_year: 2564,
             P_plan: '',
             P_activity: '',
-            P_type: '',
+            P_type: ['', '', '', '', '', '', ''],
             P_date2: '',
             P_other: '',
             add_Plan: false,
@@ -275,7 +292,7 @@ export class Network extends Component {
     }
     onTypeChange(index, value) {
         let temp_type = this.state.P_type;
-
+        console.log(temp_type)
         if (isEmptyValue(temp_type[index])) {
             temp_type[index] = value;
         } else {
@@ -288,7 +305,7 @@ export class Network extends Component {
     render() {
         const { Agency_name, Caretaker_name, Caretaker_Last_name, Position, Agency_phone_number, Main_agency } = this.state;
         const { add, step, add_Plan } = this.state;
-        const { P_year, P_plan, P_activity, P_type, P_date2, P_other } = this.state;
+        const { P_year, P_plan, P_activity, P_type, P_date2, P_other, Role } = this.state;
         const data = {
             columns: [
                 {
@@ -350,7 +367,7 @@ export class Network extends Component {
                     <TopBar {...this.props} ></TopBar>
                     <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
 
-                        {add ?
+                        {(add) ?
                             <form className="login100-form validate-form" style={{
                                 border: '1px solid',
                                 padding: 20, borderColor: '#808080', width: '90%',
@@ -412,7 +429,56 @@ export class Network extends Component {
             return (
                 <div>
                     <TopBar {...this.props} ></TopBar>
+                    <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
+                        {Role === 'admin' && <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
+                            <form className="login100-form validate-form" style={{
+                                border: '1px solid',
+                                padding: 20, borderColor: '#808080', width: '90%',
+                                justifyContent: 'center ', display: 'flex'
+                            }}>
+                                <Col sm={16}>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">ชื่อหน่วยงาน: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="text" className="form-control" name="Agency_name" value={Agency_name} onChange={this.onChange} required />
+                                        </Col>
+                                        <Form.Label column sm="3">เบอร์โทรติดต่อ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="tel"
+                                                className="form-control" name="Agency_phone_number" value={Agency_phone_number} onChange={this.onChange} required />
+                                        </Col>
+                                    </Form.Group>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">ชื่อผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="text" className="form-control" name="Caretaker_name" value={Caretaker_name} onChange={this.onChange} required />
+                                            <button style={{ color: "#0080c0", cursor: 'pointer' }} onClick={this.setMe}><u>me</u></button>
+                                        </Col>
+                                        <Form.Label column sm="3">นามสกุลผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="text" className="form-control" name="Caretaker_Last_name" value={Caretaker_Last_name} onChange={this.onChange} required />
+                                        </Col>
+                                    </Form.Group>
+                                    <Form.Group as={Row}>
+                                        <Form.Label column sm="3">ตำแหน่ง: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="text" className="form-control" name="Position" value={Position} onChange={this.onChange} required />
+                                        </Col>
+                                        <Form.Label column sm="3">หน่วยงานหลัก: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Col>
+                                            <input type="text" className="form-control" name="Main_agency" value={Main_agency} onChange={this.onChange} required />
+                                        </Col>
+                                    </Form.Group>
+                                    <div style={{ justifyContent: 'center', display: 'flex' }}>
+                                        <button className="login100-form-btn" type="submit" style={{ width: 175 }} onClick={this.onSubmitAgency}>บันทึก</button>
+                                        <button className="login100-form-btn2" type="button" style={{ width: 175 }} onClick={this.onCancel}>ยกเลิก</button>
+                                    </div>
+                                </Col>
+                            </form>
+                        </div>}
+                    </div>
                     <div className="content" style={{ alignItems: 'center ', display: 'flex', flexDirection: 'column' }}>
+
                         <div className="login100-form validate-form" style={{
                             border: '1px solid',
                             padding: 20, borderColor: '#808080', width: '90%',
@@ -470,7 +536,7 @@ export class Network extends Component {
                                             </Col>
                                         </Form.Group>
                                         <Form.Group as={Row}>
-                                            <Form.Label column sm="3">กิจกรรม: <label style={{ color: "red" }}>*</label></Form.Label>
+                                            <Form.Label column sm="3">กิจกรรม: </Form.Label>
                                             <Col>
                                                 <textarea className="form-control" name="P_activity" value={P_activity} onChange={this.onChange}
                                                     placeholder="รายละเอียดกิจกรรม"
@@ -478,11 +544,6 @@ export class Network extends Component {
                                             </Col>
                                         </Form.Group>
                                         <Form.Group as={Row}>
-                                            <Form.Label column sm="3">ปี: <label style={{ color: "red" }}>*</label></Form.Label>
-                                            <Col>
-                                                <input type="number" placeholder="พ.ศ."
-                                                    className="form-control" name="P_year" value={P_year} onChange={this.onChange} required />
-                                            </Col>
                                             <Form.Label column sm="3">วันเวลา: </Form.Label>
                                             <Col>
                                                 <div className="form-control">
@@ -490,7 +551,6 @@ export class Network extends Component {
                                                         locale="th"
                                                         dateFormat="dd/MM/yyyy"
                                                         selected={P_date2}
-                                                        maxDate={new Date()}
                                                         onChange={str => this.setState({
                                                             P_date2: str, changeP_date: true
                                                         })}
@@ -502,6 +562,32 @@ export class Network extends Component {
                                                     />
                                                 </div>
                                             </Col>
+                                            <Form.Label column sm="3">วันเวลาสิ้นสุด: </Form.Label>
+                                            <Col>
+                                                <div className="form-control">
+                                                    <DatePicker
+                                                        locale="th"
+                                                        dateFormat="dd/MM/yyyy"
+                                                        selected={P_date2}
+                                                        onChange={str => this.setState({
+                                                            P_date2: str, changeP_date: true
+                                                        })}
+                                                        placeholderText="วัน/เดือน/ปี(ค.ศ.)"
+                                                        peekNextMonth
+                                                        showMonthDropdown
+                                                        showYearDropdown
+                                                        dropdownMode="select"
+                                                    />
+                                                </div>
+                                            </Col>
+                                        </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">ปี: <label style={{ color: "red" }}>*</label></Form.Label>
+                                            <Col>
+                                                <input type="number" placeholder="พ.ศ."
+                                                    className="form-control" name="P_year" value={P_year} onChange={this.onChange} required />
+                                            </Col>
+
                                         </Form.Group>
                                         <Form.Group as={Row}>
                                             <Form.Label column sm="3">หมายเหตุ: </Form.Label>

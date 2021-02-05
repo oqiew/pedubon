@@ -12,6 +12,7 @@ import { isEmptyValue } from '../../components/Methods';
 import { routeName } from '../../route/RouteConstant';
 import { connect } from 'react-redux';
 import { fetch_user_network } from '../../actions';
+import { tableName } from '../database/TableName';
 
 
 export class TopBar extends Component {
@@ -20,11 +21,35 @@ export class TopBar extends Component {
         this.state = {
             ...this.props.fetchReducer.user_network
         }
+        this.tbUserNetwork = Firebase.firestore().collection(tableName.UserNetwork);
     }
     componentDidMount() {
+        Firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log(user.uid)
+                this.tbUserNetwork.doc(user.uid).get().then((doc) => {
+                    if (isEmptyValue(doc.data())) {
+                        this.props.fetch_user_network({
+                            uid: user.uid,
+                        })
+                    } else {
+                        console.log('profile', doc.data())
+                        this.props.fetch_user_network({
+                            uid: user.uid,
+                            ...doc.data()
+                        })
+                    }
 
+                }).catch((error) => {
+                    this.props.fetch_user_network({})
+                    console.log(error)
+                })
+            } else {
+                this.props.fetch_user_network({})
+            }
+        })
     }
-    logout = e => {
+    logout() {
         this.props.fetch_user_network({});
         Firebase.auth()
             .signOut()

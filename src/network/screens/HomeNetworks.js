@@ -13,48 +13,10 @@ export class HomeNetworks extends Component {
         this.state = {
             loading: false
         }
-        this.tbUserNetwork = Firebase.firestore().collection(tableName.UserNetwork);
 
     }
     componentDidMount() {
-        this.setState({
-            loading: true
-        })
-        Firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                this.tbUserNetwork.doc(user.uid).get().then((doc) => {
-                    if (isEmptyValue(doc.data())) {
-                        this.props.fetch_user_network({
-                            uid: user.uid,
-                        })
-                        this.setState({
-                            loading: false
-                        })
-                    } else {
-                        console.log('profile', doc.data())
-                        this.props.fetch_user_network({
-                            uid: user.uid,
-                            ...doc.data()
-                        })
-                        this.setState({
-                            loading: false
-                        })
-                    }
 
-                }).catch((error) => {
-                    this.props.fetch_user_network({})
-                    console.log(error)
-                    this.setState({
-                        loading: false
-                    })
-                })
-            } else {
-                this.props.fetch_user_network({})
-                this.setState({
-                    loading: false
-                })
-            }
-        })
     }
     render() {
         if (this.state.loading) {

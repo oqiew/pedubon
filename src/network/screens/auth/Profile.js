@@ -73,8 +73,9 @@ export class Profile extends Component {
         } else {
             this.tbUserNetwork.doc(this.state.uid).set({
                 Name, Last_name, Nickname, Sex, Phone_number, Birthday: temp_Birtday,
-                Avatar_URL,
-                Create_date: Firebase.firestore.Timestamp.now()
+                Avatar_URL, Email: this.state.email, Agency_ID: '',
+                Create_date: Firebase.firestore.Timestamp.now(),
+                Update_date: Firebase.firestore.Timestamp.now()
             }).then(() => {
                 this.props.fetch_user_network({
                     uid: this.state.uid,
