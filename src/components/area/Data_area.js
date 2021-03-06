@@ -39,7 +39,7 @@ export class Data_area extends Component {
             zoomMap: 8,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_iamge_URL: '',
+            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
             //จุดดี เสี่ยง
             Geo_map_result_description: '',
             Geo_map_time: '',
@@ -108,7 +108,7 @@ export class Data_area extends Component {
                 nbans.forEach((element) => {
                     if (element === doc.data().Area_SDID) {
 
-                        const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
+                        const { Geo_map_position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
                         const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;
                         var icon_m = '';
                         var name_type = '';
@@ -173,7 +173,7 @@ export class Data_area extends Component {
                                         name={Geo_map_name + ""}
                                         position={Geo_map_position}
                                         description={Geo_map_description}
-                                        image={Map_iamge_URL}
+                                        image={Map_image_URL}
                                         icon={icon_m}
                                     // animation={this.props.google.maps.Animation.DROP}
                                     // label={count}

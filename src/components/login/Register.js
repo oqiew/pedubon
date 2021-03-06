@@ -34,7 +34,7 @@ export class Register extends Component {
                 areas: [],
                 //
                 profile: true,
-                Birthday2: new Date(this.props.fetchReducer.user.Birthday.seconds * 1000),
+                Birthday: new Date(this.props.fetchReducer.user.Birthday),
                 loading: false,
             }
         } else {
@@ -59,11 +59,11 @@ export class Register extends Component {
 
     }
     selectDate = date => {
+        const Birthday_format = ("0" + date.getDate()).slice(-2) + "-" + (parseInt(date.getMonth(), 10) + 1) + "-" + date.getFullYear();
         this.setState({
-            Birthday2: date,
-            Birthday: { nanoseconds: 0, seconds: date.getTime() / 1000 },
+            Birthday_format,
+            Birthday: date,
         });
-        console.log({ nanoseconds: 0, seconds: date.getTime() / 1000 })
     };
     componentDidMount() {
         Firebase.firestore().collection(tableName.Areas).onSnapshot(this.onUpdateAreas);
@@ -113,8 +113,7 @@ export class Register extends Component {
             loading: true
         })
         const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
-            Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL, newAvatarUpload } = this.state;
-
+            Line_ID, Facebook, Birthday, Birthday_format, Position, Area_ID, Avatar_URL, newAvatarUpload } = this.state;
         var temp_Avatar_URL = "";
         if (newAvatarUpload) {
             temp_Avatar_URL = await this.uploadImage();
@@ -127,10 +126,11 @@ export class Register extends Component {
                 this.tbUsers.doc(this.state.uid).update({
                     Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
                     Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, Role: '',
+                    Birthday_format,
                     Update_date: Firebase.firestore.Timestamp.now()
                 }).then((docRef) => {
                     this.props.fetch_user({
-                        uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
+                        uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type, Birthday_format,
                         Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
                     });
                     this.setState({
@@ -148,7 +148,7 @@ export class Register extends Component {
             } else {
                 //add data user 
                 this.tbUsers.doc(this.state.uid).set({
-                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email, Birthday_format,
                     Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, Role: '',
                     Create_date: Firebase.firestore.Timestamp.now()
 
@@ -157,7 +157,7 @@ export class Register extends Component {
                     this.props.fetch_user({
                         uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
                         Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
-
+                        Birthday_format,
                     });
                     this.setState({
                         profile: true,
@@ -224,7 +224,7 @@ export class Register extends Component {
         const { email, } = this.state;
         //User Profile
         const { Name, Lastname, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday2, Position,
+            Line_ID, Facebook, Birthday, Position,
             dominance, Area_ID,
             Role, User_type,
         } = this.state;
@@ -250,7 +250,7 @@ export class Register extends Component {
                                     <label >เลือกรูปโปรไฟล์: <label style={{ color: "red" }}>*</label></label>
                                     {(isEmptyValue(avatar_uri) && isEmptyValue(Avatar_URL)) ?
                                         <img className="avatar" alt="avatar_user" src={temp_avatar} />
-                                        : <img className="avatar" alt="avatar_user" src={avatar_uri} />}
+                                        : <img className="avatar" alt="avatar_user" src={isEmptyValue(avatar_uri) ? Avatar_URL : avatar_uri} />}
 
                                     <input type="file" placeholder="อัพโหลดรูปภาพของคุณ" style={{ width: 200, wordWrap: 'break-word' }}
                                         onChange={this.fileChangedHandler} />
@@ -287,8 +287,8 @@ export class Register extends Component {
                                     <div className="form-control">
                                         <DatePicker
                                             locale="th"
-                                            dateFormat="dd/MM/yyyy"
-                                            selected={Birthday2}
+                                            dateFormat="dd-MM-yyyy"
+                                            selected={Birthday}
                                             maxDate={new Date()}
                                             onChange={this.selectDate}
                                             placeholderText="วัน/เดือน/ปี(ค.ศ.)"

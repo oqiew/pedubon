@@ -21,7 +21,10 @@ import CanvasJSReact from '../../canvasjs.react';
 import RadarChart from 'react-svg-radar-chart';
 import 'react-svg-radar-chart/build/css/index.css'
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
-const BorderLinearProgress = withStyles((theme) => ({
+const ColorNo1 = '#f19867';
+const ColorNo2 = '#3e9eff';
+const ColorNo3 = '#6ad500';
+const BorderLinearProgress1 = withStyles((theme) => ({
     root: {
         height: 10,
         borderRadius: 5,
@@ -31,7 +34,33 @@ const BorderLinearProgress = withStyles((theme) => ({
     },
     bar: {
         borderRadius: 5,
-        backgroundColor: '#1a90ff',
+        backgroundColor: ColorNo1,
+    },
+}))(LinearProgress);
+const BorderLinearProgress2 = withStyles((theme) => ({
+    root: {
+        height: 10,
+        borderRadius: 5,
+    },
+    colorPrimary: {
+        backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
+    },
+    bar: {
+        borderRadius: 5,
+        backgroundColor: ColorNo2,
+    },
+}))(LinearProgress);
+const BorderLinearProgress3 = withStyles((theme) => ({
+    root: {
+        height: 10,
+        borderRadius: 5,
+    },
+    colorPrimary: {
+        backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
+    },
+    bar: {
+        borderRadius: 5,
+        backgroundColor: ColorNo3,
     },
 }))(LinearProgress);
 export class Register extends Component {
@@ -122,7 +151,7 @@ export class Register extends Component {
 
         //User Profile
         const { email, Name, Lastname, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, bd, Position, Role,
+            Line_ID, Facebook, Birthday_format, Position, Role,
             Avatar_URL, area_name
 
         } = this.state;
@@ -130,6 +159,7 @@ export class Register extends Component {
         const { c1, c2, c3, journey, User_type, C1, C2, C3, Journey } = this.state;
 
         // const ShowC10 = (C1[0] * 100) / 5;
+        const ShowC10 = 50;
         // const ShowC11 = (C1[1] * 100) / 5;
         // const captionsC3 = {
         //     // columns
@@ -147,6 +177,14 @@ export class Register extends Component {
         //     Q3: C3[2],
         //     Q4: C3[3],
         // }
+        const card_style = {
+            backgroundColor: '#91c8c8',
+            borderRadius: 10,
+            boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+            transition: "0.3s",
+            padding: 10
+
+        }
         if (this.state.loading) {
             return <Loading></Loading>
         } else {
@@ -154,95 +192,169 @@ export class Register extends Component {
                 <div>
                     <Topnav user={this.state.User}></Topnav>
                     <div className='main_component'>
-                        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                            <div>
-                                {Avatar_URL && <img className="avatar" alt="avatar" style={{ marginRight: 30 }} src={Avatar_URL} />}
-                            </div>
-                            <div style={{ flexDirection: 'column' }}>
-                                <h4 style={{ padding: 5 }}>{email} : {Role === 'admin' && <b style={{ color: 'red' }}>{Role}</b>}</h4>
-                                <h4 style={{ padding: 5 }}><strong>ชื่อ : </strong>{Name} {Lastname}<strong> ชื่อเล่น : </strong>{Nickname}<strong> เพศ : </strong>{Sex}<strong>  วันเกิด : </strong>{bd}</h4>
-                                <h4 style={{ padding: 5 }}><strong>ประเภทผู้ใช้ : </strong>{User_type}<strong>  เบอร์โทรศัพท์มือถือ : </strong>{Phone_number}</h4>
-                                <h4 style={{ padding: 5 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h4>
-                                <h4 style={{ padding: 5 }}><strong>ตำแหน่ง : </strong>{Position}</h4>
-                                <h4 style={{ padding: 5 }}><strong>อปท : </strong>{area_name}</h4>
+                        <div style={card_style}>
+                            <Row >
+                                <Col sm={4} style={{ display: 'flex', justifyContent: "center", alignItems: 'center' }}>
+                                    {Avatar_URL && <img className="avatar" alt="avatar" src={Avatar_URL} />}
+                                </Col>
+                                <Col style={{ flexDirection: 'column' }} sm="auto">
+                                    <h4 style={{ padding: 5 }}>{email}  {Role === 'admin' && <b style={{ color: 'red' }}>({Role})</b>}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>ชื่อ : </strong>{Name} {Lastname}<strong> ชื่อเล่น : </strong>{Nickname}</h4>
+                                    <h4 style={{ padding: 5 }}><strong> เพศ : </strong>{Sex}<strong>  วันเกิด : </strong>{Birthday_format}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>ประเภทผู้ใช้ : </strong>{User_type}<strong>  เบอร์โทรศัพท์มือถือ : </strong>{Phone_number}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>ตำแหน่ง : </strong>{Position}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>อปท : </strong>{area_name}</h4>
 
-                            </div>
+                                </Col>
+                            </Row>
+                            <Row style={{ justifyContent: 'center' }}>
+                                {/* <Link className="btn btn-success" to={routeName.PowerUser}>แก้ไขพลัง</Link> */}
 
+                            </Row>
+                            <hr style={{ margin: 10 }}></hr>
+                            <Row style={{ marginTop: 20 }}>
+                                <Col>
+
+                                    <div style={{ flexDirection: 'row' }}>
+                                        <span>การมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัด</span>
+                                        <span>C101</span>
+                                        <div style={{ flexDirection: 'row' }}>
+                                            <span>No.1</span>
+                                            <BorderLinearProgress1 variant="determinate" value={ShowC10} />
+                                        </div>
+                                        <div>
+                                            <span>No.2</span>
+                                            <BorderLinearProgress2 variant="determinate" value={ShowC10} />
+                                        </div>
+                                        <div>
+                                            <span>No.3</span>
+                                            <BorderLinearProgress3 variant="determinate" value={ShowC10} />
+                                        </div>
+                                    </div>
+                                    <div style={{ flexDirection: 'row' }}>
+                                        <span>การมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัด</span>
+                                        <span>C102</span>
+                                        <div style={{ flexDirection: 'row' }}>
+                                            <span>No.1</span>
+                                            <BorderLinearProgress1 variant="determinate" value={ShowC10} />
+                                        </div>
+                                        <div>
+                                            <span>No.2</span>
+                                            <BorderLinearProgress2 variant="determinate" value={ShowC10} />
+                                        </div>
+                                        <div>
+                                            <span>No.3</span>
+                                            <BorderLinearProgress3 variant="determinate" value={ShowC10} />
+                                        </div>
+                                    </div>
+
+                                </Col>
+
+                                <Col>
+                                    <RadarChart
+
+                                        captions={{
+                                            // columns
+                                            Q1: 'C201',
+                                            Q2: 'C202',
+                                            Q3: 'C203',
+                                            Q4: 'C204',
+                                        }}
+                                        data={[
+                                            // data
+                                            {
+                                                // data: {
+                                                //     Q1: C2[0] * 0.2,
+                                                //     Q2: C2[1] * 0.2,
+                                                //     Q3: C2[2] * 0.2,
+                                                //     Q4: C2[3] * 0.2,
+
+                                                // },
+                                                data: {
+                                                    Q1: 1 * 0.2,
+                                                    Q2: 2 * 0.2,
+                                                    Q3: 3 * 0.2,
+                                                    Q4: 4 * 0.2,
+
+                                                },
+                                                meta: { color: ColorNo1 }
+                                            },
+                                        ]}
+                                        size={400}
+                                    />
+
+                                </Col>
+                                <Col>
+                                    <RadarChart
+
+                                        captions={{
+                                            // columns
+                                            Q1: 'C301',
+                                            Q2: 'C302',
+                                            Q3: 'C303',
+                                            Q4: 'C304',
+                                        }}
+                                        data={[
+                                            // data
+                                            {
+                                                // data: {
+                                                //     Q1: C3[0] * 0.2,
+                                                //     Q2: C3[1] * 0.2,
+                                                //     Q3: C3[2] * 0.2,
+                                                //     Q4: C3[3] * 0.2,
+
+                                                // },
+                                                data: {
+                                                    Q1: 1 * 0.2,
+                                                    Q2: 2 * 0.2,
+                                                    Q3: 3 * 0.2,
+                                                    Q4: 4 * 0.2,
+
+                                                },
+                                                meta: { color: ColorNo1 }
+                                            }, {
+                                                // data: {
+                                                //     Q1: C3[0] * 0.2,
+                                                //     Q2: C3[1] * 0.2,
+                                                //     Q3: C3[2] * 0.2,
+                                                //     Q4: C3[3] * 0.2,
+
+                                                // },
+                                                data: {
+                                                    Q1: 2 * 0.2,
+                                                    Q2: 3 * 0.2,
+                                                    Q3: 4 * 0.2,
+                                                    Q4: 4 * 0.2,
+
+                                                },
+                                                meta: { color: ColorNo2 }
+                                            }, {
+                                                // data: {
+                                                //     Q1: C3[0] * 0.2,
+                                                //     Q2: C3[1] * 0.2,
+                                                //     Q3: C3[2] * 0.2,
+                                                //     Q4: C3[3] * 0.2,
+
+                                                // },
+                                                data: {
+                                                    Q1: 5 * 0.2,
+                                                    Q2: 5 * 0.2,
+                                                    Q3: 5 * 0.2,
+                                                    Q4: 4 * 0.2,
+
+                                                },
+                                                meta: { color: ColorNo3 }
+                                            },
+
+                                        ]}
+                                        size={400}
+
+                                    />
+                                </Col>
+                            </Row>
                         </div>
-                        <Row style={{ justifyContent: 'center' }}>
-                            {/* <Link className="btn btn-success" to={routeName.PowerUser}>แก้ไขพลัง</Link> */}
-                            <Link className="btn btn-success" to={'/register'}>แก้ไข</Link>
-                        </Row>
-                        <Row style={{ marginTop: 20 }}>
-                            <Col>
 
-                                <div style={{ flexDirection: 'row' }}>
-                                    {/* <p>การมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัด</p> */}
-                                    {/* <p>C101</p> */}
-                                    {/* <BorderLinearProgress variant="determinate" value={ShowC10} /> */}
-                                </div>
-                                <div style={{ flexDirection: 'row' }}>
-                                    {/* <p>ความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน</p> */}
-                                    {/* <p>C102</p> */}
-                                    {/* <BorderLinearProgress variant="determinate" value={ShowC11} /> */}
-                                </div>
-                            </Col>
-
-                            {/* <Col>
-                                <RadarChart
-
-                                    captions={{
-                                        // columns
-                                        Q1: 'C201',
-                                        Q2: 'C202',
-                                        Q3: 'C203',
-                                        Q4: 'C204',
-                                    }}
-                                    data={[
-                                        // data
-                                        {
-                                            data: {
-                                                Q1: C2[0] * 0.2,
-                                                Q2: C2[1] * 0.2,
-                                                Q3: C2[2] * 0.2,
-                                                Q4: C2[3] * 0.2,
-
-                                            },
-                                            meta: { color: '#58FCEC' }
-                                        },
-                                    ]}
-                                    size={400}
-                                />
-
-                            </Col>
-                            <Col>
-                                <RadarChart
-
-                                    captions={{
-                                        // columns
-                                        Q1: 'C301',
-                                        Q2: 'C302',
-                                        Q3: 'C303',
-                                        Q4: 'C304',
-                                    }}
-                                    data={[
-                                        // data
-                                        {
-                                            data: {
-                                                Q1: C3[0] * 0.2,
-                                                Q2: C3[1] * 0.2,
-                                                Q3: C3[2] * 0.2,
-                                                Q4: C3[3] * 0.2,
-
-                                            },
-                                            meta: { color: '#58FCEC' }
-                                        },
-                                    ]}
-                                    size={400}
-
-                                />
-                            </Col> */}
-                        </Row>
                     </div>
                 </div>
             )

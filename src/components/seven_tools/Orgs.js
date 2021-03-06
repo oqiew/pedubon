@@ -59,16 +59,16 @@ class Orgs extends React.Component {
       .doc(id);
     searchRef.get().then(doc => {
       if (this.state.User_ID === doc.data().Informer_ID) {
-        if (doc.exists && doc.data().Map_iamge_URL !== "") {
+        if (doc.exists && doc.data().Map_image_URL !== "") {
           var desertRef = Firebase.storage().refFromURL(
-            doc.data().Map_iamge_URL
+            doc.data().Map_image_URL
           );
           desertRef
             .delete()
-            .then(function() {
+            .then(function () {
               console.log("delete geomap and image sucess");
             })
-            .catch(function(error) {
+            .catch(function (error) {
               console.log(
                 "image No such document! " + doc.data().areaImageName
               );
@@ -88,7 +88,7 @@ class Orgs extends React.Component {
               Geo_map_description: "",
               Informer_ID: "",
               Create_date: "",
-              Map_iamge_URL: "",
+              Map_image_URL: "",
               status_add: false,
               edit_ID: ""
             });
@@ -102,7 +102,7 @@ class Orgs extends React.Component {
     });
   }
 
-  cancelEdit = e => {};
+  cancelEdit = e => { };
   removeOrg = id => {
     const { Name, User_ID } = this.state;
     this.tbSM
@@ -148,7 +148,7 @@ class Orgs extends React.Component {
     querySnapshot.forEach(doc => {
       const {
         Informer_name,
-        Map_iamge_URL,
+        Map_image_URL,
         Geo_map_name,
         Geo_map_description,
         Status_o,
@@ -162,7 +162,7 @@ class Orgs extends React.Component {
           orgs.push({
             Key: doc.id,
             img: (
-              <img src={Map_iamge_URL} style={{ width: 50, height: 50 }}></img>
+              <img src={Map_image_URL} style={{ width: 50, height: 50 }}></img>
             ),
             Geo_map_name,
             Geo_map_description,
@@ -216,7 +216,7 @@ class Orgs extends React.Component {
           orgs2.push({
             Key: doc.id,
             img: (
-              <img src={Map_iamge_URL} style={{ width: 50, height: 50 }}></img>
+              <img src={Map_image_URL} style={{ width: 50, height: 50 }}></img>
             ),
             Geo_map_name,
             Geo_map_description,
@@ -244,7 +244,7 @@ class Orgs extends React.Component {
         orgs.push({
           Key: doc.id,
           img: (
-            <img src={Map_iamge_URL} style={{ width: 50, height: 50 }}></img>
+            <img src={Map_image_URL} style={{ width: 50, height: 50 }}></img>
           ),
           Geo_map_name,
           Geo_map_description,
@@ -390,7 +390,7 @@ class Orgs extends React.Component {
     };
 
     const events = {
-      select: function(event) {
+      select: function (event) {
         var { nodes, edges } = event;
         console.log("Selected nodes:");
         console.log(nodes);
@@ -441,64 +441,64 @@ class Orgs extends React.Component {
                   />
                 </div>
               ) : (
-                <form onSubmit={this.onSubmit}>
-                  <Form.Group as={Row}>
-                    <label>
-                      เลือกองค์กรที่ต้องการเชื่อมความสมัพันธ์:{" "}
-                      <label style={{ color: "red" }}>*</label>
-                    </label>
+                  <form onSubmit={this.onSubmit}>
+                    <Form.Group as={Row}>
+                      <label>
+                        เลือกองค์กรที่ต้องการเชื่อมความสมัพันธ์:{" "}
+                        <label style={{ color: "red" }}>*</label>
+                      </label>
 
-                    <select
-                      className="form-control"
-                      id="To"
-                      name="To"
-                      value={To}
-                      onChange={this.onChange}
-                      required
-                    >
-                      <option value=""></option>
-                      {console.log(this.state.edit_ID)}
-                      {this.state.orgs.map((data, i) =>
-                        this.state.edit_ID !== data.Key ? (
-                          <option key={i + 1} value={data.Key}>
-                            {data.Geo_map_name}
-                          </option>
-                        ) : (
-                          ""
-                        )
-                      )}
-                    </select>
-                  </Form.Group>
-                  <Form.Group as={Row}>
-                    <label>
-                      ความสัมพันธ์: <label style={{ color: "red" }}>*</label>
-                    </label>
+                      <select
+                        className="form-control"
+                        id="To"
+                        name="To"
+                        value={To}
+                        onChange={this.onChange}
+                        required
+                      >
+                        <option value=""></option>
+                        {console.log(this.state.edit_ID)}
+                        {this.state.orgs.map((data, i) =>
+                          this.state.edit_ID !== data.Key ? (
+                            <option key={i + 1} value={data.Key}>
+                              {data.Geo_map_name}
+                            </option>
+                          ) : (
+                              ""
+                            )
+                        )}
+                      </select>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <label>
+                        ความสัมพันธ์: <label style={{ color: "red" }}>*</label>
+                      </label>
 
-                    <select
-                      className="form-control"
-                      id="Relation"
-                      name="Relation"
-                      value={Relation}
-                      onChange={this.onChange}
-                      required
+                      <select
+                        className="form-control"
+                        id="Relation"
+                        name="Relation"
+                        value={Relation}
+                        onChange={this.onChange}
+                        required
+                      >
+                        <option value=""></option>
+                        <option value="พึ่งพา">พึ่งพา</option>
+                        <option value="ติดต่อ">ติดต่อ</option>
+                      </select>
+                    </Form.Group>
+                    <button type="submit" className="btn btn-success">
+                      บันทึก
+                  </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => this.setState({ edit_ID: "", To: "" })}
                     >
-                      <option value=""></option>
-                      <option value="พึ่งพา">พึ่งพา</option>
-                      <option value="ติดต่อ">ติดต่อ</option>
-                    </select>
-                  </Form.Group>
-                  <button type="submit" className="btn btn-success">
-                    บันทึก
+                      ยกเลิก
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => this.setState({ edit_ID: "", To: "" })}
-                  >
-                    ยกเลิก
-                  </button>
-                </form>
-              )}
+                  </form>
+                )}
             </Col>
           </Row>
 

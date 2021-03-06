@@ -30,6 +30,7 @@ export class Network extends Component {
                 Agency_phone_number: '',
                 Main_agency: '',
                 laoding: false,
+                mouth: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
                 ...this.props.fetchReducer.user_network,
             }
         } else {
@@ -41,12 +42,14 @@ export class Network extends Component {
                 laoding: false,
                 ...this.props.fetchReducer.user_network,
                 P_year: 2564,
+                Year: 2564,
+                Year2: 2564,
                 P_plan: '',
                 P_activity: '',
                 P_type: ['', '', '', '', '', '', ''],
-                P_date2: '',
+                mouth: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
+                M1: '', M2: '',
                 P_other: '',
-                changeP_date: false,
                 plans: [],
                 Agency_name: '',
                 Position: '',
@@ -95,13 +98,14 @@ export class Network extends Component {
                 loading: false
             })
         })
-        this.tbPlanNetwork.where("Agency_ID", '==', this.state.Agency_ID).onSnapshot(this.onListPlan)
+        this.tbPlanNetwork.where("Agency_ID", '==', this.state.Agency_ID).orderBy('Create_date', 'asc').onSnapshot(this.onListPlan)
     }
+
     onListPlan = (query) => {
         const plans = [];
         let number = 1;
         query.forEach(doc => {
-            const { P_type, P_date } = doc.data();
+            const { P_type, M1, M2, Year, Year2, P_year } = doc.data();
             let types = ""
             P_type.forEach((element, i) => {
                 if (!isEmptyValue(element)) {
@@ -112,8 +116,8 @@ export class Network extends Component {
 
                 }
             });
-            const temp_date = new Date(P_date.seconds * 1000);
-            const date = temp_date.getDate() + "/" + (parseInt(temp_date.getMonth(), 10) + 1) + "/" + (parseInt(temp_date.getFullYear(), 10) + 543);
+
+            const date = (M1 === M2 && Year === Year2) ? M2 + " " + Year : M1 + "/" + Year + "-" + M2 + "/" + Year2;
 
             plans.push({
                 ID: doc.id,
@@ -223,21 +227,12 @@ export class Network extends Component {
     }
     onSubmitPlan = (e) => {
         e.preventDefault();
-        const { P_year, P_plan, P_activity, P_type, P_date2, P_other, Agency_ID, P_date } = this.state;
+        const { Year, Year2, P_year, P_plan, P_activity, P_type, P_other, Agency_ID, M1, M2 } = this.state;
         this.setState({
             laoding: true
         })
-        let temp_date = ''
-        if (this.state.changeP_date) {
-            temp_date = P_date2
-        } else {
-            if (!isEmptyValue(P_date)) {
-                temp_date = P_date
-            }
-
-        }
         this.tbPlanNetwork.add({
-            P_year, P_plan, P_activity, P_type, P_date: temp_date, P_other,
+            Year, P_plan, P_activity, P_type, P_other, M1, M2, Year2, P_year,
             Agency_ID: this.state.Agency_ID,
             Agency_name: this.state.Agency_name,
             Create_date: Firebase.firestore.Timestamp.now(),
@@ -245,11 +240,14 @@ export class Network extends Component {
         }).then(() => {
             this.setState({
                 P_year: 2564,
+                Year: 2564,
+                Year2: 2564,
                 P_plan: '',
                 P_activity: '',
                 P_type: ['', '', '', '', '', '', ''],
                 P_date2: '',
                 P_other: '',
+                M1: '', M2: '',
                 add_Plan: false,
                 changeP_date: false,
                 loading: false
@@ -280,11 +278,14 @@ export class Network extends Component {
     onCancelPlan = () => {
         this.setState({
             P_year: 2564,
+            Year: 2564,
+            Year2: 2564,
             P_plan: '',
             P_activity: '',
             P_type: ['', '', '', '', '', '', ''],
             P_date2: '',
             P_other: '',
+            M1: '', M2: '',
             add_Plan: false,
             changeP_date: false,
             loading: false
@@ -305,7 +306,7 @@ export class Network extends Component {
     render() {
         const { Agency_name, Caretaker_name, Caretaker_Last_name, Position, Agency_phone_number, Main_agency } = this.state;
         const { add, step, add_Plan } = this.state;
-        const { P_year, P_plan, P_activity, P_type, P_date2, P_other, Role } = this.state;
+        const { Year, Year2, P_year, P_plan, P_activity, P_type, P_other, Role, mouth, M1, M2 } = this.state;
         const data = {
             columns: [
                 {
@@ -373,35 +374,35 @@ export class Network extends Component {
                                 padding: 20, borderColor: '#808080', width: '90%',
                                 justifyContent: 'center ', display: 'flex'
                             }}>
-                                <Col sm={16}>
+                                <Col sm={24}>
                                     <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ชื่อหน่วยงาน: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
+                                        <Form.Label column sm="3">ชื่อหน่วยงาน: </Form.Label>
+                                        <Col sm={5}>
                                             <input type="text" className="form-control" name="Agency_name" value={Agency_name} onChange={this.onChange} required />
                                         </Col>
-                                        <Form.Label column sm="3">เบอร์โทรติดต่อ: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
+                                        <Form.Label column sm="3">เบอร์โทรติดต่อ: </Form.Label>
+                                        <Col sm={5}>
                                             <input type="tel"
                                                 className="form-control" name="Agency_phone_number" value={Agency_phone_number} onChange={this.onChange} required />
                                         </Col>
                                     </Form.Group>
                                     <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ชื่อผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Form.Label column sm="3">ชื่อผู้รับผิดชอบ: </Form.Label>
                                         <Col>
                                             <input type="text" className="form-control" name="Caretaker_name" value={Caretaker_name} onChange={this.onChange} required />
                                             <button style={{ color: "#0080c0", cursor: 'pointer' }} onClick={this.setMe}><u>me</u></button>
                                         </Col>
-                                        <Form.Label column sm="3">นามสกุลผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Form.Label column sm="3">นามสกุลผู้รับผิดชอบ: </Form.Label>
                                         <Col>
                                             <input type="text" className="form-control" name="Caretaker_Last_name" value={Caretaker_Last_name} onChange={this.onChange} required />
                                         </Col>
                                     </Form.Group>
                                     <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ตำแหน่ง: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Form.Label column sm="3">ตำแหน่ง: </Form.Label>
                                         <Col>
                                             <input type="text" className="form-control" name="Position" value={Position} onChange={this.onChange} required />
                                         </Col>
-                                        <Form.Label column sm="3">หน่วยงานหลัก: <label style={{ color: "red" }}>*</label></Form.Label>
+                                        <Form.Label column sm="3">หน่วยงานหลัก: </Form.Label>
                                         <Col>
                                             <input type="text" className="form-control" name="Main_agency" value={Main_agency} onChange={this.onChange} required />
                                         </Col>
@@ -429,54 +430,53 @@ export class Network extends Component {
             return (
                 <div>
                     <TopBar {...this.props} ></TopBar>
-                    <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
-                        {Role === 'admin' && <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
-                            <form className="login100-form validate-form" style={{
-                                border: '1px solid',
-                                padding: 20, borderColor: '#808080', width: '90%',
-                                justifyContent: 'center ', display: 'flex'
-                            }}>
-                                <Col sm={16}>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ชื่อหน่วยงาน: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="text" className="form-control" name="Agency_name" value={Agency_name} onChange={this.onChange} required />
-                                        </Col>
-                                        <Form.Label column sm="3">เบอร์โทรติดต่อ: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="tel"
-                                                className="form-control" name="Agency_phone_number" value={Agency_phone_number} onChange={this.onChange} required />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ชื่อผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="text" className="form-control" name="Caretaker_name" value={Caretaker_name} onChange={this.onChange} required />
-                                            <button style={{ color: "#0080c0", cursor: 'pointer' }} onClick={this.setMe}><u>me</u></button>
-                                        </Col>
-                                        <Form.Label column sm="3">นามสกุลผู้รับผิดชอบ: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="text" className="form-control" name="Caretaker_Last_name" value={Caretaker_Last_name} onChange={this.onChange} required />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="3">ตำแหน่ง: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="text" className="form-control" name="Position" value={Position} onChange={this.onChange} required />
-                                        </Col>
-                                        <Form.Label column sm="3">หน่วยงานหลัก: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <input type="text" className="form-control" name="Main_agency" value={Main_agency} onChange={this.onChange} required />
-                                        </Col>
-                                    </Form.Group>
-                                    <div style={{ justifyContent: 'center', display: 'flex' }}>
-                                        <button className="login100-form-btn" type="submit" style={{ width: 175 }} onClick={this.onSubmitAgency}>บันทึก</button>
-                                        <button className="login100-form-btn2" type="button" style={{ width: 175 }} onClick={this.onCancel}>ยกเลิก</button>
-                                    </div>
-                                </Col>
-                            </form>
-                        </div>}
-                    </div>
+                    {Role === 'admin' && <div className="content" style={{ alignItems: 'center ', display: 'flex', flexDirection: 'column' }}>
+                        <form className="login100-form validate-form" style={{
+                            border: '1px solid',
+                            padding: 20, borderColor: '#808080', width: '90%',
+                            justifyContent: 'center ', display: 'flex'
+                        }}>
+                            <Col sm={16}>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">ชื่อหน่วยงาน: </Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Agency_name" value={Agency_name} onChange={this.onChange} required />
+                                    </Col>
+                                    <Form.Label column sm="3">เบอร์โทรติดต่อ: </Form.Label>
+                                    <Col>
+                                        <input type="tel"
+                                            className="form-control" name="Agency_phone_number" value={Agency_phone_number} onChange={this.onChange} required />
+                                    </Col>
+                                </Form.Group>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">ชื่อผู้รับผิดชอบ: </Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Caretaker_name" value={Caretaker_name} onChange={this.onChange} required />
+                                        <button style={{ color: "#0080c0", cursor: 'pointer' }} onClick={this.setMe}><u>me</u></button>
+                                    </Col>
+                                    <Form.Label column sm="3">นามสกุลผู้รับผิดชอบ: </Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Caretaker_Last_name" value={Caretaker_Last_name} onChange={this.onChange} required />
+                                    </Col>
+                                </Form.Group>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="3">ตำแหน่ง: </Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Position" value={Position} onChange={this.onChange} required />
+                                    </Col>
+                                    <Form.Label column sm="3">หน่วยงานหลัก: </Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="Main_agency" value={Main_agency} onChange={this.onChange} required />
+                                    </Col>
+                                </Form.Group>
+                                <div style={{ justifyContent: 'center', display: 'flex' }}>
+                                    <button className="login100-form-btn" type="submit" style={{ width: 175 }} onClick={this.onSubmitAgency}>บันทึก</button>
+                                    <button className="login100-form-btn2" type="button" style={{ width: 175 }} onClick={this.onCancel}>ยกเลิก</button>
+                                </div>
+                            </Col>
+                        </form>
+                    </div>}
+
                     <div className="content" style={{ alignItems: 'center ', display: 'flex', flexDirection: 'column' }}>
 
                         <div className="login100-form validate-form" style={{
@@ -544,45 +544,40 @@ export class Network extends Component {
                                             </Col>
                                         </Form.Group>
                                         <Form.Group as={Row}>
-                                            <Form.Label column sm="3">วันเวลา: </Form.Label>
+                                            <Form.Label column sm="3">วันเวลาเรี่ม: </Form.Label>
                                             <Col>
-                                                <div className="form-control">
-                                                    <DatePicker
-                                                        locale="th"
-                                                        dateFormat="dd/MM/yyyy"
-                                                        selected={P_date2}
-                                                        onChange={str => this.setState({
-                                                            P_date2: str, changeP_date: true
-                                                        })}
-                                                        placeholderText="วัน/เดือน/ปี(ค.ศ.)"
-                                                        peekNextMonth
-                                                        showMonthDropdown
-                                                        showYearDropdown
-                                                        dropdownMode="select"
-                                                    />
-                                                </div>
+                                                <Form.Control as="select" defaultValue="เลือก..." onChange={str => this.setState({ M1: str.target.value })}>
+                                                    <option value="">เลือก...</option>
+                                                    {mouth.map((element, i) =>
+                                                        <option key={i} value={element}>{element}</option>
+                                                    )}
+                                                </Form.Control>
                                             </Col>
                                             <Form.Label column sm="3">วันเวลาสิ้นสุด: </Form.Label>
                                             <Col>
-                                                <div className="form-control">
-                                                    <DatePicker
-                                                        locale="th"
-                                                        dateFormat="dd/MM/yyyy"
-                                                        selected={P_date2}
-                                                        onChange={str => this.setState({
-                                                            P_date2: str, changeP_date: true
-                                                        })}
-                                                        placeholderText="วัน/เดือน/ปี(ค.ศ.)"
-                                                        peekNextMonth
-                                                        showMonthDropdown
-                                                        showYearDropdown
-                                                        dropdownMode="select"
-                                                    />
-                                                </div>
+                                                <Form.Control as="select" defaultValue="เลือก..." onChange={str => this.setState({ M2: str.target.value })}>
+                                                    <option value="">เลือก...</option>
+                                                    {mouth.map((element, i) =>
+                                                        <option key={i} value={element}>{element}</option>
+                                                    )}
+                                                </Form.Control>
                                             </Col>
                                         </Form.Group>
                                         <Form.Group as={Row}>
-                                            <Form.Label column sm="3">ปี: <label style={{ color: "red" }}>*</label></Form.Label>
+                                            <Form.Label column sm="3">ปีดำเนินการเริ่ม: <label style={{ color: "red" }}>*</label></Form.Label>
+                                            <Col>
+                                                <input type="number" placeholder="พ.ศ."
+                                                    className="form-control" name="Year" value={Year} onChange={this.onChange} required />
+                                            </Col>
+                                            <Form.Label column sm="3">ปีดำเนินการสิ้นสุด: <label style={{ color: "red" }}>*</label></Form.Label>
+                                            <Col>
+                                                <input type="number" placeholder="พ.ศ."
+                                                    className="form-control" name="Year2" value={Year2} onChange={this.onChange} required />
+                                            </Col>
+
+                                        </Form.Group>
+                                        <Form.Group as={Row}>
+                                            <Form.Label column sm="3">ปีงบประมาณ: <label style={{ color: "red" }}>*</label></Form.Label>
                                             <Col>
                                                 <input type="number" placeholder="พ.ศ."
                                                     className="form-control" name="P_year" value={P_year} onChange={this.onChange} required />

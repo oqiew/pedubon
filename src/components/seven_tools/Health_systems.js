@@ -77,7 +77,7 @@ class Health_systems extends React.Component {
         From,
         To,
         Geo_map_name,
-        Map_iamge_URL,
+        Map_image_URL,
         Geo_map_description
       } = doc.data();
 
@@ -100,14 +100,14 @@ class Health_systems extends React.Component {
       }
       var tempIMG = "";
       if (
-        Map_iamge_URL !== "" &&
-        Map_iamge_URL !== null &&
-        Map_iamge_URL !== undefined
+        Map_image_URL !== "" &&
+        Map_image_URL !== null &&
+        Map_image_URL !== undefined
       ) {
         tempIMG = (
           <img
             alt="imageURL"
-            src={Map_iamge_URL}
+            src={Map_image_URL}
             style={{ width: 50, height: 50 }}
           ></img>
         );
@@ -314,7 +314,7 @@ class Health_systems extends React.Component {
       .then(doc => {
         if (doc.exists) {
           var desertRef = Firebase.storage().refFromURL(
-            doc.data().Map_iamge_URL
+            doc.data().Map_image_URL
           );
           desertRef
             .delete()

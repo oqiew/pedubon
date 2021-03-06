@@ -51,10 +51,9 @@ export class Networks extends Component {
         let number = 1;
         let numAllplans = 0;
         query.forEach(doc => {
-            const { P_type, P_date } = doc.data();
+            const { P_type, P_date, M1, M2, Year, Year2 } = doc.data();
             let types = ""
-            const temp_date = new Date(P_date.seconds * 1000);
-            const date = temp_date.getDate() + "/" + (parseInt(temp_date.getMonth(), 10) + 1) + "/" + (parseInt(temp_date.getFullYear(), 10) + 543);
+            const date = (M1 === M2 && Year === Year2) ? M2 + " " + Year : M1 + "/" + Year + "-" + M2 + "/" + Year2;
             P_type.forEach((element, i) => {
                 if (!isEmptyValue(element)) {
                     types += P_type[i];
@@ -208,7 +207,7 @@ export class Networks extends Component {
             exportEnabled: true,
             theme: "light1", // "light1", "dark1", "dark2"
             title: {
-                text: 'เพศ',
+                text: 'ข้อมูลการดำเนินงาน ',
                 fontSize: 20
             },
             data: [{
@@ -287,10 +286,8 @@ export class Networks extends Component {
 const mapStateToProps = state => ({
     fetchReducer: state.fetchReducer
 });
-
 //used to action (dispatch) in to props
 const mapDispatchToProps = {
     fetch_user_network
 };
-
 export default connect(mapStateToProps, mapDispatchToProps)(Networks);

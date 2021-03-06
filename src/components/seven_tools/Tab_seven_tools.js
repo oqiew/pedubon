@@ -11,7 +11,7 @@ export default class Tab_seven_tools extends Component {
                 <Link to={'/local_calendars'} className="btn btn-info">ปฏิทินชุมชน</Link>
                 <Link to={'/local_historys'} className="btn btn-info">ประวัติศาสตร์ชุมชน</Link>
                 <Link to={'/persons'} className="btn btn-info">ประวัติบุคคลสำคัญ</Link>
-                <Link to={'/select_local'} className="btn btn-danger">กลับหน้าเลือกชุมชน</Link>
+                <Link to={'/select_local'} className="btn btn-danger">กลับหน้า</Link>
             </Row>
         )
     }

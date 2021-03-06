@@ -8,69 +8,56 @@ import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
 import "../../App.css";
 import Main_map_admin from "./Main_map_admin";
+import { Row } from "react-bootstrap";
+import { tableName } from "../../database/TableConstant";
+import Loading from "../Loading";
 
 export class Select_local extends Component {
   constructor(props) {
     super(props);
-    this.tbLGOs = Firebase.firestore().collection("LGOS");
+    this.tbAreas = Firebase.firestore().collection(tableName.Areas);
     this.state = {
       ...this.props.fetchReducer.user,
-      LGOs: []
+      area: [],
+      loading: false
     };
   }
   componentDidMount() {
-
+    this.setState({
+      loading: true
+    })
+    this.tbAreas.doc(this.state.Area_ID).get().then((doc) => {
+      this.setState({
+        area: doc.data(),
+        loading: false
+      })
+    })
   }
   render() {
-    const { Ban_name, Name } = this.state;
-    if (!isEmptyValue(Name)) {
-      return (
-        <div>
-          <Topnav></Topnav>
-          <div className="main_component">
-            <center>
-              {!isEmptyValue(Ban_name) ? (
-                <h2>
-                  <strong>
-                    บ้าน {Ban_name}หมู่ที่{this.state.Area_ID + 1}
-                  </strong>{" "}
-                </h2>
-              ) : (
-                  <h2>
-                    <strong>กรุณาเลือกหมู่บ้านที่ทำการสำรวจ</strong>{" "}
-                  </h2>
-                )}
-
-              <hr></hr>
-
-              {!isEmptyValue(Ban_name) ? (
-                <Link className="btn btn-success" to="/main_seven_tools">
-                  เปิดเครื่องมือ
-                </Link>
-              ) : (
-                  <div></div>
-                )}
-              <Link className="btn btn-success" to={`/select_ban`}>
-                เลือกหมู่บ้าน
-              </Link>
-              <hr></hr>
-              <Main_map_admin></Main_map_admin>
-            </center>
-          </div>
-        </div>
-      );
+    const { area } = this.state;
+    if (this.state.loading) {
+      return (<Loading></Loading>)
     } else {
       return (
         <div>
           <Topnav></Topnav>
           <div className="main_component">
             <center>
+
+              <div style={{ justifyContent: "center" }} >
+                <h4>{area.Dominance + area.Area_name} {area.Area_type !== '' && area.Area_type}</h4>
+                <Link className="btn btn-success" to="/main_seven_tools">
+                  เปิดเครื่องมือ
+                </Link>
+              </div>
+
+
+              <hr></hr>
               <Main_map_admin></Main_map_admin>
             </center>
           </div>
         </div>
       );
-
     }
 
   }

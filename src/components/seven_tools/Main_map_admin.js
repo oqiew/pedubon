@@ -25,12 +25,13 @@ import TabST from './Tab_seven_tools';
 import { connect } from 'react-redux';
 import { fetch_user } from '../../actions';
 import google_api from '../../'
+import { tableName } from '../../database/TableConstant';
 export class Main_map_admin extends Component {
     constructor(props) {
         super(props);
-        this.tbSocialMap = Firebase.firestore().collection('SOCIAL_MAPS');
+        this.tbSocialMaps = Firebase.firestore().collection(tableName.Social_maps);
+
         this.unsubscribe = null;
-        console.log(this.props)
         this.state = {
             showingInfoWindow: false,
             activeMarker: {},
@@ -39,7 +40,7 @@ export class Main_map_admin extends Component {
             zoomMap: 9,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_iamge_URL: '',
+            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
             //จุดดี เสี่ยง
             Geo_map_result_description: '',
             Geo_map_time: '',
@@ -60,13 +61,16 @@ export class Main_map_admin extends Component {
             sflag_danger: false,
             saccident: false,
 
+
         }
         this.onMarkerClick = this.onMarkerClick.bind(this);
         this.onMapClicked = this.onMapClicked.bind(this);
     }
 
     componentDidMount() {
-        this.unsubscribe = this.tbSocialMap.onSnapshot(this.ListMark);
+        this.unsubscribe = this.tbSocialMaps.onSnapshot(this.ListMark);
+
+
     }
     componentWillUnmount() {
         this.unsubscribe = null;
@@ -78,7 +82,7 @@ export class Main_map_admin extends Component {
         let count = 0;
 
         querySnapshot.forEach((doc) => {
-            const { Geo_map_position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
+            const { Geo_map_position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
             const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;
             var icon_m = '';
             var name_type = '';
@@ -143,7 +147,7 @@ export class Main_map_admin extends Component {
                             name={Geo_map_name + ""}
                             position={Geo_map_position}
                             description={Geo_map_description}
-                            image={Map_iamge_URL}
+                            image={Map_image_URL}
                             icon={icon_m}
                         // animation={this.props.google.maps.Animation.DROP}
                         // label={count}
@@ -234,7 +238,7 @@ export class Main_map_admin extends Component {
                 sflag_danger: false,
                 saccident: false,
             })
-            this.tbSocialMap.onSnapshot(this.ListMark);
+            this.tbSocialMaps.onSnapshot(this.ListMark);
 
         } else {
 
@@ -311,7 +315,7 @@ export class Main_map_admin extends Component {
                     })
                 }
             }
-            this.tbSocialMap.onSnapshot(this.ListMark);
+            this.tbSocialMaps.onSnapshot(this.ListMark);
         }
     }
 

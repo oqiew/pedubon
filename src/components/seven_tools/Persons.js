@@ -60,7 +60,7 @@ class Persons extends React.Component {
       .then(doc => {
         if (doc.exists) {
           var desertRef = Firebase.storage().refFromURL(
-            doc.data().Map_iamge_URL
+            doc.data().Map_image_URL
           );
           desertRef
             .delete()
@@ -151,7 +151,7 @@ class Persons extends React.Component {
         HAddress,
         HAge,
         HCareer,
-        Map_iamge_URL,
+        Map_image_URL,
         Geo_map_name,
         Geo_map_description,
         HName,
@@ -163,7 +163,7 @@ class Persons extends React.Component {
       listLifeStorys.push({
         img: (
           <img
-            src={Map_iamge_URL}
+            src={Map_image_URL}
             alt="mapURL"
             style={{ width: 50, height: 50 }}
           ></img>

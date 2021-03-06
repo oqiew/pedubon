@@ -30,11 +30,9 @@ export class Home extends Component {
       if (user) {
         Firebase.firestore().collection(tableName.Users).doc(user.uid).get().then(async (doc) => {
           if (doc.exists) {
-            const temp_bd = new Date(doc.data().Birthday.seconds * 1000);
             const area_name = await this.setArea(doc.data().Area_ID)
             this.props.fetch_user({
               uid: user.uid, email: user.email, ...doc.data(),
-              bd: temp_bd.getDate() + "/" + (parseInt(temp_bd.getMonth(), 10) + 1) + "/" + temp_bd.getFullYear(),
               area_name
             });
             if (!this.props.fetchReducer.isFectching) {
