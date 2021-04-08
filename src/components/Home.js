@@ -13,6 +13,7 @@ import Loading from "./Loading";
 import Topnav from "./top/Topnav";
 import { isEmptyValue } from "./Methods";
 import { tableName } from "../database/TableConstant";
+import { routeName } from "../route/RouteConstant";
 
 export class Home extends Component {
   constructor(props) {
@@ -30,18 +31,20 @@ export class Home extends Component {
       if (user) {
         Firebase.firestore().collection(tableName.Users).doc(user.uid).get().then(async (doc) => {
           if (doc.exists) {
-            const area_name = await this.setArea(doc.data().Area_ID)
+            const area = await this.setArea(doc.data().Area_ID)
             this.props.fetch_user({
               uid: user.uid, email: user.email, ...doc.data(),
-              area_name
+              area
             });
             if (!this.props.fetchReducer.isFectching) {
+
               this.setState({
                 loading: false
               });
             }
           } else {
             this.props.fetch_user({ uid: user.uid, email: user.email });
+            this.props.history.push('register')
             this.setState({
               loading: false
             });
@@ -64,7 +67,7 @@ export class Home extends Component {
     return new Promise((resolve, reject) => {
       Firebase.firestore().collection(tableName.Areas).doc(Area_ID).get().then((doc) => {
         if (doc.exists) {
-          resolve(doc.data().Dominance + " " + doc.data().Area_name + "(" + doc.data().Area_type + ")")
+          resolve({ ID: doc.id, ...doc.data(), area_name: doc.data().Dominance + " " + doc.data().Area_name + "(" + doc.data().Area_type + ")" })
         } else {
           reject('')
         }

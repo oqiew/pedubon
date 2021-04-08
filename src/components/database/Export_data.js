@@ -14,9 +14,7 @@ export class Export_data extends Component {
         }
     }
     componentDidMount() {
-
         Firebase.firestore().collection('communityCalendars').onSnapshot(this.ListUsers);
-
     }
     ListCollection = (querySnapshot) => {
         console.log(querySnapshot.size);
@@ -33,15 +31,11 @@ export class Export_data extends Component {
                 ...doc.data()
 
             });
-
-
         });
-
         this.setState({
             List_user
         })
     }
-
     render() {
 
         return (
@@ -55,7 +49,6 @@ export class Export_data extends Component {
                     <ExcelColumn label="ชื่อ" value="nameActivity" />
                     <ExcelColumn label="ประเภท" value="typeActivity" />
                     <ExcelColumn label="คนเพิ่ม" value="userAddID" />
-
                     {/* calendar
                     <ExcelColumn label="Key" value="Key" />
                     <ExcelColumn label="บ้านไอดี" value="banID" />

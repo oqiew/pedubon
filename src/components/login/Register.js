@@ -34,7 +34,8 @@ export class Register extends Component {
                 areas: [],
                 //
                 profile: true,
-                Birthday: new Date(this.props.fetchReducer.user.Birthday),
+                Birthday: new Date(this.props.fetchReducer.user.Birthday.seconds * 1000),
+
                 loading: false,
             }
         } else {
@@ -131,7 +132,7 @@ export class Register extends Component {
                 }).then((docRef) => {
                     this.props.fetch_user({
                         uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type, Birthday_format,
-                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
+                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, area: this.state.area
                     });
                     this.setState({
                         loading: false
@@ -242,7 +243,7 @@ export class Register extends Component {
                     <Topnav></Topnav>
                     <div className="content" style={{ justifyContent: 'center ', display: 'flex' }}>
                         <form className="login100-form validate-form" style={{ width: '80%' }} onSubmit={this.onSubmit} >
-                            <h3>{email}</h3>
+                            <h3 style={{ marginTop: 10 }}>{email}</h3>
                             <hr></hr>
 
                             <Form.Group as={Row}>

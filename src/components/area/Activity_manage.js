@@ -41,7 +41,7 @@ export class Activity_manage extends Component {
             // area
             Area_local_ID: this.props.match.params.id,
             AProvince_ID: '', ADistrict_ID: '', Dominance: '', Area_type: '', Create_date: '',
-            Informer_name: '', Informer_ID: '', LGO_ID: '', Area_name: '', Activity: '', Project_name: '',
+            Informer_name: '', Create_By_ID: '', LGO_ID: '', Area_name: '', Activity: '', Project_name: '',
             Province: '', District: '', Mentor: '', Leader1: '', Leader2: '', Leader3: '', Description: '',
             leader_local: [], mentors: [], File_URL: '', isUploading: false, File_name: '', progress: 0,
             // Activity
@@ -84,7 +84,7 @@ export class Activity_manage extends Component {
         querySnapshot.forEach((doc) => {
             const { Area_local_ID, Activity_name, Activity_description, Activity_date, Activity_image_URL, Activity_image_name, Activity_position,
                 Activity_iamge_URL, Activity_iamge_name,
-                Activity_time, Activity_Informer_ID, Activity_Informer_Name, User_ID, Name } = doc.data();
+                Activity_time, Activity_Informer_ID, Activity_Informer_Name, Name } = doc.data();
             if (!isEmptyValue(Activity_position)) {
                 listshowMarker.push(
 
@@ -151,8 +151,7 @@ export class Activity_manage extends Component {
 
     }
     delete(data, id) {
-
-        if (this.state.User_ID === data.Informer_ID) {
+        if (this.state.uid === data.Create_By_ID) {
             if (data.Activity_image_URL !== '') {
                 var desertRef = Firebase.storage().refFromURL(data.Activity_image_URL);
                 desertRef.delete().then(function () {
@@ -269,13 +268,13 @@ export class Activity_manage extends Component {
     onSubmit = (e) => {
         e.preventDefault();
         const { Area_local_ID, Activity_name, Activity_description, Activity_date, Activity_image_URL, Activity_image_name, Activity_position,
-            Activity_time, Activity_Informer_ID, Activity_Informer_Name, User_ID, Name } = this.state;
+            Activity_time, Activity_Informer_ID, Activity_Informer_Name, uid, Name } = this.state;
 
         if (Activity_image_URL !== '') {
             if (this.state.edit_ID !== '') {
                 this.tbActivity.doc(this.state.edit_ID).update({
                     Area_local_ID, Activity_name, Activity_description, Activity_date, Activity_image_URL, Activity_image_name, Activity_position,
-                    Activity_time, Informer_ID: User_ID, Informer_Name: Name, Create_date: GetCurrentDate('/'),
+                    Activity_time, Create_By_ID: uid, Informer_Name: Name, Create_date: GetCurrentDate('/'),
                 }).then((result) => {
                     this.setState({
                         Activity_name: '', Activity_description: '', Activity_date: '', Activity_image_URL: '', Activity_image_name: '',
@@ -288,7 +287,7 @@ export class Activity_manage extends Component {
             } else {
                 this.tbActivity.add({
                     Area_local_ID, Activity_name, Activity_description, Activity_date, Activity_image_URL, Activity_image_name, Activity_position,
-                    Activity_time, Informer_ID: User_ID, Informer_Name: Name, Create_date: GetCurrentDate('/'),
+                    Activity_time, Create_By_ID: uid, Informer_Name: Name, Create_date: GetCurrentDate('/'),
                 }).then((result) => {
                     this.setState({
                         Activity_name: '', Activity_description: '', Activity_date: '', Activity_image_URL: '', Activity_image_name: '',

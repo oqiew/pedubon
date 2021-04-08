@@ -30,6 +30,7 @@ import Local_calendars from "./components/seven_tools/Local_calendars";
 import Local_historys from "./components/seven_tools/Local_historys";
 import Person_historys from "./components/seven_tools/Person_historys";
 import Persons from "./components/seven_tools/Persons";
+import BanManages from "./components/seven_tools/BanManages";
 // import Activity_local from "./components/seven_tools/Activity_local";
 //system data
 import Import_data from "./system_data/Import_data";
@@ -145,6 +146,7 @@ export class App extends Component {
         <Route path={routeName.AdminNetwork} component={AdminNetwork}></Route>
         {/* user */}
         <Route path={routeName.PowerUser} component={PowerUser}></Route>
+        <Route path={'/BanManages'} component={BanManages}></Route>
 
       </Router>
     );

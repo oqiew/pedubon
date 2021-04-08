@@ -430,7 +430,7 @@ class Health_systems extends React.Component {
       Geo_map_description,
       edit_ID,
       Name,
-      User_ID
+      uid
     } = this.state;
 
     this.tbSM
@@ -443,7 +443,7 @@ class Health_systems extends React.Component {
         HAge,
         HCareer,
         Geo_map_description,
-        Informer_ID: User_ID
+        Create_By_ID: uid
       })
       .then(result => {
         this.setState({});
@@ -454,12 +454,12 @@ class Health_systems extends React.Component {
   };
   onSubmitB = e => {
     e.preventDefault();
-    const { Geo_map_name, User_ID, Name } = this.state;
+    const { Geo_map_name, uid, Name } = this.state;
     const { Area_ID, Area_SDID, Area_DID, Area_PID } = this.state;
     this.tbSM
       .add({
         Geo_map_name,
-        Informer_ID: User_ID,
+        Create_By_ID: uid,
         Informer_name: Name,
         Geo_map_type: "resource",
         Area_ID, Area_SDID, Area_DID, Area_PID
@@ -585,34 +585,34 @@ class Health_systems extends React.Component {
                   </button>
                 </form>
               ) : (
-                  <div>
-                    <div style={{ display: "flex" }}>
-                      <Link to={"/main_seven_tools"} className="btn btn-success">
-                        เพิ่มข้อมูลทรัพยากร
+                <div>
+                  <div style={{ display: "flex" }}>
+                    <Link to={"/main_seven_tools"} className="btn btn-success">
+                      เพิ่มข้อมูลทรัพยากร
                     </Link>
-                      <button
-                        className="btn btn-success"
-                        onClick={() => this.setState({ addb: true })}
-                      >
-                        เพิ่มหมวดหมู่หรือข้อมูลอื่น
+                    <button
+                      className="btn btn-success"
+                      onClick={() => this.setState({ addb: true })}
+                    >
+                      เพิ่มหมวดหมู่หรือข้อมูลอื่น
                     </button>
-                      <Link to={"/main_seven_tools"} className="btn btn-danger">
-                        กลับ
+                    <Link to={"/main_seven_tools"} className="btn btn-danger">
+                      กลับ
                     </Link>
-                    </div>
-
-                    <MDBDataTable
-                      striped
-                      bordered
-                      small
-                      searchLabel="ค้นหา"
-                      paginationLabel={["ก่อนหน้า", "ถัดไป"]}
-                      infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
-                      entriesLabel="แสดง รายการ"
-                      data={data}
-                    />
                   </div>
-                )}
+
+                  <MDBDataTable
+                    striped
+                    bordered
+                    small
+                    searchLabel="ค้นหา"
+                    paginationLabel={["ก่อนหน้า", "ถัดไป"]}
+                    infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
+                    entriesLabel="แสดง รายการ"
+                    data={data}
+                  />
+                </div>
+              )}
             </Col>
           </Row>
 

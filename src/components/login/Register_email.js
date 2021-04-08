@@ -55,7 +55,7 @@ export class Register_email extends Component {
             Firebase.auth().createUserWithEmailAndPassword(Email, Password)
                 .then(doc => {
                     this.props.fetch_user({
-                        User_ID: doc.user.uid,
+                        uid: doc.user.uid,
                         Email: doc.user.email
                     });
                     confirmAlert({

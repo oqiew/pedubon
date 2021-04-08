@@ -18,14 +18,14 @@ import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue, alert_status, GetCurrentDate } from "../Methods";
+import { tableName } from "../../database/TableConstant";
 class Persons extends React.Component {
   constructor(props) {
     super(props);
-    this.tbUserHome = Firebase.firestore().collection("SOCIAL_MAPS");
+    this.tbUserHome = Firebase.firestore().collection(tableName.Social_maps);
     //getl);
+    this.nameFocus = React.createRef();
     this.state = {
-      users: [],
-
       //data
       HName: "",
       HLastname: "",
@@ -42,19 +42,16 @@ class Persons extends React.Component {
   }
 
   componentDidMount() {
-    const { Area_ID, Area_SDID, Area_DID, Area_PID } = this.state;
+    const { Area_ID, } = this.state;
     this.tbUserHome
       .where("Geo_map_type", "==", "home")
+      .where("Important", "==", true)
       .where("Area_ID", "==", Area_ID)
-      .where("Area_PID", "==", Area_PID)
-      .where("Area_DID", "==", Area_DID)
-      .where("Area_SDID", "==", Area_SDID)
       .onSnapshot(this.onCollectionUpdate);
   }
 
   delete(id) {
-    Firebase.firestore()
-      .collection("SOCIAL_MAPS")
+    this.tbUserHome
       .doc(id)
       .get()
       .then(doc => {
@@ -65,8 +62,7 @@ class Persons extends React.Component {
           desertRef
             .delete()
             .then(function () {
-              Firebase.firestore()
-                .collection("SOCIAL_MAPS")
+              this.tbUserHome
                 .doc(id)
                 .delete()
                 .then(() => {
@@ -84,54 +80,43 @@ class Persons extends React.Component {
         }
       });
   }
-  edit(id) {
-    Firebase.firestore()
-      .collection("SOCIAL_MAPS")
-      .doc(id)
-      .get()
-      .then(doc => {
-        const {
-          HName,
-          HLastname,
-          HAddress,
-          HAge,
-          HCareer,
-          Geo_map_description
-        } = doc.data();
-        if (
-          HName === "" ||
-          HLastname === "" ||
-          HAddress === "" ||
-          HAge === "" ||
-          HCareer === "" ||
-          HName === undefined ||
-          HLastname === undefined ||
-          HAddress === undefined ||
-          HAge === undefined ||
-          HCareer === undefined
-        ) {
-          this.setState({
-            Geo_map_description,
-            edit_ID: id
-          });
-        } else {
-          console.log("edit");
-          this.setState({
-            HName,
-            HLastname,
-            HAddress,
-            HAge,
-            HCareer,
-            Geo_map_description,
-            edit_ID: id
-          });
-        }
-      })
-      .catch(error => {
-        console.error("Error document: ", error);
+  edit(data, id) {
+    console.log(this)
+    const { HName, HLastname, HAddress,
+      HAge, HCareer, Geo_map_description, } = data;
+    if (
+      HName === "" ||
+      HLastname === "" ||
+      HAddress === "" ||
+      HAge === "" ||
+      HCareer === "" ||
+      HName === undefined ||
+      HLastname === undefined ||
+      HAddress === undefined ||
+      HAge === undefined ||
+      HCareer === undefined
+    ) {
+      this.setState({
+        Geo_map_description,
+        edit_ID: id
       });
+    } else {
+      this.setState({
+        HName,
+        HLastname,
+        HAddress,
+        HAge,
+        HCareer,
+        Geo_map_description,
+        edit_ID: id
+      }, () => {
+        this.nameFocus.focus();
+      });
+    }
+
   }
   cancelEdit = e => {
+    this.nameFocus = null;
     this.setState({
       HName: "",
       HLastname: "",
@@ -187,13 +172,13 @@ class Persons extends React.Component {
                 ></img>
               </Link>
             ) : (
-                <div></div>
-              )}
+              <div></div>
+            )}
             <img
               alt="edit"
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               src={Iedit}
-              onClick={this.edit.bind(this, doc.id)}
+              onClick={this.edit.bind(this, doc.data(), doc.id)}
             ></img>
             <img
               alt="delete"
@@ -220,46 +205,34 @@ class Persons extends React.Component {
   onSubmit = e => {
     e.preventDefault();
     const {
-      HName,
-      HLastname,
-      HAddress,
-      HAge,
-      HCareer,
-      Geo_map_description,
-      Area_ID,
-      Area_PID,
-      Area_DID,
-      Area_SDID,
-      edit_ID,
-      Name,
-      User_ID
+      HName, HLastname, HAddress, HAge,
+      HCareer, Geo_map_description, Area_ID, edit_ID, Name, uid
     } = this.state;
-
     this.tbUserHome
       .doc(edit_ID)
       .update({
         Informer_name: Name,
-        Area_ID,
-        Area_PID,
-        Area_DID,
-        Area_SDID,
+        Geo_ban_ID: Area_ID,
         HName,
         HLastname,
         HAddress,
         HAge,
         HCareer,
         Geo_map_description,
-        Informer_ID: User_ID,
+        Informer_ID: uid,
+        Update_date: Firebase.firestore.Timestamp.now(),
       })
       .then(result => {
+        this.nameFocus = null;
         this.setState({
-          HName: "",
-          HLastname: "",
-          HAddress: "",
-          HAge: "",
-          HCareer: "",
-          Geo_map_description: "",
-          edit_ID: ""
+          HName: '',
+          HLastname: '',
+          HAddress: '',
+          HAge: '',
+          HCareer: '',
+          Geo_map_description: '',
+          edit_ID: '',
+          selected: 1,
         });
       })
       .catch(error => {
@@ -275,7 +248,7 @@ class Persons extends React.Component {
       HAge,
       HCareer,
       Geo_map_description,
-      Ban_name
+      area
     } = this.state;
     const data = {
       columns: [
@@ -332,7 +305,6 @@ class Persons extends React.Component {
       ],
       rows: this.state.listLifeStorys
     };
-
     return (
       <div>
         <Topnav></Topnav>
@@ -340,8 +312,7 @@ class Persons extends React.Component {
           <center>
             <h2>
               <strong>
-                ประวัติชีวิต : {Ban_name}หมู่ที่
-                {this.state.Area_ID + 1}
+                ประวัติชีวิต : พื้นที่ {area.Area_name}
               </strong>{" "}
             </h2>
             <hr></hr>
@@ -376,6 +347,8 @@ class Persons extends React.Component {
                         </Form.Label>
                         <Col>
                           <input
+
+                            ref={(ref) => (this.nameFocus = ref)}
                             type="text"
                             className="form-control"
                             placeholder="ชื่อ"
@@ -498,12 +471,12 @@ class Persons extends React.Component {
                 </form>
               </div>
             ) : (
-                <div>
-                  <Link to={"/main_seven_tools"} className="btn btn-danger">
-                    กลับ
+              <div>
+                <Link to={"/main_seven_tools"} className="btn btn-danger">
+                  กลับ
                 </Link>
-                </div>
-              )}
+              </div>
+            )}
           </center>
         </div>
       </div>

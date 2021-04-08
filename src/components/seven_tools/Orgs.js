@@ -18,10 +18,11 @@ import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
+import { tableName } from "../../database/TableConstant";
 class Orgs extends React.Component {
   constructor(props) {
     super(props);
-    this.tbSM = Firebase.firestore().collection("SOCIAL_MAPS");
+    this.tbSocialMaps = Firebase.firestore().collection(tableName.Social_maps);
     //getl);
     this.state = {
       statusSave: "",
@@ -39,12 +40,9 @@ class Orgs extends React.Component {
 
   componentDidMount() {
     const { Area_ID, Area_SDID, Area_DID, Area_PID } = this.state;
-    this.tbSM
+    this.tbSocialMaps
       .where("Geo_map_type", "==", "organization")
       .where("Area_ID", "==", Area_ID)
-      .where("Area_PID", "==", Area_PID)
-      .where("Area_DID", "==", Area_DID)
-      .where("Area_SDID", "==", Area_SDID)
       .onSnapshot(this.onCollectionUpdate);
   }
 
@@ -58,7 +56,7 @@ class Orgs extends React.Component {
       .collection("SOCIAL_MAPS")
       .doc(id);
     searchRef.get().then(doc => {
-      if (this.state.User_ID === doc.data().Informer_ID) {
+      if (this.state.uid === doc.data().Create_By_ID) {
         if (doc.exists && doc.data().Map_image_URL !== "") {
           var desertRef = Firebase.storage().refFromURL(
             doc.data().Map_image_URL
@@ -86,7 +84,7 @@ class Orgs extends React.Component {
               Geo_map_name: "",
               Geo_map_type: "",
               Geo_map_description: "",
-              Informer_ID: "",
+              Create_By_ID: "",
               Create_date: "",
               Map_image_URL: "",
               status_add: false,
@@ -104,15 +102,15 @@ class Orgs extends React.Component {
 
   cancelEdit = e => { };
   removeOrg = id => {
-    const { Name, User_ID } = this.state;
-    this.tbSM
+    const { Name, uid } = this.state;
+    this.tbSocialMaps
       .doc(id)
       .update({
         Informer_name: Name,
         To: "",
         Status_o: 0,
         Relation: "",
-        Informer_ID: User_ID
+        Create_By_ID: uid
       })
       .then(result => {
         this.state.orgs.forEach(element => {
@@ -284,22 +282,22 @@ class Orgs extends React.Component {
 
   onSubmit = e => {
     e.preventDefault();
-    const { edit_ID, Name, User_ID, To, Relation } = this.state;
+    const { edit_ID, Name, uid, To, Relation } = this.state;
     console.log(edit_ID);
-    this.tbSM
+    this.tbSocialMaps
       .doc(edit_ID)
       .update({
         Informer_name: Name,
         To,
         Status_o: 1,
         Relation,
-        Informer_ID: User_ID
+        Create_By_ID: uid
       })
       .then(result => {
         this.setState({
           edit_ID: ""
         });
-        // this.unsubscribe = this.tbSM
+        // this.unsubscribe = this.tbSocialMaps
         //     .where('Geo_map_type', '==', 'organization')
         //     .where('Geo_Ban_name_ID', '==', this.state.Area_ID)
         //     .onSnapshot(this.onCollectionUpdate);
@@ -441,64 +439,64 @@ class Orgs extends React.Component {
                   />
                 </div>
               ) : (
-                  <form onSubmit={this.onSubmit}>
-                    <Form.Group as={Row}>
-                      <label>
-                        เลือกองค์กรที่ต้องการเชื่อมความสมัพันธ์:{" "}
-                        <label style={{ color: "red" }}>*</label>
-                      </label>
+                <form onSubmit={this.onSubmit}>
+                  <Form.Group as={Row}>
+                    <label>
+                      เลือกองค์กรที่ต้องการเชื่อมความสมัพันธ์:{" "}
+                      <label style={{ color: "red" }}>*</label>
+                    </label>
 
-                      <select
-                        className="form-control"
-                        id="To"
-                        name="To"
-                        value={To}
-                        onChange={this.onChange}
-                        required
-                      >
-                        <option value=""></option>
-                        {console.log(this.state.edit_ID)}
-                        {this.state.orgs.map((data, i) =>
-                          this.state.edit_ID !== data.Key ? (
-                            <option key={i + 1} value={data.Key}>
-                              {data.Geo_map_name}
-                            </option>
-                          ) : (
-                              ""
-                            )
-                        )}
-                      </select>
-                    </Form.Group>
-                    <Form.Group as={Row}>
-                      <label>
-                        ความสัมพันธ์: <label style={{ color: "red" }}>*</label>
-                      </label>
-
-                      <select
-                        className="form-control"
-                        id="Relation"
-                        name="Relation"
-                        value={Relation}
-                        onChange={this.onChange}
-                        required
-                      >
-                        <option value=""></option>
-                        <option value="พึ่งพา">พึ่งพา</option>
-                        <option value="ติดต่อ">ติดต่อ</option>
-                      </select>
-                    </Form.Group>
-                    <button type="submit" className="btn btn-success">
-                      บันทึก
-                  </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() => this.setState({ edit_ID: "", To: "" })}
+                    <select
+                      className="form-control"
+                      id="To"
+                      name="To"
+                      value={To}
+                      onChange={this.onChange}
+                      required
                     >
-                      ยกเลิก
+                      <option value=""></option>
+                      {console.log(this.state.edit_ID)}
+                      {this.state.orgs.map((data, i) =>
+                        this.state.edit_ID !== data.Key ? (
+                          <option key={i + 1} value={data.Key}>
+                            {data.Geo_map_name}
+                          </option>
+                        ) : (
+                          ""
+                        )
+                      )}
+                    </select>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <label>
+                      ความสัมพันธ์: <label style={{ color: "red" }}>*</label>
+                    </label>
+
+                    <select
+                      className="form-control"
+                      id="Relation"
+                      name="Relation"
+                      value={Relation}
+                      onChange={this.onChange}
+                      required
+                    >
+                      <option value=""></option>
+                      <option value="พึ่งพา">พึ่งพา</option>
+                      <option value="ติดต่อ">ติดต่อ</option>
+                    </select>
+                  </Form.Group>
+                  <button type="submit" className="btn btn-success">
+                    บันทึก
                   </button>
-                  </form>
-                )}
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => this.setState({ edit_ID: "", To: "" })}
+                  >
+                    ยกเลิก
+                  </button>
+                </form>
+              )}
             </Col>
           </Row>
 

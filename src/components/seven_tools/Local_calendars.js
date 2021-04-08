@@ -15,10 +15,15 @@ import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue, GetCurrentDate } from "../Methods";
 import { confirmAlert } from "react-confirm-alert"; // Import
+import { tableName } from "../../database/TableConstant";
+import { Button } from "react-bootstrap";
+
 class Local_calendar extends React.Component {
   constructor(props) {
     super(props);
-    this.tbLocalCalendar = Firebase.firestore().collection("LOCAL_CALENDARS");
+
+    this.tbLocalCalendars = Firebase.firestore().collection(tableName.Local_calendars);
+    this.tbBans = Firebase.firestore().collection(tableName.Bans)
     //getl);
     this.state = {
       status_add: false,
@@ -46,19 +51,34 @@ class Local_calendar extends React.Component {
       showMouth1: [],
       showMouth2: [],
       Name_activity: "",
+      selected_ban: {
+        Name: '',
+        ID: ''
+      },
+      query_bans: [],
+      bans: [],
+      selected: 1,
       //getuser
       ...this.props.fetchReducer.user
     };
   }
 
   componentDidMount() {
-    const { Area_ID, Area_SDID, Area_DID, Area_PID } = this.state;
-    this.unsubscribe = this.tbLocalCalendar
-      .where("Area_ID", "==", Area_ID)
-      .where("Area_PID", "==", Area_PID)
-      .where("Area_DID", "==", Area_DID)
-      .where("Area_SDID", "==", Area_SDID)
-      .onSnapshot(this.onCollectionUpdate);
+    this.genrateMonth(0, 0);
+    this.tbBans.where('Area_ID', '==', this.state.Area_ID).onSnapshot(this.onListBans)
+  }
+  onListBans = (query) => {
+    const query_bans = [];
+    query.forEach(doc => {
+      query_bans.push({
+        ID: doc.id,
+        ...doc.data()
+      })
+    });
+    this.setState({
+      query_bans,
+      bans: query_bans
+    })
   }
   onCollectionUpdate = querySnapshot => {
     const dataCalendar1 = [];
@@ -116,7 +136,7 @@ class Local_calendar extends React.Component {
               alt="edit"
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               src={Iedit}
-              onClick={this.edit.bind(this, doc.id)}
+              onClick={this.edit.bind(this, doc.data(), doc.id)}
             ></img>
             <img
               alt="delete"
@@ -150,7 +170,7 @@ class Local_calendar extends React.Component {
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               alt="edit"
               src={Iedit}
-              onClick={this.edit.bind(this, doc.id)}
+              onClick={this.edit.bind(this, doc.data(), doc.id)}
             ></img>
             <img
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
@@ -173,8 +193,7 @@ class Local_calendar extends React.Component {
   };
 
   delete(id) {
-    Firebase.firestore()
-      .collection("LOCAL_CALENDARS")
+    this.tbLocalCalendars
       .doc(id)
       .delete()
       .then(() => {
@@ -184,34 +203,26 @@ class Local_calendar extends React.Component {
         console.error("Error removing document: ", error);
       });
   }
-  edit(id) {
-    Firebase.firestore()
-      .collection("LOCAL_CALENDARS")
-      .doc(id)
-      .get()
-      .then(doc => {
-        const { Name_activity, Month1, Month2, Type_activity } = doc.data();
-        const mouth = this.state;
-        const showMouth2 = [];
-        for (let index = Month1; index <= 12; index++) {
-          showMouth2.push(
-            <option key={index} value={index}>
-              {mouth[index - 1]}
-            </option>
-          );
-        }
-        this.setState({
-          Name_activity,
-          Month1,
-          Month2,
-          Type_activity,
-          edit_ID: id,
-          showMouth2
-        });
-      })
-      .catch(error => {
-        console.error("Error document: ", error);
-      });
+  edit(data, id) {
+    const { mouth } = this.state;
+    const showMouth2 = [];
+    for (let index = data.Month1; index <= 12; index++) {
+      showMouth2.push(
+        <option key={index} value={index}>
+          {mouth[index - 1]}
+        </option>
+      );
+    }
+
+    this.setState({
+      Name_activity: data.Name_activity,
+      Month1: data.Month1,
+      Month2: data.Month2,
+      Type_activity: data.Type_activity,
+      edit_ID: id,
+      showMouth2
+    });
+
   }
   cancelEdit = e => {
     this.setState({
@@ -219,9 +230,23 @@ class Local_calendar extends React.Component {
       Month1: "",
       Month2: "",
       Type_activity: "",
-      edit_ID: ""
+      edit_ID: "",
     });
   };
+  onBack = () => {
+    this.setState({
+      Name_activity: "",
+      Month1: "",
+      Month2: "",
+      Type_activity: "",
+      edit_ID: "",
+      selected_ban: {
+        Name: '',
+        ID: ''
+      },
+      selected: 1,
+    });
+  }
 
   onChange = (e, value) => {
     const state = this.state;
@@ -257,229 +282,239 @@ class Local_calendar extends React.Component {
       showMouth2
     });
   }
+  onSelectedBan(Name, ID) {
+    this.tbLocalCalendars
+      .where('Ban_ID', '==', ID)
+      .onSnapshot(this.onCollectionUpdate);
+    this.setState({
+      selected_ban: { Name, ID },
+      selected: 2
+    })
+  }
   onSubmit = e => {
     e.preventDefault();
     const {
-      Name_activity,
-      Month1,
-      Month2,
-      User_ID,
-      Type_activity,
-      Area_ID,
-      Area_PID,
-      Area_DID,
-      Area_SDID,
-      Name,
-      edit_ID
+      Name_activity, Month1, Month2, uid, Type_activity, Name, edit_ID,
+      Area_ID, selected_ban
     } = this.state;
 
-    if (edit_ID !== "") {
-      this.tbLocalCalendar
-        .doc(edit_ID)
-        .set({
-          Name_activity,
-          Type_activity,
-          Month1,
-          Month2,
-          Informer_ID: User_ID,
-          Informer_name: Name,
-          Area_ID,
-          Area_PID,
-          Area_DID,
-          Area_SDID, Create_date: GetCurrentDate('/'),
-        })
-        .then(docRef => {
+    if (!isEmptyValue(selected_ban.ID)) {
+      if (edit_ID !== "") {
+        this.tbLocalCalendars
+          .doc(edit_ID)
+          .set({
+            Name_activity, Type_activity
+            , Month1, Month2, Informer_ID: uid, Informer_name: Name
+            , Ban_ID: this.state.selected_ban.ID,
+            Update_date: Firebase.firestore.Timestamp.now()
+          })
+          .then(docRef => {
+            this.setState({
+              Name_activity: "",
+              Month1: "",
+              Month2: "",
+              Type_activity: "",
+              edit_ID: ""
+            });
+          })
+          .catch(error => {
+            confirmAlert({
+              title: "บันทึกข้อมูลไม่สำเร็จ",
+              buttons: [
+                {
+                  label: "ตกลง"
+                }
+              ]
+            });
+            console.error("Error adding document: ", error);
+          });
+      } else {
+        this.tbLocalCalendars
+          .add({
+            Name_activity, Type_activity,
+            Update_date: Firebase.firestore.Timestamp.now(),
+            Create_date: Firebase.firestore.Timestamp.now()
+            , Month1, Month2, Informer_ID: uid, Informer_name: Name
+            , Area_ID, Ban_ID: this.state.selected_ban.ID,
+          })
+          .then(docRef => {
 
-          this.setState({
-            Name_activity: "",
-            Month1: "",
-            Month2: "",
-            Type_activity: "",
-            edit_ID: ""
+            this.setState({
+              Name_activity: "",
+              Month1: "",
+              Month2: "",
+              Type_activity: ""
+            });
+          })
+          .catch(error => {
+            confirmAlert({
+              title: "เพิ่มข้อมูลไม่สำเร็จ",
+              buttons: [
+                {
+                  label: "ตกลง"
+                }
+              ]
+            });
+            console.error("Error adding document: ", error);
           });
-        })
-        .catch(error => {
-          confirmAlert({
-            title: "บันทึกข้อมูลไม่สำเร็จ",
-            buttons: [
-              {
-                label: "ตกลง"
-              }
-            ]
-          });
-          console.error("Error adding document: ", error);
-        });
-    } else {
-      this.tbLocalCalendar
-        .add({
-          Name_activity,
-          Type_activity,
-          Month1,
-          Month2,
-          Informer_ID: User_ID,
-          Informer_name: Name,
-          Area_ID,
-          Area_PID,
-          Area_DID,
-          Area_SDID,
-          Create_date: GetCurrentDate('/'),
-        })
-        .then(docRef => {
-
-          this.setState({
-            Name_activity: "",
-            Month1: "",
-            Month2: "",
-            Type_activity: ""
-          });
-        })
-        .catch(error => {
-          confirmAlert({
-            title: "เพิ่มข้อมูลไม่สำเร็จ",
-            buttons: [
-              {
-                label: "ตกลง"
-              }
-            ]
-          });
-          console.error("Error adding document: ", error);
-        });
+      }
     }
+
   };
 
   render() {
-    const { Month1, Month2, Name_activity, Type_activity } = this.state;
+    const { Month1, Month2, Name_activity, Type_activity, selected, bans, selected_ban } = this.state;
 
     return (
       <div>
         <Topnav></Topnav>
         <div className="main_component">
           <center>
-            <h2>
-              <strong>
-                ปฏิทินชุมชน : {this.state.Ban_name}หมู่ที่
-                {this.state.Area_ID + 1}
+            {selected === 1 ?
+              <>
+                <h2>
+                  <strong>
+                    เลือกหมู่บ้าน
               </strong>{" "}
-            </h2>
-            <hr></hr>
-
-            <form onSubmit={this.onSubmit}>
-              <Form.Group as={Row}>
-                <Form.Label column sm="2">
-                  ชื่อ
-                </Form.Label>
-                <Col sm="4">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="ชื่อ กิจกรรม ประเพณี หรือสิ่งที่ทำ"
-                    name="Name_activity"
-                    value={Name_activity}
-                    onChange={this.onChange}
-                    required
-                  />
-                </Col>
-                <Form.Label column sm="2">
-                  กลุ่มกิจกรรม
-                </Form.Label>
-                <Col sm="4">
-                  <select
-                    className="form-control"
-                    name="Type_activity"
-                    value={Type_activity}
-                    onChange={this.onChange}
-                    required
-                  >
-                    <option value=""></option>
-                    <option value="วัฒนธรรมประเพณี">วัฒนธรรมประเพณี</option>
-                    <option value="เศรษฐกิจ">เศรษฐกิจ</option>
-                  </select>
-                </Col>
-              </Form.Group>
-
-              <Form.Group as={Row}>
-                <Form.Label column sm="2">
-                  เดือนที่เริ่ม
-                </Form.Label>
-                <Col sm="4">
-                  <select
-                    className="form-control"
-                    name="Month1"
-                    value={Month1}
-                    onChange={this.onChange}
-                    required
-                  >
-                    <option value=""></option>
-                    {this.state.showMouth1}
-                  </select>
-                </Col>
-                <Form.Label column sm="2">
-                  เดือนที่สิ้นสุด
-                </Form.Label>
-                <Col sm="4">
-                  <select
-                    className="form-control"
-                    name="Month2"
-                    value={Month2}
-                    onChange={this.onChange}
-                    required
-                  >
-                    <option value=""></option>
-                    {this.state.showMouth2}
-                  </select>
-                </Col>
-              </Form.Group>
-
-              <button
-                type="submit"
-                className="btn btn-success"
-                style={{ borderRadius: "4px" }}
-              >
-                บันทึกข้อมูล
-              </button>
-              {this.state.edit_ID !== "" ? (
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={this.cancelEdit.bind(this)}
-                  style={{ borderRadius: "4px" }}
-                >
-                  ยกเลิก
-                </button>
-              ) : (
-                  ""
-                )}
-
-              <Link to={"/main_seven_tools"} className="btn btn-danger">
-                กลับ
+                </h2>
+                <Link to={"/main_seven_tools"} className="btn btn-danger">
+                  กลับ
               </Link>
-              <br></br>
-            </form>
-            <Table bordered hover size="sm">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>รายการ</th>
-                  <th>ม.ค.</th>
-                  <th>ก.พ.</th>
-                  <th>มี.ค.</th>
-                  <th>เม.ย.</th>
-                  <th>พ.ค.</th>
-                  <th>มิ.ย.</th>
-                  <th>ก.ค.</th>
-                  <th>ส.ค.</th>
-                  <th>ก.ย.</th>
-                  <th>ต.ค.</th>
-                  <th>พ.ย.</th>
-                  <th>ธ.ค.</th>
-                  <th>แก้ไข</th>
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.dataCalendar1}
-                {this.state.dataCalendar2}
-              </tbody>
-            </Table>
+                <hr></hr>
+                {bans.map((element, i) =>
+                  <div key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                    <h6>{element.Name}</h6>
+                    <h6>อำเภอ{element.District_name}</h6>
+                    <h6>จังหวัด{element.Province_name}</h6>
+                    <Button variant="primary" onClick={this.onSelectedBan.bind(this, element.Name, element.ID)}>เลือก</Button>
+                  </div>
+                )}
+              </>
+              :
+              <>
+                <h2>
+                  <strong>
+                    ปฏิทินชุมชน : {selected_ban.Name}
+                  </strong>{" "}
+                </h2>
+                <hr></hr>
+                <form onSubmit={this.onSubmit}>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="2">
+                      ชื่อ
+                </Form.Label>
+                    <Col sm="4">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="ชื่อ กิจกรรม ประเพณี หรือสิ่งที่ทำ"
+                        name="Name_activity"
+                        value={Name_activity}
+                        onChange={this.onChange}
+                        required
+                      />
+                    </Col>
+                    <Form.Label column sm="2">
+                      กลุ่มกิจกรรม
+                </Form.Label>
+                    <Col sm="4">
+                      <select
+                        className="form-control"
+                        name="Type_activity"
+                        value={Type_activity}
+                        onChange={this.onChange}
+                        required
+                      >
+                        <option value=""></option>
+                        <option value="วัฒนธรรมประเพณี">วัฒนธรรมประเพณี</option>
+                        <option value="เศรษฐกิจ">เศรษฐกิจ</option>
+                      </select>
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="2">
+                      เดือนที่เริ่ม
+                </Form.Label>
+                    <Col sm="4">
+                      <select
+                        className="form-control"
+                        name="Month1"
+                        value={Month1}
+                        onChange={this.onChange}
+                        required
+                      >
+                        <option value=""></option>
+                        {this.state.showMouth1}
+                      </select>
+                    </Col>
+                    <Form.Label column sm="2">
+                      เดือนที่สิ้นสุด
+                </Form.Label>
+                    <Col sm="4">
+                      <select
+                        className="form-control"
+                        name="Month2"
+                        value={Month2}
+                        onChange={this.onChange}
+                        required
+                      >
+                        <option value=""></option>
+                        {this.state.showMouth2}
+                      </select>
+                    </Col>
+                  </Form.Group>
+
+                  <button
+                    type="submit"
+                    className="btn btn-success"
+                    style={{ borderRadius: "4px" }}
+                  >
+                    บันทึกข้อมูล
+              </button>
+                  {this.state.edit_ID !== "" ? (
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={this.cancelEdit.bind(this)}
+                      style={{ borderRadius: "4px" }}
+                    >
+                      ยกเลิก
+                    </button>
+                  ) : (
+                    ""
+                  )}
+
+                  <Button variant="danger" onClick={this.onBack.bind(this)}>กลับ</Button>
+                  <br></br>
+                </form>
+                <Table bordered hover size="sm">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>รายการ</th>
+                      <th>ม.ค.</th>
+                      <th>ก.พ.</th>
+                      <th>มี.ค.</th>
+                      <th>เม.ย.</th>
+                      <th>พ.ค.</th>
+                      <th>มิ.ย.</th>
+                      <th>ก.ค.</th>
+                      <th>ส.ค.</th>
+                      <th>ก.ย.</th>
+                      <th>ต.ค.</th>
+                      <th>พ.ย.</th>
+                      <th>ธ.ค.</th>
+                      <th>แก้ไข</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.dataCalendar1}
+                    {this.state.dataCalendar2}
+                  </tbody>
+                </Table>
+              </>
+            }
           </center>
         </div>
       </div>

@@ -39,7 +39,7 @@ export class Data_area extends Component {
             zoomMap: 8,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
+            Geo_map_description: '', Create_By_ID: '', Create_date: '', Map_image_URL: '',
             //จุดดี เสี่ยง
             Geo_map_result_description: '',
             Geo_map_time: '',

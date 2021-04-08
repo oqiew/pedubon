@@ -104,7 +104,7 @@ export class Area extends Component {
         value: doc[0]
       });
     });
-    if (this.state.User_ID !== "") {
+    if (this.state.uid !== "") {
       this.setState({
         SubDistricts
       });
@@ -419,7 +419,7 @@ export class Area extends Component {
 
   //       // const tb = Firebase.firestore().collection(this.state.Tb_name);
 
-  //       const { Name, User_ID, } = this.state;
+  //       const { Name, uid, } = this.state;
   //       this.state.data.forEach((element, i) => {
   //         var temp_DID = this.check_DID(element.District_name)
   //         // console.log(element.ID)
@@ -436,7 +436,7 @@ export class Area extends Component {
   //           Area_name: element.Area_name,
   //           Zip_code: element.Zip_code,
   //           Informer_name: Name,
-  //           Informer_ID: User_ID,
+  //           Create_By_ID: uid,
   //         })
   //       });
   //     }
@@ -490,10 +490,10 @@ export class Area extends Component {
   }
   onSubmit = (e) => {
     e.preventDefault();
-    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Dominance, Area_type, Name, User_ID, LGO_ID, Area_name, } = this.state;
+    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Dominance, Area_type, Name, uid, LGO_ID, Area_name, } = this.state;
     Firebase.firestore().collection('AREAS').doc(LGO_ID).set({
       AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: GetCurrentDate("/"), ASubDistrict_ID,
-      Informer_name: Name, Informer_ID: User_ID, Area_name, Address: '', Zip_code: ''
+      Informer_name: Name, Create_By_ID: uid, Area_name, Address: '', Zip_code: ''
     }).then((doc) => {
       console.log('insert success');
     }).catch((error) => {
@@ -508,7 +508,7 @@ export class Area extends Component {
         Dominance: element.Dominance,
         Create_date: GetCurrentDate("/"),
         Informer_name: element.Informer_name,
-        Informer_ID: element.Informer_ID,
+        Create_By_ID: element.Create_By_ID,
         Area_name: element.Area_name,
         Zip_code: element.Zip_code,
         Address: '',

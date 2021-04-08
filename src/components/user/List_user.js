@@ -19,6 +19,7 @@ export class List_user extends Component {
   constructor(props) {
     super(props);
     this.tbUsers = Firebase.firestore().collection(tableName.Users);
+    this.tblog = Firebase.firestore().collection(tableName.log_history);
     this.state = {
       ...this.props.fetchReducer.user,
       list_user: [],
@@ -160,7 +161,7 @@ export class List_user extends Component {
         {
           label: "ยืนยัน",
           onClick: () => {
-            const searchRef = Firebase.firestore().collection('USERS').doc(id);
+            const searchRef = this.tbUsers.doc(id);
             searchRef.get().then((doc) => {
 
               if (doc.exists && doc.data().Avatar_URL !== '') {
@@ -173,8 +174,12 @@ export class List_user extends Component {
               } else {
                 console.log("user image  No such document! " + id);
               }
-              Firebase.firestore().collection('USERS').doc(id).delete().then(() => {
+              this.tbUsers.doc(id).delete().then(() => {
                 console.log("Document successfully deleted!");
+                this.tblog.add({
+                  message: 'delete',
+                  id
+                })
                 this.unsubscribe = this.tbUsers.onSnapshot(this.getUsers);
               }).catch((error) => {
                 console.error("Error removing document: ", error);

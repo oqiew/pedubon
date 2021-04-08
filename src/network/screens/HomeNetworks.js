@@ -13,10 +13,8 @@ export class HomeNetworks extends Component {
         this.state = {
             loading: false
         }
-
     }
     componentDidMount() {
-
     }
     render() {
         if (this.state.loading) {

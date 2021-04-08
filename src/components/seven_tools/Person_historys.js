@@ -191,7 +191,7 @@ class Person_historys extends React.Component {
       Description,
       Year_start,
       Name,
-      User_ID,
+      uid,
       edit_ID
     } = this.state;
     if (edit_ID !== "") {
@@ -201,7 +201,7 @@ class Person_historys extends React.Component {
           Name_activity,
           Description,
           Year_start,
-          Informer_ID: User_ID,
+          Create_By_ID: uid,
           Informer_name: Name,
           Person_ID: this.props.match.params.id,
           Create_date: GetCurrentDate('/'),
@@ -225,7 +225,7 @@ class Person_historys extends React.Component {
           Name_activity,
           Description,
           Year_start,
-          Informer_ID: User_ID,
+          Create_By_ID: uid,
           Informer_name: Name,
           Person_ID: this.props.match.params.id,
           Create_date: GetCurrentDate('/'),

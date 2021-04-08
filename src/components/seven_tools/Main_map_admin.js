@@ -40,7 +40,7 @@ export class Main_map_admin extends Component {
             zoomMap: 9,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
+            Geo_map_description: '', Create_By_ID: '', Create_date: '', Map_image_URL: '',
             //จุดดี เสี่ยง
             Geo_map_result_description: '',
             Geo_map_time: '',
@@ -69,18 +69,11 @@ export class Main_map_admin extends Component {
 
     componentDidMount() {
         this.unsubscribe = this.tbSocialMaps.onSnapshot(this.ListMark);
-
-
     }
-    componentWillUnmount() {
-        this.unsubscribe = null;
-    }
-
     ListMark = (querySnapshot) => {
         const geoMaps = [];
         const listshowMarker = [];
         let count = 0;
-
         querySnapshot.forEach((doc) => {
             const { Geo_map_position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
             const { sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident, } = this.state;

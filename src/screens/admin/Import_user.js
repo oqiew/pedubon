@@ -226,11 +226,11 @@ export class Import_user extends Component {
         // if (Avatar_URL !== '' || Avatar_URL !== undefined) {
 
         if (Sex != '') {
-            if (!isEmptyValue(this.state.User_ID)) {
+            if (!isEmptyValue(this.state.uid)) {
                 // if (true) {
-                // var temp_list_avatar_url = Avatar_URL.split(this.state.User_ID
+                // var temp_list_avatar_url = Avatar_URL.split(this.state.uid
                 // );
-                // var temp_avatar_url = temp_list_avatar_url[0] + this.state.User_ID
+                // var temp_avatar_url = temp_list_avatar_url[0] + this.state.uid
                 //     + "_200x200" + temp_list_avatar_url[1];
                 Firebase.firestore().collection('USERS').add({
                     Birthday,
@@ -246,7 +246,7 @@ export class Import_user extends Component {
                         .signOut()
                         .then(() => {
                             this.setState({
-                                User_ID: '',
+                                uid: '',
                                 massage: <p style={{ color: 'green' }}>สำเร็จ</p>
                             })
                         }
@@ -268,7 +268,7 @@ export class Import_user extends Component {
         Firebase.auth().createUserWithEmailAndPassword(Email, '12345678')
             .then(doc => {
                 this.setState({
-                    User_ID: doc.user.uid,
+                    uid: doc.user.uid,
                     massage: <p style={{ color: 'green' }}>เข้าสู่ระบบ{doc.user.uid} </p>
                 })
             }).catch(error => {
@@ -347,11 +347,11 @@ export class Import_user extends Component {
                                     {!this.state.Avatar_URL && <img className="avatar" alt="avatar_user" src={user} />}
                                     {this.state.Avatar_URL && <img className="avatar" alt="avatar" src={this.state.Avatar_URL} />}
                                     <h4>{this.state.Avatar_name}</h4>
-                                    <h4>{this.state.User_ID}</h4>
+                                    <h4>{this.state.uid}</h4>
                                     <br></br>
                                     <CustomUploadButton
                                         accept="image/*"
-                                        filename={"user" + this.state.User_ID}
+                                        filename={"user" + this.state.uid}
                                         storageRef={Firebase.storage().ref('Avatar')}
                                         onUploadStart={this.handleUploadStart}
                                         onUploadError={this.handleUploadError}

@@ -14,7 +14,7 @@ export class Course_manage extends Component {
         this.tbCourse = Firebase.firestore().collection('COURSES');
         this.state = {
             Course_name: '', Area_local_ID: this.props.match.params.id, ...this.props.fetchReducer.user,
-            Area_local_name: '', Create_date: '', Informer_ID: '', Informer_name: '', Description: '',
+            Area_local_name: '', Create_date: '', Create_By_ID: '', Informer_name: '', Description: '',
 
             File_URL: '', isUploading: false, File_name: '', progress: 0,
             list_course: [], add: false, edit: ''
@@ -65,7 +65,7 @@ export class Course_manage extends Component {
     };
     delete(id) {
         this.tbCourse.doc(id).get().then((doc) => {
-            if (this.state.User_ID === doc.data().Informer_ID) {
+            if (this.state.uid === doc.data().Create_By_ID) {
 
                 var desertRef = Firebase.storage().refFromURL(doc.data().File_URL);
                 desertRef.delete().then(function () {
@@ -95,12 +95,12 @@ export class Course_manage extends Component {
         e.preventDefault();
 
 
-        const { Course_name, Area_local_ID, Name, User_ID, File_name, File_URL, Dominance, Area_name, Area_type,
+        const { Course_name, Area_local_ID, Name, uid, File_name, File_URL, Dominance, Area_name, Area_type,
             Description, } = this.state;
         if (isEmptyValue(this.state.edit)) {
             this.tbCourse.add({
                 Course_name, Description,
-                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Informer_ID: User_ID, Area_local_name: Area_name,
+                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
                 Area_local_dominance: Dominance, File_name, File_URL, Area_local_type: Area_type
             }).then((doc) => {
                 this.setState({
@@ -113,7 +113,7 @@ export class Course_manage extends Component {
         } else {
             this.tbCourse.doc(this.state.edit).update({
                 Course_name, Description,
-                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Informer_ID: User_ID, Area_local_name: Area_name,
+                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
                 Area_local_dominance: Dominance, File_name, File_URL, Area_local_type: Area_type
             }).then((doc) => {
             }).then((doc) => {

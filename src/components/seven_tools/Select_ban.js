@@ -61,7 +61,7 @@ class Select_ban extends Component {
         value: doc[0]
       });
     });
-    if (this.state.User_ID !== "") {
+    if (this.state.uid !== "") {
       this.setState({
         Districts
       });
@@ -82,7 +82,7 @@ class Select_ban extends Component {
         value: doc[0]
       });
     });
-    if (this.state.User_ID !== "") {
+    if (this.state.uid !== "") {
       this.setState({
         Sub_districts
       });
@@ -102,7 +102,7 @@ class Select_ban extends Component {
         value: doc[1]
       });
     });
-    if (this.state.User_ID !== "") {
+    if (this.state.uid !== "") {
       this.setState({
         Bans
       });
@@ -172,7 +172,7 @@ class Select_ban extends Component {
 
   onSubmit = e => {
     const {
-      User_ID, Province, District, Sub_district, User_type, bd,
+      uid, Province, District, Sub_district, User_type, bd,
       Ban_name, Name, Last_name, Nickname, Sex, Phone_number, Line_ID,
       Facebook, Birthday, Position, Department, Province_ID, District_ID,
       Sub_district_ID, Email, Avatar_URL, Add_date, Role, Area_ID,
@@ -181,7 +181,7 @@ class Select_ban extends Component {
     e.preventDefault();
     Firebase.firestore()
       .collection("USERS")
-      .doc(this.state.User_ID)
+      .doc(this.state.uid)
       .update({
         Area_ID: parseInt(Area_ID, 10),
         Area_PID: parseInt(Area_PID, 10),
@@ -191,7 +191,7 @@ class Select_ban extends Component {
       .then(doc => {
         const Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1]
         this.props.fetch_user({
-          User_ID, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
+          uid, Province, District, Sub_district, User_type, bd, Ban_name, Name, Last_name,
           Nickname, Sex, Phone_number, Line_ID, Facebook, Birthday, Position, Department, Province_ID,
           District_ID, Sub_district_ID, Email, Avatar_URL, Add_date, Role,
 
@@ -217,7 +217,7 @@ class Select_ban extends Component {
 
   render() {
     const { Provinces, Districts, Sub_districts, Bans } = this.state;
-    const { Area_ID, User_ID, Area_PID, Area_DID, Area_SDID } = this.state;
+    const { Area_ID, uid, Area_PID, Area_DID, Area_SDID } = this.state;
     return (
       <div>
         <Topnav></Topnav>

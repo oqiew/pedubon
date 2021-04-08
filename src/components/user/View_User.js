@@ -20,7 +20,7 @@ export class View_User extends Component {
         super(props);
 
         this.state = {
-            User_ID: '', Province: '', District: '', Sub_district: '', User_type: '', bd: '',
+            uid: '', Province: '', District: '', Sub_district: '', User_type: '', bd: '',
             Ban_name: '', Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '', Line_ID: '',
             Facebook: '', Birthday: '', Position: '', Department: '', Province_ID: '', District_ID: '',
             Sub_district_ID: '', Email: '', Avatar_URL: '', Add_date: '', Role: '', Area_ID: '',
@@ -44,7 +44,7 @@ export class View_User extends Component {
             let bd =
                 d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
             this.setState({
-                User_ID: doc.uid, Province, District, Sub_district, bd, Ban_name,
+                uid: doc.uid, Province, District, Sub_district, bd, Ban_name,
                 ...doc.data()
             })
         })

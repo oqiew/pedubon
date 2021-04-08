@@ -33,6 +33,7 @@ export class Main_seven_tools extends Component {
         super(props);
         this.tbSocialMaps = Firebase.firestore().collection(tableName.Social_maps);
         this.tbAreas = Firebase.firestore().collection(tableName.Areas);
+        this.unsub = null;
 
         this.state = {
             showingInfoWindow: false,
@@ -42,9 +43,11 @@ export class Main_seven_tools extends Component {
             zoomMap: 12,
             //data insert map
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '',
+            Geo_map_description: '', Create_By_ID: '', Create_date: '',
             Map_image_URL: '',
             map_image_uri: '',
+            Map_image_name: '',
+            Important: false,
             //จุดดี เสี่ยง
             Geo_map_result_description: '',
             Geo_map_time: '',
@@ -66,9 +69,11 @@ export class Main_seven_tools extends Component {
             saccident: false,
             area: [],
             laoding: false,
+            newImageUpload: false,
 
 
         }
+        console.log(this.state)
         this.onMarkerClick = this.onMarkerClick.bind(this);
         this.onMapClicked = this.onMapClicked.bind(this);
         this.getGeolocation = this.getGeolocation.bind(this);
@@ -76,17 +81,20 @@ export class Main_seven_tools extends Component {
 
     componentDidMount() {
         const { Area_ID } = this.state;
-        this.setState({
-            loading: true
-        })
 
-        this.tbSocialMaps
+        this.unsub = this.tbSocialMaps
             .where('Area_ID', '==', Area_ID)
             .onSnapshot(this.ListMark);
     }
 
+    componentWillUnmount() {
+        this.unsub = null;
+    }
 
     ListMark = (querySnapshot) => {
+        this.setState({
+            loading: true
+        })
         const geoMaps = [];
         const listshowMarker = [];
         let count = 0;
@@ -214,6 +222,7 @@ export class Main_seven_tools extends Component {
                 Geo_map_description: data.Geo_map_description,
                 Map_image_URL: data.Map_image_URL,
                 status_add: true, edit_ID: id,
+                Map_image_name: data.Map_image_name,
                 Geo_map_time: data.Geo_map_time,
                 Geo_map_result_description: data.Geo_map_result_description
             })
@@ -223,6 +232,7 @@ export class Main_seven_tools extends Component {
                 position: data.Geo_map_position,
                 Geo_map_type: data.Geo_map_type,
                 Geo_map_description: data.Geo_map_description,
+                Map_image_name: data.Map_image_name,
                 Map_image_URL: data.Map_image_URL,
                 status_add: true, edit_ID: id,
             })
@@ -230,9 +240,8 @@ export class Main_seven_tools extends Component {
 
     }
     delete(id) {
-        const searchRef = Firebase.firestore().collection('SOCIAL_MAPS').doc(id);
-        searchRef.get().then((doc) => {
-            if (this.state.User_ID === doc.data().Informer_ID) {
+        this.tbSocialMaps.doc(id).get().then((doc) => {
+            if (this.state.uid === doc.data().Create_By_ID) {
                 if (doc.exists && doc.data().Map_image_URL !== '') {
                     var desertRef = Firebase.storage().refFromURL(doc.data().Map_image_URL);
                     desertRef.delete().then(function () {
@@ -243,11 +252,11 @@ export class Main_seven_tools extends Component {
                 } else {
                     console.log("geomap image  No such document! " + id);
                 }
-                Firebase.firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
+                this.tbSocialMaps.doc(id).delete().then(() => {
                     console.log("Document successfully deleted!");
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
-                        Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
+                        Geo_map_description: '', Create_By_ID: '', Create_date: '', Map_image_URL: '',
                         status_add: false, edit_ID: '',
                     });
                 }).catch((error) => {
@@ -275,7 +284,7 @@ export class Main_seven_tools extends Component {
         e.preventDefault();
         this.setState({
             Geo_map_name: '', Geo_map_type: '',
-            Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
+            Geo_map_description: '', Create_By_ID: '', Create_date: '', Map_image_URL: '',
             status_add: false
         })
     }
@@ -334,6 +343,7 @@ export class Main_seven_tools extends Component {
                     // console.log(uri)
                     this.setState({
                         map_image_uri: uri,
+                        newImageUpload: true
                     })
                 }, 'base64', 200, 200);
         }
@@ -456,36 +466,57 @@ export class Main_seven_tools extends Component {
             this.tbSocialMaps.where('Area_ID', '==', Area_ID).onSnapshot(this.ListMark);
         }
     }
-    onSubmit = (e) => {
+    onSubmit = async (e) => {
         e.preventDefault();
-        const { position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description,
-            Geo_map_result_description, Geo_map_time, area,
-            Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
 
-        if (this.state.Map_image_URL !== '') {
+        const { position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description,
+            Geo_map_result_description, Geo_map_time, area, newImageUpload, Map_image_name,
+            Area_ID, Important } = this.state;
+        let new_id = '';
+        if (!isEmptyValue(this.state.edit_ID)) {
+            new_id = Map_image_name;
+        } else {
+            new_id = Date.now().toString();
+        }
+        var temp_Map_image_URL = "";
+        if (newImageUpload) {
+            temp_Map_image_URL = await this.uploadImage(new_id);
+        } else {
+            temp_Map_image_URL = Map_image_URL
+        }
+        if (temp_Map_image_URL !== '') {
             if (this.state.edit_ID !== '') {
                 this.tbSocialMaps.doc(this.state.edit_ID).update({
-                    Geo_map_position: position, Informer_name: this.state.Name, Create_date: GetCurrentDate('/'),
-                    Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID,
-                    Geo_map_result_description, Geo_map_time,
+                    Geo_map_position: position, Informer_name: this.state.Name, Update_date:
+                        Firebase.firestore.Timestamp.now(),
+                    Map_image_URL: temp_Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description,
+                    Create_By_ID: this.state.uid,
+                    Map_image_name: new_id, Important,
+                    Geo_map_result_description, Geo_map_time, Area_ID,
                 }).then((result) => {
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
-                        Geo_map_description: '', Informer_ID: '', Create_date: '', Map_image_URL: '',
+                        Geo_map_description: '', Create_By_ID: '', Create_date: '', Map_image_URL: '',
+                        map_image_uri: '', Important: false,
                         status_add: false, edit_ID: '', Geo_map_result_description: '', Geo_map_time: '',
                     })
                 }).catch((error) => {
                     console.log(error);
                 });
             } else {
-                this.tbSocialMaps.add({
-                    Geo_map_position: position, Informer_name: this.state.Name, Area_ID, Area_PID, Area_DID, Area_SDID, Create_date: GetCurrentDate('/'),
-                    Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_ID: this.state.User_ID,
-                    Geo_map_result_description, Geo_map_time,
+                this.tbSocialMaps.doc(new_id).set({
+                    Geo_map_position: position, Informer_name: this.state.Name, Area_ID,
+                    Create_date: Firebase.firestore.Timestamp.now(),
+                    Update_date: Firebase.firestore.Timestamp.now(),
+                    Map_image_URL: temp_Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Create_By_ID: this.state.uid,
+                    Geo_map_result_description, Geo_map_time, Important, Area_ID,
+                    Map_image_name: new_id,
                 }).then((result) => {
                     this.setState({
                         Geo_map_name: '', Geo_map_type: '',
                         Geo_map_description: '', Create_date: '', Map_image_URL: '',
+                        map_image_uri: '', Important: false,
+
                         status_add: false, edit_ID: '', Geo_map_result_description: '', Geo_map_time: '',
                     })
                 }).catch((error) => {
@@ -509,7 +540,7 @@ export class Main_seven_tools extends Component {
 
     render() {
         const { area } = this.state;
-        const { Geo_map_name, Geo_map_type,
+        const { Geo_map_name, Geo_map_type, Important,
             Geo_map_description, Geo_map_result_description, Geo_map_time,
             Map_image_URL, map_image_uri } = this.state;
         const data = {
@@ -643,12 +674,22 @@ export class Main_seven_tools extends Component {
                                                 </Col>
 
                                             </Form.Group>
+                                            {Geo_map_type === 'home' &&
+                                                <Form.Group as={Row}>
+                                                    <Form.Check type="radio" name="Important" checked={!Important} label="ไม่เพิ่ม" onChange={() => this.setState({ Important: false })} />
+                                                    <Form.Check type="radio" name="Important" checked={Important} label="เพิ่ม" onChange={() => this.setState({ Important: true })} />
+                                                </Form.Group>
+
+                                            }
                                             {Geo_map_type === "flag_good" || Geo_map_type === "flag_danger" ?
                                                 <div>
                                                     <Form.Group as={Row}>
                                                         <Form.Label column sm="3">เวลาที่เกิดเหตุ: <label style={{ color: "red" }}>*</label></Form.Label>
                                                         <Col>
-                                                            <input type="time" className="form-control" name="Geo_map_time" value={Geo_map_time} onChange={this.onChange} required />
+                                                            {/* <input type="time" className="form-control" name="Geo_map_time" value={Geo_map_time} onChange={this.onChange} required /> */}
+                                                            <input type="text"
+                                                                placeholder="00:00"
+                                                                className="form-control" name="Geo_map_time" value={Geo_map_time} onChange={this.onChange} required />
 
                                                         </Col>
 

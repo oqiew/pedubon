@@ -152,7 +152,7 @@ export class Register extends Component {
         //User Profile
         const { email, Name, Lastname, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday_format, Position, Role,
-            Avatar_URL, area_name
+            Avatar_URL, area
 
         } = this.state;
 
@@ -182,7 +182,7 @@ export class Register extends Component {
             borderRadius: 10,
             boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
             transition: "0.3s",
-            padding: 10
+            padding: 30
 
         }
         if (this.state.loading) {
@@ -204,13 +204,13 @@ export class Register extends Component {
                                     <h4 style={{ padding: 5 }}><strong>ประเภทผู้ใช้ : </strong>{User_type}<strong>  เบอร์โทรศัพท์มือถือ : </strong>{Phone_number}</h4>
                                     <h4 style={{ padding: 5 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h4>
                                     <h4 style={{ padding: 5 }}><strong>ตำแหน่ง : </strong>{Position}</h4>
-                                    <h4 style={{ padding: 5 }}><strong>อปท : </strong>{area_name}</h4>
+                                    <h4 style={{ padding: 5 }}><strong>อปท : </strong>{area.area_name}</h4>
 
                                 </Col>
                             </Row>
                             <Row style={{ justifyContent: 'center' }}>
                                 {/* <Link className="btn btn-success" to={routeName.PowerUser}>แก้ไขพลัง</Link> */}
-
+                                <Link className="btn btn-success" to={'/register'}>แก้ไข</Link>
                             </Row>
                             <hr style={{ margin: 10 }}></hr>
                             <Row style={{ marginTop: 20 }}>

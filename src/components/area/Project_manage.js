@@ -14,7 +14,7 @@ export class Project_manage extends Component {
         this.tbProject = Firebase.firestore().collection('PROJECTS')
         this.state = {
             AProvince_ID: '', ADistrict_ID: '', Dominance: '', Area_type: '', Create_date: '',
-            Informer_name: '', Informer_ID: '', LGO_ID: '', Area_name: '', Activity: '', Project_name: '',
+            Informer_name: '', Create_By_ID: '', LGO_ID: '', Area_name: '', Activity: '', Project_name: '',
             Province: '', District: '', Mentor: '', Leader1: '', Leader2: '', Leader3: '', Description: '',
             leader_local: [], mentors: [], File_URL: '', isUploading: false, File_name: '', progress: 0,
             list_projects: [], add: false, edit: '',
@@ -88,7 +88,7 @@ export class Project_manage extends Component {
             .then(url => this.setState({ File_URL: url }));
     };
     delete(data) {
-        if (this.state.User_ID === data.Informer_ID) {
+        if (this.state.uid === data.Create_By_ID) {
 
             var desertRef = Firebase.storage().refFromURL(data.File_URL);
             desertRef.delete().then(function () {
@@ -119,12 +119,12 @@ export class Project_manage extends Component {
 
         console.log('save')
         const { Description, File_name, File_URL,
-            Project_name, Name, User_ID,
+            Project_name, Name, uid,
             Leader1, Leader2, Leader3, Mentor } = this.state;
         if (isEmptyValue(this.state.edit)) {
             this.tbProject.add({
                 Create_date: GetCurrentDate("/"), Area_local_ID: this.props.match.params.id,
-                Informer_name: Name, Informer_ID: User_ID,
+                Informer_name: Name, Create_By_ID: uid,
                 Leader1, Leader2, Leader3, Mentor, Description, Project_name, File_name, File_URL,
             }).then((doc) => {
                 this.setState({
@@ -140,7 +140,7 @@ export class Project_manage extends Component {
         } else {
             this.tbProject.doc(this.state.edit).update({
                 Create_date: GetCurrentDate("/"), Area_local_ID: this.props.match.params.id,
-                Informer_name: Name, Informer_ID: User_ID,
+                Informer_name: Name, Create_By_ID: uid,
                 Leader1, Leader2, Leader3, Mentor, Description, Project_name, File_name, File_URL,
             }).then((doc) => {
                 this.setState({

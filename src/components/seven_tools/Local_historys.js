@@ -10,13 +10,17 @@ import "../../App.css";
 import Iedit from "../../assets/pencil.png";
 //img
 import Idelete from "../../assets/trash_can.png";
+import { tableName } from "../../database/TableConstant";
 import Firebase from "../../Firebase";
-import { alert_status, GetCurrentDate } from "../Methods";
+import { alert_status, GetCurrentDate, isEmptyValue } from "../Methods";
 import Topnav from "../top/Topnav";
+import { confirmAlert } from "react-confirm-alert"; // Import
+import { Button } from "react-bootstrap";
 class Local_historys extends React.Component {
   constructor(props) {
     super(props);
-    this.tbLocalHistory = Firebase.firestore().collection("LOCAL_HISTORYS");
+    this.tbLocalHistory = Firebase.firestore().collection(tableName.Local_historys);
+    this.tbBans = Firebase.firestore().collection(tableName.Bans)
     //getl);
     this.state = {
       dataTimeline: [],
@@ -32,23 +36,35 @@ class Local_historys extends React.Component {
       status_add: false,
       edit_ID: "",
       //getuser
+      selected_ban: {
+        Name: '',
+        ID: ''
+      },
+      query_bans: [],
+      bans: [],
+      selected: 1,
       ...this.props.fetchReducer.user
     };
   }
 
   componentDidMount() {
-    const { Area_ID, Area_SDID, Area_DID, Area_PID } = this.state;
-    this.tbLocalHistory
-      .where("Area_ID", "==", Area_ID)
-      .where("Area_PID", "==", Area_PID)
-      .where("Area_DID", "==", Area_DID)
-      .where("Area_SDID", "==", Area_SDID)
-      .onSnapshot(this.onCollectionUpdate);
+    this.tbBans.where('Area_ID', '==', this.state.Area_ID).onSnapshot(this.onListBans)
   }
-
+  onListBans = (query) => {
+    const query_bans = [];
+    query.forEach(doc => {
+      query_bans.push({
+        ID: doc.id,
+        ...doc.data()
+      })
+    });
+    this.setState({
+      query_bans,
+      bans: query_bans
+    })
+  }
   delete(id) {
-    Firebase.firestore()
-      .collection("LOCAL_HISTORYS")
+    this.tbLocalHistory
       .doc(id)
       .delete()
       .then(() => {
@@ -58,23 +74,14 @@ class Local_historys extends React.Component {
         console.error("Error removing document: ", error);
       });
   }
-  edit(id) {
-    Firebase.firestore()
-      .collection("LOCAL_HISTORYS")
-      .doc(id)
-      .get()
-      .then(doc => {
-        const { Name_activity, Description, Year_start } = doc.data();
-        this.setState({
-          Name_activity,
-          Description,
-          Year_start,
-          edit_ID: id
-        });
-      })
-      .catch(error => {
-        console.error("Error document: ", error);
-      });
+  edit(data, id) {
+    const { Name_activity, Description, Year_start } = data;
+    this.setState({
+      Name_activity,
+      Description,
+      Year_start,
+      edit_ID: id
+    });
   }
   cancelEdit = e => {
     this.setState({
@@ -84,6 +91,28 @@ class Local_historys extends React.Component {
       edit_ID: ""
     });
   };
+  onBack = () => {
+    this.setState({
+      Name_activity: "",
+      Description: "",
+      Year_start: "",
+      edit_ID: "",
+      selected_ban: {
+        Name: '',
+        ID: ''
+      },
+      selected: 1,
+    });
+  }
+  onSelectedBan(Name, ID) {
+    this.tbLocalHistory
+      .where('Ban_ID', '==', ID)
+      .onSnapshot(this.onCollectionUpdate);
+    this.setState({
+      selected_ban: { Name, ID },
+      selected: 2
+    })
+  }
   onCollectionUpdate = querySnapshot => {
     const dataTimeline = [];
     const localHistorys = [];
@@ -94,21 +123,21 @@ class Local_historys extends React.Component {
         Name_activity,
         Year_start,
         Description,
-        Informer_name
+        Create_By
       } = doc.data();
 
       localHistorys.push({
         Name_activity,
         Description,
         Year_start,
-        Informer_name,
+        Create_By,
         edit: (
           <div>
             <img
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               alt="edit"
               src={Iedit}
-              onClick={this.edit.bind(this, doc.id)}
+              onClick={this.edit.bind(this, doc.data(), doc.id)}
             ></img>
             <img
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
@@ -192,75 +221,75 @@ class Local_historys extends React.Component {
   onSubmit = e => {
     e.preventDefault();
     const {
-      Name_activity,
-      Description,
-      Year_start,
-      Area_ID,
-      Area_PID,
-      Area_DID,
-      Area_SDID,
-      Name,
-      User_ID,
-      edit_ID
+      Name_activity, Description, Year_start, Area_ID, Name, uid, edit_ID, selected_ban
     } = this.state;
-    if (edit_ID !== "") {
-      this.tbLocalHistory
-        .doc(edit_ID)
-        .set({
-          Name_activity,
-          Description,
-          Year_start,
-          Informer_ID: User_ID,
-          Informer_name: Name,
-          Area_ID,
-          Area_PID,
-          Area_DID,
-          Area_SDID,
-          Create_date: GetCurrentDate('/'),
-        })
-        .then(docRef => {
-
-          this.setState({
-            Name_activity: "",
-            Year_start: "",
-            Description: "",
-            edit_ID: ""
-          });
-        })
-        .catch(error => {
-          alert_status("noupdate");
-          console.error("Error adding document: ", error);
+    if (!isEmptyValue(selected_ban.ID)) {
+      if (Year_start.length < 4) {
+        confirmAlert({
+          title: "บันทึกข้อมูลไม่สำเร็จ",
+          message: 'ข้อมูลปีไม่ถูกต้อง',
+          buttons: [
+            {
+              label: "ตกลง"
+            }
+          ]
         });
-    } else {
-      this.tbLocalHistory
-        .add({
-          Name_activity,
-          Description,
-          Year_start,
-          Informer_ID: User_ID,
-          Informer_name: Name,
-          Area_ID,
-          Area_PID,
-          Area_DID,
-          Area_SDID,
-          Create_date: GetCurrentDate('/'),
-        })
-        .then(docRef => {
-          this.setState({
-            Name_activity: "",
-            Year_start: "",
-            Description: ""
-          });
+      } else {
+        if (edit_ID !== "") {
+          this.tbLocalHistory
+            .doc(edit_ID)
+            .set({
+              Name_activity, Description,
+              Update_date: Firebase.firestore.Timestamp.now(),
+              Year_start,
+              Create_By_ID: uid,
+              Create_By: Name,
+              Ban_ID: selected_ban.ID
+            })
+            .then(docRef => {
 
-        })
-        .catch(error => {
-          alert_status("noadd");
-          console.error("Error adding document: ", error);
-        });
+              this.setState({
+                Name_activity: "",
+                Year_start: "",
+                Description: "",
+                edit_ID: ""
+              });
+            })
+            .catch(error => {
+              alert_status("noupdate");
+              console.error("Error adding document: ", error);
+            });
+        } else {
+          this.tbLocalHistory
+            .add({
+              Name_activity, Description,
+              Update_date: Firebase.firestore.Timestamp.now(),
+              Create_date: Firebase.firestore.Timestamp.now(),
+              Year_start,
+              Create_By_ID: uid,
+              Create_By: Name,
+              Ban_ID: selected_ban.ID
+            })
+            .then(docRef => {
+              this.setState({
+                Name_activity: "",
+                Year_start: "",
+                Description: ""
+              });
+
+            })
+            .catch(error => {
+              alert_status("noadd");
+              console.error("Error adding document: ", error);
+            });
+        }
+      }
     }
+
+
   };
   render() {
-    const { Year_start, Name_activity, Description } = this.state;
+    const { Year_start, Name_activity, Description, selected, bans, selected_ban } = this.state;
     const data = {
       columns: [
         {
@@ -280,7 +309,7 @@ class Local_historys extends React.Component {
         },
         {
           label: "ผู้เพิ่มข้อมูล",
-          field: "Informer_name",
+          field: "Create_By",
           sort: "asc"
         },
         {
@@ -294,118 +323,140 @@ class Local_historys extends React.Component {
     return (
       <div>
         <Topnav></Topnav>
-        <div className="main_component">
-          <center>
-            <h2>
-              <strong>
-                ประวัติศาสตร์ชุมชน : {this.state.Ban_name}หมู่ที่
-                {this.state.Area_ID + 1}
+        {selected === 1 ?
+          <div className="main_component">
+            <center>
+              <>
+                <h2>
+                  <strong>
+                    เลือกหมู่บ้าน
               </strong>{" "}
-            </h2>
-            <hr></hr>
+                </h2>
+                <Link to={"/main_seven_tools"} className="btn btn-danger">
+                  กลับ
+              </Link>
+                <hr></hr>
+                {bans.map((element, i) =>
+                  <div key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                    <h6>{element.Name}</h6>
+                    <h6>อำเภอ{element.District_name}</h6>
+                    <h6>จังหวัด{element.Province_name}</h6>
+                    <Button variant="primary" onClick={this.onSelectedBan.bind(this, element.Name, element.ID)}>เลือก</Button>
+                  </div>
+                )}
+              </>
+            </center>
+          </div>
+          :
+          <div className="main_component">
+            <center>
+              <h2>
+                <strong>
+                  ประวัติศาสตร์ชุมชน : {this.state.Ban_name}หมู่ที่
+                {this.state.Area_ID + 1}
+                </strong>{" "}
+              </h2>
+              <hr></hr>
 
-            <form onSubmit={this.onSubmit}>
-              <Row>
-                <Col>
-                  <Form.Group as={Row}>
-                    <Form.Label column sm="3">
-                      ชื่อกิจกรรม
+              <form onSubmit={this.onSubmit}>
+                <Row>
+                  <Col>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">
+                        ชื่อกิจกรรม
                     </Form.Label>
-                    <Col>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="ชื่อหัวข้อ เหตุการณ์ หรือกิจกรรม"
-                        name="Name_activity"
-                        value={Name_activity}
-                        onChange={this.onChange}
-                        required
-                      />
-                    </Col>
-                  </Form.Group>
-                  <Form.Group as={Row}>
-                    <Form.Label column sm="3">
-                      ข้อมูลกิจกรรม
-                    </Form.Label>
-                    <Col>
-                      <div className="form-group">
-                        <textarea
+                      <Col>
+                        <input
+                          type="text"
                           className="form-control"
-                          placeholder="คำอธิบาย เหตุการณ์ หรือกิจกรรมที่เกิดขึ้นกับชุมชน"
-                          name="Description"
-                          value={Description}
+                          placeholder="ชื่อหัวข้อ เหตุการณ์ หรือกิจกรรม"
+                          name="Name_activity"
+                          value={Name_activity}
                           onChange={this.onChange}
-                          cols="80"
-                          rows="5"
                           required
-                        >
-                          {Description}
-                        </textarea>
-                      </div>
-                    </Col>
-                  </Form.Group>
-                  <Form.Group as={Row}>
-                    <Form.Label column sm="3">
-                      ปีที่เริ่ม
+                        />
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">
+                        ข้อมูลกิจกรรม
                     </Form.Label>
-                    <Col>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="ปีที่เริ่ม พ.ศ."
-                        maxLength={4}
-                        minLength={4}
-                        name="Year_start"
-                        value={Year_start}
-                        onChange={this.onChange}
-                        required
-                      />
-                    </Col>
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <MDBDataTable
-                    striped
-                    bordered
-                    small
-                    searchLabel="ค้นหา"
-                    paginationLabel={["ก่อนหน้า", "ถัดไป"]}
-                    infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
-                    entriesLabel="แสดง รายการ"
-                    data={data}
-                  />
-                </Col>
-              </Row>
-              <button
-                type="submit"
-                className="btn btn-success"
-                style={{ borderRadius: "4px" }}
-              >
-                บันทึกข้อมูล
-              </button>
-              {this.state.edit_ID !== "" ? (
+                      <Col>
+                        <div className="form-group">
+                          <textarea
+                            className="form-control"
+                            placeholder="คำอธิบาย เหตุการณ์ หรือกิจกรรมที่เกิดขึ้นกับชุมชน"
+                            name="Description"
+                            value={Description}
+                            onChange={this.onChange}
+                            cols="80"
+                            rows="5"
+                            required
+                          >
+                            {Description}
+                          </textarea>
+                        </div>
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">
+                        ปีที่เริ่ม
+                    </Form.Label>
+                      <Col>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="ปีที่เริ่ม พ.ศ."
+                          maxLength={4}
+                          minLength={4}
+                          name="Year_start"
+                          value={Year_start}
+                          onChange={this.onChange}
+                          required
+                        />
+                      </Col>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <MDBDataTable
+                      striped
+                      bordered
+                      small
+                      searchLabel="ค้นหา"
+                      paginationLabel={["ก่อนหน้า", "ถัดไป"]}
+                      infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
+                      entriesLabel="แสดง รายการ"
+                      data={data}
+                    />
+                  </Col>
+                </Row>
                 <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={this.cancelEdit.bind(this)}
+                  type="submit"
+                  className="btn btn-success"
                   style={{ borderRadius: "4px" }}
                 >
-                  ยกเลิก
-                </button>
-              ) : (
+                  บันทึกข้อมูล
+              </button>
+                {this.state.edit_ID !== "" ? (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={this.cancelEdit.bind(this)}
+                    style={{ borderRadius: "4px" }}
+                  >
+                    ยกเลิก
+                  </button>
+                ) : (
                   ""
                 )}
 
-              <Link to={"/main_seven_tools"} className="btn btn-danger">
-                กลับ
-              </Link>
-              <br></br>
-            </form>
-
-            <hr></hr>
-          </center>
-          <Timeline lineColor={"#ddd"}>{this.state.dataTimeline}</Timeline>
-        </div>
+                <Button variant="danger" onClick={this.onBack.bind(this)}>กลับ</Button>
+                <br></br>
+              </form>
+              <hr></hr>
+            </center>
+            <Timeline lineColor={"#ddd"}>{this.state.dataTimeline}</Timeline>
+          </div>}
       </div>
     );
   }

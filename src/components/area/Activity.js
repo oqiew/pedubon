@@ -55,11 +55,11 @@ export class Activity extends Component {
     }
 
     componentDidMount() {
-        if (isEmptyValue(this.state.User_ID)) {
+        if (isEmptyValue(this.state.uid)) {
             // Firebase.firestore().collection('ACT_PEOPLES').onSnapshot(this.List_activity_seft);
             this.tbActivity.onSnapshot(this.ListMark);
         } else {
-            Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.User_ID).onSnapshot(this.List_activity_seft);
+            Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.uid).onSnapshot(this.List_activity_seft);
             this.tbActivity.onSnapshot(this.ListMark);
         }
 
@@ -101,7 +101,7 @@ export class Activity extends Component {
         querySnapshot.forEach((doc) => {
             const { Activity_name, Activity_description, Activity_date, Activity_image_URL, Activity_image_name, Activity_position,
                 Activity_iamge_URL, Activity_iamge_name,
-                Activity_time, Activity_Informer_ID, Activity_Informer_Name, User_ID, Name } = doc.data();
+                Activity_time, Activity_Informer_ID, Activity_Informer_Name, uid, Name } = doc.data();
             if (!isEmptyValue(Activity_position)) {
                 listshowMarker.push(
 
@@ -189,7 +189,7 @@ export class Activity extends Component {
                             onClick: (() => {
                                 console.log(regis_id)
                                 Firebase.firestore().collection('ACT_PEOPLES').doc(regis_id).delete().then((doc) => {
-                                    Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.User_ID).onSnapshot(this.List_activity_seft);
+                                    Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.uid).onSnapshot(this.List_activity_seft);
                                     this.tbActivity.onSnapshot(this.ListMark);
                                     console.log('delete people success')
                                 })
@@ -213,10 +213,10 @@ export class Activity extends Component {
                                 Firebase.firestore().collection('ACT_PEOPLES').add({
                                     Activity_ID: id,
                                     Activity_name: data.Activity_name,
-                                    User_ID: this.state.User_ID,
+                                    uid: this.state.uid,
                                     Name: this.state.Name,
                                 }).then((doc) => {
-                                    Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.User_ID).onSnapshot(this.List_activity_seft);
+                                    Firebase.firestore().collection('ACT_PEOPLES').where('User_ID', '==', this.state.uid).onSnapshot(this.List_activity_seft);
                                     this.tbActivity.onSnapshot(this.ListMark);
                                     console.log('add people success')
                                 })

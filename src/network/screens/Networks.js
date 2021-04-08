@@ -13,7 +13,12 @@ import { routeName } from '../../route/RouteConstant'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import { MDBDataTable } from "mdbreact";
 import CanvasJSReact from '../../canvasjs.react';
+import ReactExport from "react-export-excel";
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
+
 export class Networks extends Component {
     constructor(props) {
         super(props);
@@ -241,6 +246,18 @@ export class Networks extends Component {
                         <div style={{ flexDirection: 'row' }}>
                             <Button variant="info" onClick={() => this.setState({ page: 'table', select_Type: this.state.plans })}>ตารางข้อมูล</Button>
                             <Button variant="info" onClick={() => this.setState({ page: 'result' })}>สรุปข้อมูล</Button>
+                            <ExcelFile>
+                                <ExcelSheet data={plans} name="ดาวโหลดไฟล์">
+                                    <ExcelColumn label="หน่วยงาน" value="Agency_name" />
+                                    <ExcelColumn label="กิจกรรม" value="P_activity" />
+                                    <ExcelColumn label="แผนงาน" value="P_plan" />
+                                    <ExcelColumn label="ช่วงเวลา" value="date" />
+                                    <ExcelColumn label="ปีงบประมาณ" value="P_year" />
+                                    <ExcelColumn label="เมืองน่าอยู่" value="types" />
+
+                                </ExcelSheet>
+
+                            </ExcelFile>
                         </div>
                         <hr>
                         </hr>

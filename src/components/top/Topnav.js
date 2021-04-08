@@ -130,9 +130,9 @@ class Topnav extends Component {
                   <MDBDropdownToggle nav caret>
                   </MDBDropdownToggle>
                   <MDBDropdownMenu className="dropdown-default">
-                    <NavDropdown.Item href="/profile">
+                    {!isEmptyValue(Name) && <NavDropdown.Item href="/profile">
                       โปรไฟล์
-                      </NavDropdown.Item>
+                      </NavDropdown.Item>}
                     <NavDropdown.Divider />
                     <NavDropdown.Item
                       href="/"

@@ -8,4 +8,6 @@ export const tableName = {
     Power_users: 'Power_users',
     Indicators: 'Indicators',
     Journey: 'Journey',
+    log_history: 'log_history',
+    Bans: 'Bans'
 }
