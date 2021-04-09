@@ -14,10 +14,12 @@ import { make_cols } from '../excel/MakeColumns';
 import SheetJSFT from '../excel/Excel_type';
 import { Modal, Button } from 'antd';
 import { database } from "firebase";
+import { tableName } from "../../database/TableConstant";
 // ทำเพิ่มหมู่บ้าน เข้ากับ อปท
 export class Area extends Component {
   constructor(props) {
     super(props);
+    this.tbAreas = Firebase.firestore().collection(tableName.Areas);
     this.state = {
       ...this.props.fetchReducer.user,
       c1: [],
@@ -54,7 +56,7 @@ export class Area extends Component {
   }
   componentDidMount() {
     Firebase.firestore().collection('PROJECTS').onSnapshot(this.list_project);
-    Firebase.firestore().collection("AREAS").onSnapshot(this.getModuleC);
+    this.tableName.onSnapshot(this.getModuleC);
 
     this.listProvinces();
     this.listDistrict(0)
