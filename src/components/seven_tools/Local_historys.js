@@ -336,6 +336,7 @@ class Local_historys extends React.Component {
                   กลับ
               </Link>
                 <hr></hr>
+                <center>{bans.length === 0 && <h3>กรุณาติดต่อพี่เลี้ยงเพื่อเพิ่มข้อมูล</h3>}</center>
                 {bans.map((element, i) =>
                   <div key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
                     <h6>{element.Name}</h6>

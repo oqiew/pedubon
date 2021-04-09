@@ -17,8 +17,9 @@ import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
-import { isEmptyValue, alert_status, GetCurrentDate } from "../Methods";
+import { isEmptyValue, alert_status, GetCurrentDate, deleteSM } from "../Methods";
 import { tableName } from "../../database/TableConstant";
+
 class Persons extends React.Component {
   constructor(props) {
     super(props);
@@ -50,35 +51,11 @@ class Persons extends React.Component {
       .onSnapshot(this.onCollectionUpdate);
   }
 
-  delete(id) {
-    this.tbUserHome
-      .doc(id)
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          var desertRef = Firebase.storage().refFromURL(
-            doc.data().Map_image_URL
-          );
-          desertRef
-            .delete()
-            .then(function () {
-              this.tbUserHome
-                .doc(id)
-                .delete()
-                .then(() => {
-                  console.log("delete user and image sucess");
-                })
-                .catch(error => {
-                  console.error("Error removing document: ", error);
-                });
-            })
-            .catch(function (error) {
-              console.log("image No such document! ");
-            });
-        } else {
-          console.log("user No such document! " + id);
-        }
-      });
+  delete(id, data) {
+    if (this.state.uid === data.Create_By_ID || this.state.Role === 'admin') {
+
+      deleteSM(id, data)
+    }
   }
   edit(data, id) {
     console.log(this)
@@ -184,7 +161,7 @@ class Persons extends React.Component {
               alt="delete"
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               src={Idelete}
-              onClick={this.delete.bind(this, doc.id)}
+              onClick={this.delete.bind(this, doc.id, doc.data())}
             ></img>
           </div>
         )

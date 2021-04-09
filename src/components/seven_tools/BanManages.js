@@ -253,6 +253,7 @@ export class BanManages extends Component {
                                 </Form.Group>
                                 <center>
                                     <button type="submit" className="btn btn-success">เพิ่ม</button>
+                                    <button type="button" className="btn btn-danger" onClick={() => this.props.history.push('main_seven_tools')}>กลับ</button>
                                 </center>
                             </form>
                             <MDBDataTable

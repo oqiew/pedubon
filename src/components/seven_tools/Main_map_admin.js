@@ -17,7 +17,7 @@ import Idelete from '../../assets/trash_can.png';
 import Izoom from '../../assets/zoom.png';
 import data_provinces from '../../data/provinces.json';
 import Firebase from "../../Firebase";
-import { GetCurrentDate, isEmptyValue } from '../Methods';
+import { deleteSM, GetCurrentDate, isEmptyValue } from '../Methods';
 import Geolocation from '../seven_tools/Geolocation';
 import Topnav from '../top/Topnav';
 import TabST from './Tab_seven_tools';
@@ -69,6 +69,12 @@ export class Main_map_admin extends Component {
 
     componentDidMount() {
         this.unsubscribe = this.tbSocialMaps.onSnapshot(this.ListMark);
+    }
+    delete(id, data) {
+        if (this.state.uid === data.Create_By_ID || this.state.Role === 'admin') {
+
+            deleteSM(id, data)
+        }
     }
     ListMark = (querySnapshot) => {
         const geoMaps = [];
@@ -153,7 +159,17 @@ export class Main_map_admin extends Component {
                         Informer_name,
                         edit:
                             <div>
-                                <img style={{ widtha: 20, height: 20, cursor: 'pointer' }} alt="zoom" src={Izoom} onClick={this.onFocusMarker.bind(this, Geo_map_position.lat, Geo_map_position.lng)}></img>
+                                <img style={{ widtha: 20, height: 20, cursor: 'pointer' }}
+                                    alt="zoom" src={Izoom}
+                                    onClick={this.onFocusMarker.bind(this, Geo_map_position.lat, Geo_map_position.lng)}>
+
+                                </img>
+                                {this.state.Role === 'admin' && <img
+                                    alt="delete"
+                                    style={{ widtha: 20, height: 20, cursor: "pointer" }}
+                                    src={Idelete}
+                                    onClick={this.delete.bind(this, doc.id, doc.data())}
+                                ></img>}
                             </div>
                     });
                 }

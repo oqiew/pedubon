@@ -73,7 +73,6 @@ export class Main_seven_tools extends Component {
 
 
         }
-        console.log(this.state)
         this.onMarkerClick = this.onMarkerClick.bind(this);
         this.onMapClicked = this.onMapClicked.bind(this);
         this.getGeolocation = this.getGeolocation.bind(this);
@@ -81,7 +80,6 @@ export class Main_seven_tools extends Component {
 
     componentDidMount() {
         const { Area_ID } = this.state;
-
         this.unsub = this.tbSocialMaps
             .where('Area_ID', '==', Area_ID)
             .onSnapshot(this.ListMark);
@@ -221,6 +219,7 @@ export class Main_seven_tools extends Component {
                 Geo_map_type: data.Geo_map_type,
                 Geo_map_description: data.Geo_map_description,
                 Map_image_URL: data.Map_image_URL,
+                Important: data.Important,
                 status_add: true, edit_ID: id,
                 Map_image_name: data.Map_image_name,
                 Geo_map_time: data.Geo_map_time,
@@ -233,6 +232,7 @@ export class Main_seven_tools extends Component {
                 Geo_map_type: data.Geo_map_type,
                 Geo_map_description: data.Geo_map_description,
                 Map_image_name: data.Map_image_name,
+                Important: data.Important,
                 Map_image_URL: data.Map_image_URL,
                 status_add: true, edit_ID: id,
             })

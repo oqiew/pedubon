@@ -1,6 +1,7 @@
 import Firebase from "../Firebase";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
 import { confirmAlert } from "react-confirm-alert"; // Import
+import { tableName } from "../database/TableConstant";
 
 export function alert_status(status) {
   let title = "";
@@ -51,6 +52,41 @@ export function GetNameUserType(id) {
         return "";
       }
     });
+}
+export function deleteSM(id, data) {
+  Firebase.firestore().collection(tableName.Social_maps)
+    .doc(id)
+    .get()
+    .then((doc) => {
+      if (doc.exists && doc.data().Map_image_URL !== '') {
+        var desertRef = Firebase.storage().refFromURL(doc.data().Map_image_URL);
+        desertRef.delete().then(function () {
+          console.log("delete geomap and image sucess");
+        }).catch(function (error) {
+          console.log("image No such document! " + doc.data().areaImageName);
+        });
+      } else {
+        console.log("geomap image  No such document! " + id);
+      }
+      if (data.Geo_map_type === 'home' && data.Important === true) {
+        Firebase.firestore().collection(tableName.Person_historys)
+          .where('Person_ID', '==', id)
+          .onSnapshot((query) => {
+            query.forEach((doc) => {
+              Firebase.firestore().collection(tableName.Person_historys).doc(doc.id).delete().then(() => {
+                console.log('delete timeline person siccess')
+              })
+            })
+          })
+      }
+      Firebase.firestore().collection(tableName.Social_maps).doc(id).delete().then(() => {
+        console.log("Document successfully deleted!");
+      }).catch((error) => {
+        console.error("Error removing document: ", error);
+      });
+    });
+
+
 }
 
 

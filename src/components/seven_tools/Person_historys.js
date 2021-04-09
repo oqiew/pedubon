@@ -16,10 +16,11 @@ import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
 import data_provinces from "../../data/provinces.json";
 import { isEmptyValue, alert_status, GetCurrentDate } from "../Methods";
+import { tableName } from "../../database/TableConstant";
 class Person_historys extends React.Component {
   constructor(props) {
     super(props);
-    this.tbPersonHistorys = Firebase.firestore().collection("PERSON_HISTORYS");
+    this.tbPersonHistorys = Firebase.firestore().collection(tableName.Person_historys);
     //getl);
     this.state = {
       dataTimeline: [],
@@ -48,8 +49,7 @@ class Person_historys extends React.Component {
   }
 
   delete(id) {
-    Firebase.firestore()
-      .collection("PERSON_HISTORYS")
+    this.tbPersonHistorys
       .doc(id)
       .delete()
       .then(() => {
@@ -59,23 +59,15 @@ class Person_historys extends React.Component {
         console.error("Error removing document: ", error);
       });
   }
-  edit(id) {
-    Firebase.firestore()
-      .collection("PERSON_HISTORYS")
-      .doc(id)
-      .get()
-      .then(doc => {
-        const { Name_activity, Description, Year_start } = doc.data();
-        this.setState({
-          Name_activity,
-          Description,
-          Year_start,
-          edit_ID: id
-        });
-      })
-      .catch(error => {
-        console.error("Error document: ", error);
-      });
+  edit(id, data) {
+
+    const { Name_activity, Description, Year_start } = data
+    this.setState({
+      Name_activity,
+      Description,
+      Year_start,
+      edit_ID: id
+    });
   }
   onCollectionUpdate = querySnapshot => {
     const dataTimeline = [];
@@ -103,7 +95,7 @@ class Person_historys extends React.Component {
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
               alt="edit"
               src={Iedit}
-              onClick={this.edit.bind(this, doc.id)}
+              onClick={this.edit.bind(this, doc.id, doc.data())}
             ></img>
             <img
               style={{ widtha: 20, height: 20, cursor: "pointer" }}
