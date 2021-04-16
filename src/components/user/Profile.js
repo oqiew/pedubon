@@ -219,56 +219,48 @@ export class Register extends Component {
                                     <h6 style={{ padding: 2 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h6>
                                     <h6 style={{ padding: 2 }}><strong>ตำแหน่ง : </strong>{Position}</h6>
                                     <h6 style={{ padding: 2 }}><strong>อปท : </strong>{area.area_name}</h6>
-                                    <Link className="btn btn-success" to={'/register'}>แก้ไข</Link>
-                                </Col>
-                                <Col>
-                                    <Row>
-                                        <Col>
-                                            <div style={{ height: 100 }}>
-                                                <span >C101 {this.state.q1[0]}</span>
-                                            </div>
-                                        </Col>
-                                        <Col>
-                                            <div style={{ flexDirection: 'row' }}>
-                                                <span>ก่อนเข้าร่วม</span>
-                                                <BorderLinearProgress1 variant="determinate" value={ShowC110} />
-                                            </div>
-                                            <div>
-                                                <span>ระหว่างเข้าร่วม</span>
-                                                <BorderLinearProgress2 variant="determinate" value={ShowC120} />
-                                            </div>
-                                            <div>
-                                                <span>หลังเข้าร่วม</span>
-                                                <BorderLinearProgress3 variant="determinate" value={ShowC130} />
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                    <hr></hr>
-                                    <Row>
-                                        <Col>
-                                            <div style={{ height: 100 }}>
-                                                <span >C102 {this.state.q1[1]}</span>
-                                            </div>
-                                        </Col>
-                                        <Col>
-                                            <div style={{ flexDirection: 'row' }}>
-                                                <span>ก่อนเข้าร่วม</span>
-                                                <BorderLinearProgress1 variant="determinate" value={ShowC111} />
-                                            </div>
-                                            <div>
-                                                <span>ระหว่างเข้าร่วม</span>
-                                                <BorderLinearProgress2 variant="determinate" value={ShowC121} />
-                                            </div>
-                                            <div>
-                                                <span>หลังเข้าร่วม</span>
-                                                <BorderLinearProgress3 variant="determinate" value={ShowC131} />
-                                            </div>
-                                        </Col>
-                                    </Row>
+
                                 </Col>
                             </Row>
-
+                            <center><Link className="btn btn-success" to={'/register'}>แก้ไข</Link></center>
                             <hr style={{ margin: 10 }}></hr>
+                            <Row>
+                                <Col>
+                                    <div style={{ height: 100 }}>
+                                        <span >C101 {this.state.q1[0]}</span>
+                                    </div>
+
+                                    <div style={{ flexDirection: 'row' }}>
+                                        <span>ก่อนเข้าร่วม</span>
+                                        <BorderLinearProgress1 variant="determinate" value={ShowC110} />
+                                    </div>
+                                    <div>
+                                        <span>ระหว่างเข้าร่วม</span>
+                                        <BorderLinearProgress2 variant="determinate" value={ShowC120} />
+                                    </div>
+                                    <div>
+                                        <span>หลังเข้าร่วม</span>
+                                        <BorderLinearProgress3 variant="determinate" value={ShowC130} />
+                                    </div>
+                                </Col>
+                                <Col>
+                                    <div style={{ height: 100 }}>
+                                        <span >C102 {this.state.q1[1]}</span>
+                                    </div>
+                                    <div style={{ flexDirection: 'row' }}>
+                                        <span>ก่อนเข้าร่วม</span>
+                                        <BorderLinearProgress1 variant="determinate" value={ShowC111} />
+                                    </div>
+                                    <div>
+                                        <span>ระหว่างเข้าร่วม</span>
+                                        <BorderLinearProgress2 variant="determinate" value={ShowC121} />
+                                    </div>
+                                    <div>
+                                        <span>หลังเข้าร่วม</span>
+                                        <BorderLinearProgress3 variant="determinate" value={ShowC131} />
+                                    </div>
+                                </Col>
+                            </Row>
                             <Row>
                                 <Col>
                                     <RadarChart

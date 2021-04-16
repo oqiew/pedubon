@@ -1,22 +1,28 @@
-import React, { Component } from 'react'
-import Loading from '../../components/Loading'
-import { Form, Col, Row, Button, Table } from 'react-bootstrap';
+
+
+import React, { Component } from 'react';
+import { Form, Row, Col, Button, Table } from 'react-bootstrap';
+import "react-datepicker/dist/react-datepicker.css";
+import { Link } from 'react-router-dom';
+import '../../App.css';
 import Firebase from '../../Firebase';
+import Topnav from '../../components/top/Topnav';
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
-import Topnav from '../../components/top/Topnav';
+import { isEmptyValue } from "../../components/Methods";
 import { tableName } from '../../database/TableConstant';
-import { isEmptyValue } from '../../components/Methods';
-import { routeName } from '../../route/RouteConstant';
-export class Journey extends Component {
+import Loading from '../../components/Loading';
+
+
+export class ManageJourney extends Component {
     constructor(props) {
         super(props);
+        this.tbUsers = Firebase.firestore().collection(tableName.Users);
         this.tbJourney = Firebase.firestore().collection(tableName.Journey);
         this.state = {
             ...this.props.fetchReducer.user,
             loading: false,
             select_number: '',
-
             q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
             q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
                 "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
@@ -36,32 +42,11 @@ export class Journey extends Component {
             J2: "",
             J3: "",
             J4: "",
-            statusJ1: false,
-            statusJ2: false,
-            statusJ3: false,
         }
+
     }
     componentDidMount() {
-        this.tbJourney.where('uid', '==', this.state.uid).onSnapshot(this.getJourney);
         this.setQuestions();
-    }
-    getJourney = (querySnapshot) => {
-        let statusJ1 = false;
-        let statusJ2 = false;
-        let statusJ3 = false;
-        querySnapshot.forEach((doc) => {
-            const { C1, C2, C3, J1, J2, J3, J4, Time } = doc.data();
-            if (Time === 'ก่อนเข้าร่วมกิจกรรม') {
-                statusJ1 = true
-            } else if (Time === 'ระหว่างร่วมกิจกรรม') {
-                statusJ2 = true
-            } else if (Time === 'หลังร่วมกิจกรรม') {
-                statusJ3 = true
-            }
-        })
-        this.setState({
-            statusJ1, statusJ2, statusJ3
-        })
     }
     onSave = (e) => {
         e.preventDefault();
@@ -72,7 +57,6 @@ export class Journey extends Component {
 
         }).then(() => {
             console.log('sucess')
-            this.props.history.push(routeName.Profile)
         }).catch((error) => {
             console.log('error', error)
         })
@@ -217,7 +201,7 @@ export class Journey extends Component {
     render() {
         const { select_number, J1, J2, J3, J4, statusJ1, statusJ2, statusJ3 } = this.state;
         if (this.state.loading) {
-            return (<Loading></Loading>)
+            return <Loading></Loading>
         } else {
             return (
                 <div>
@@ -228,18 +212,17 @@ export class Journey extends Component {
                             <hr></hr>
                             {isEmptyValue(select_number) ?
                                 <>
-                                    {statusJ1 === false ? <Button variant="primary"
+                                    <Button variant="primary"
                                         onClick={() => this.setState({
                                             select_number: 'ก่อนเข้าร่วมกิจกรรม'
-                                        })}>ก่อนเข้าร่วมกิจกรรม</Button> :
-                                        statusJ1 === true && statusJ2 === false ?
-                                            <Button variant="primary" onClick={() => this.setState({
-                                                select_number: 'ระหว่างร่วมกิจกรรม'
-                                            })}>ระหว่างร่วมกิจกรรม</Button>
-                                            : statusJ1 === true && statusJ2 === true && statusJ3 === false ?
-                                                <Button variant="primary" onClick={() => this.setState({
-                                                    select_number: 'หลังร่วมกิจกรรม'
-                                                })}>หลังร่วมกิจกรรม</Button> : <></>}
+                                        })}>ก่อนเข้าร่วมกิจกรรม</Button>
+                                    <Button variant="primary" onClick={() => this.setState({
+                                        select_number: 'ระหว่างร่วมกิจกรรม'
+                                    })}>ระหว่างร่วมกิจกรรม</Button>
+
+                                    <Button variant="primary" onClick={() => this.setState({
+                                        select_number: 'หลังร่วมกิจกรรม'
+                                    })}>หลังร่วมกิจกรรม</Button>
                                 </>
                                 : <>
                                     <h1>{select_number}</h1>
@@ -342,7 +325,6 @@ export class Journey extends Component {
     }
 }
 
-
 //Used to add reducer's into the props
 const mapStateToProps = state => ({
     fetchReducer: state.fetchReducer
@@ -353,4 +335,5 @@ const mapDispatchToProps = {
     fetch_user
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Journey);
+export default connect(mapStateToProps, mapDispatchToProps)(ManageJourney);
+

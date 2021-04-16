@@ -95,6 +95,11 @@ class Topnav extends Component {
                   ตรวจสอบเอกสาร
 </Nav.Link>
               }
+              {!isEmptyValue(Role) && Role === 'admin' &&
+                <NavDropdown title="admin" id="collasible-nav-dropdown">
+                  <NavDropdown.Item href="/manage_journey">จัดการ journey</NavDropdown.Item>
+                </NavDropdown>
+              }
 
               {/* <Nav.Link href="/map_all" className="white-text">
                   แผนที่
@@ -131,15 +136,15 @@ class Topnav extends Component {
                   </MDBDropdownToggle>
                   <MDBDropdownMenu className="dropdown-default">
                     {!isEmptyValue(Name) &&
-                    <> 
-                    <NavDropdown.Item href="/profile">
-                      โปรไฟล์
+                      <>
+                        <NavDropdown.Item href="/profile">
+                          โปรไฟล์
                       </NavDropdown.Item>
-                    <NavDropdown.Item href="/Journey">
-                    Journey
+                        <NavDropdown.Item href="/Journey">
+                          Journey
                       </NavDropdown.Item>
                       </>
-                      }
+                    }
                     <NavDropdown.Divider />
                     <NavDropdown.Item
                       href="/"
