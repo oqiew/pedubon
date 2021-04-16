@@ -14,15 +14,23 @@ export class Journey extends Component {
         super(props);
         this.tbIIndicators = Firebase.firestore().collection(tableName.Indicators);
         this.tbJourney = Firebase.firestore().collection(tableName.Journey);
-        this.tbJourneyUser = Firebase.firestore().collection(tableName.Journey_users);
         this.state = {
             ...this.props.fetchReducer.user,
             loading: false,
             select_number: '',
+
+            q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
+            q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
+                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
+                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
+                "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
+            q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
+                "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
+                "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
+                "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
             c1: [],
             c2: [],
             c3: [],
-            journey: [],
             C1: [],
             C2: [],
             C3: [],
@@ -30,20 +38,39 @@ export class Journey extends Component {
             J2: "",
             J3: "",
             J4: "",
+            statusJ1: false,
+            statusJ2: false,
+            statusJ3: false,
         }
     }
     componentDidMount() {
-        this.tbJourney.where('Name', '==', '4ctped').onSnapshot(this.getJourney)
-        this.tbIIndicators.where('n', '==', 'c1').onSnapshot(this.getC1)
-        this.tbIIndicators.where('n', '==', 'c2').onSnapshot(this.getC2)
-        this.tbIIndicators.where('n', '==', 'c3').onSnapshot(this.getC3)
+        this.tbJourney.where('uid', '==', this.state.uid).onSnapshot(this.getJourney);
+        this.setQuestions();
+    }
+    getJourney = (querySnapshot) => {
+        let statusJ1 = false;
+        let statusJ2 = false;
+        let statusJ3 = false;
+        querySnapshot.forEach((doc) => {
+            const { C1, C2, C3, J1, J2, J3, J4, Time } = doc.data();
+            if (Time === 'ก่อนเข้าร่วมกิจกรรม') {
+                statusJ1 = true
+            } else if (Time === 'ระหว่างร่วมกิจกรรม') {
+                statusJ2 = true
+            } else if (Time === 'หลังร่วมกิจกรรม') {
+                statusJ3 = true
+            }
+        })
+        this.setState({
+            statusJ1, statusJ2, statusJ3
+        })
     }
     onSave = (e) => {
         e.preventDefault();
         const { C1, C2, C3, select_number, J1, J2, J3, J4, uid } = this.state;
-        this.tbJourneyUser.add({
+        this.tbJourney.add({
             uid, Create_date: Firebase.firestore.Timestamp.now(),
-            time: select_number, C1, C2, C3, J1, J2, J3, J4
+            Time: select_number, C1, C2, C3, J1, J2, J3, J4
 
         }).then(() => {
             console.log('sucess')
@@ -52,59 +79,102 @@ export class Journey extends Component {
             console.log('error', error)
         })
     }
-    getJourney = (query) => {
-        const journey = [];
-
-        query.forEach(element => {
-            const { Question } = element.data();
-            Question.forEach((doc) => {
-                journey.push(
-                    doc
-                )
-            })
-        });
-        this.setState({
-            journey
-        })
-    }
-    getC1 = (query) => {
+    setQuestions() {
         const c1 = [];
-        let index = 1;
-        query.forEach(element => {
-            const { Question } = element.data();
-            Question.forEach((doc) => {
-                c1.push(
-                    <tr key={index}>
-                        <td>
-                            {index}
-                        </td>
-                        <td>
-                            {doc}
-                        </td>
-                        <td>
-                            <input required type="radio" name={"C1" + index} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index, 10) - 1, '1')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C1" + index} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index, 10) - 1, '2')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C1" + index} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index, 10) - 1, '3')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C1" + index} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index, 10) - 1, '4')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C1" + index} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index, 10) - 1, '5')} />
-                        </td>
+        const c2 = [];
+        const c3 = [];
+        let index1 = 1;
+        let index2 = 1;
+        let index3 = 1;
+        this.state.q1.forEach((doc) => {
+            c1.push(
+                <tr key={index1}>
+                    <td>
+                        {index1}
+                    </td>
+                    <td>
+                        {doc}
+                    </td>
+                    <td>
+                        <input required type="radio" name={"C1" + index1} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index1, 10) - 1, '1')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C1" + index1} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index1, 10) - 1, '2')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C1" + index1} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index1, 10) - 1, '3')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C1" + index1} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index1, 10) - 1, '4')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C1" + index1} style={{ margin: 5 }} onChange={this.ans1.bind(this, parseInt(index1, 10) - 1, '5')} />
+                    </td>
 
-                    </tr>
-                )
-                index++
-            })
+                </tr>
+            )
+            index1++
+        })
+        this.state.q2.forEach((doc) => {
+            c2.push(
+                <tr key={index2}>
+                    <td>
+                        {index2}
+                    </td>
+                    <td>
+                        {doc}
+                    </td>
+                    <td>
+                        <input required type="radio" name={"C2" + index2} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index2, 10) - 1, '1')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C2" + index2} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index2, 10) - 1, '2')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C2" + index2} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index2, 10) - 1, '3')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C2" + index2} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index2, 10) - 1, '4')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C2" + index2} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index2, 10) - 1, '5')} />
+                    </td>
 
-        });
+                </tr>
+            )
+            index2++
+        })
+        this.state.q3.forEach((doc) => {
+            c3.push(
+                <tr key={index3}>
+                    <td>
+                        {index3}
+                    </td>
+                    <td>
+                        {doc}
+                    </td>
+                    <td>
+                        <input required type="radio" name={"C3" + index3} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index3, 10) - 1, '1')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C3" + index3} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index3, 10) - 1, '2')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C3" + index3} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index3, 10) - 1, '3')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C3" + index3} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index3, 10) - 1, '4')} />
+                    </td>
+                    <td>
+                        <input type="radio" name={"C3" + index3} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index3, 10) - 1, '5')} />
+                    </td>
+
+                </tr>
+            )
+            index3++
+        })
         this.setState({
-            c1
+            c1, c2, c3
         })
     }
     ans1(id, value) {
@@ -116,45 +186,6 @@ export class Journey extends Component {
         })
 
     }
-    getC2 = (query) => {
-        const c2 = [];
-        let index = 1;
-        query.forEach(element => {
-            const { Question } = element.data();
-            Question.forEach((doc) => {
-                c2.push(
-                    <tr key={index}>
-                        <td>
-                            {index}
-                        </td>
-                        <td>
-                            {doc}
-                        </td>
-                        <td>
-                            <input required type="radio" name={"C2" + index} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index, 10) - 1, '1')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C2" + index} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index, 10) - 1, '2')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C2" + index} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index, 10) - 1, '3')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C2" + index} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index, 10) - 1, '4')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C2" + index} style={{ margin: 5 }} onChange={this.ans2.bind(this, parseInt(index, 10) - 1, '5')} />
-                        </td>
-
-                    </tr>
-                )
-                index++
-            })
-        });
-        this.setState({
-            c2
-        })
-    }
     ans2(id, value) {
         let C2 = this.state.C2;
         C2[id] = value;
@@ -163,45 +194,6 @@ export class Journey extends Component {
             C2
         })
 
-    }
-    getC3 = (query) => {
-        const c3 = [];
-        let index = 1;
-        query.forEach(element => {
-            const { Question } = element.data();
-            Question.forEach((doc) => {
-                c3.push(
-                    <tr key={index}>
-                        <td>
-                            {index}
-                        </td>
-                        <td>
-                            {doc}
-                        </td>
-                        <td>
-                            <input required type="radio" name={"C3" + index} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index, 10) - 1, '1')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C3" + index} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index, 10) - 1, '2')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C3" + index} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index, 10) - 1, '3')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C3" + index} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index, 10) - 1, '4')} />
-                        </td>
-                        <td>
-                            <input type="radio" name={"C3" + index} style={{ margin: 5 }} onChange={this.ans3.bind(this, parseInt(index, 10) - 1, '5')} />
-                        </td>
-
-                    </tr>
-                )
-                index++
-            })
-        });
-        this.setState({
-            c3
-        })
     }
     ans3(id, value) {
         let C3 = this.state.C3;
@@ -225,7 +217,7 @@ export class Journey extends Component {
 
     }
     render() {
-        const { power, select_number, J1, J2, J3, J4 } = this.state;
+        const { select_number, J1, J2, J3, J4, statusJ1, statusJ2, statusJ3 } = this.state;
         if (this.state.loading) {
             return (<Loading></Loading>)
         } else {
@@ -238,16 +230,20 @@ export class Journey extends Component {
                             <hr></hr>
                             {isEmptyValue(select_number) ?
                                 <>
-                                    <Button variant="primary"
+                                    {statusJ1 === false ? <Button variant="primary"
                                         onClick={() => this.setState({
                                             select_number: 'ก่อนเข้าร่วมกิจกรรม'
-                                        })}>ก่อนเข้าร่วมกิจกรรม</Button>
-                                    <Button variant="primary" onClick={() => this.setState({
-                                        select_number: 'ระหว่างร่วมกิจกรรม'
-                                    })}>ระหว่างร่วมกิจกรรม</Button>
-                                    <Button variant="primary" onClick={() => this.setState({
-                                        select_number: 'หลังร่วมกิจกรรม'
-                                    })}>หลังร่วมกิจกรรม</Button>
+                                        })}>ก่อนเข้าร่วมกิจกรรม</Button> :
+                                        statusJ1 === true && statusJ2 === false ?
+                                            <Button variant="primary" onClick={() => this.setState({
+                                                select_number: 'ระหว่างร่วมกิจกรรม'
+                                            })}>ระหว่างร่วมกิจกรรม</Button>
+                                            : statusJ1 === true && statusJ2 === true && statusJ3 === false ?
+                                                <Button variant="primary" onClick={() => this.setState({
+                                                    select_number: 'หลังร่วมกิจกรรม'
+                                                })}>หลังร่วมกิจกรรม</Button> : <></>}
+
+
                                 </>
                                 : <>
                                     <h1>{select_number}</h1>

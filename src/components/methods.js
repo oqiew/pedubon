@@ -91,7 +91,7 @@ export function deleteSM(id, data) {
 
 
 export const isEmptyValue = value => {
-  if (value === "" || value === null || value === undefined) {
+  if (value === "" || value === null || value === undefined || value.length === 0) {
     return true;
   } else {
     return false;
