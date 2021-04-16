@@ -39,6 +39,7 @@ import Profile from "./components/user/Profile";
 import List_user from "./components/user/List_user";
 import View_User from "./components/user/View_User";
 
+
 // org
 // import  Map_all  from "./components/admin/Map_all";
 import Orgc_manage from "./components/org/Orgc_manage";
@@ -78,6 +79,7 @@ import AdminNetwork from "./network/screens/AdminNetwork";
 
 // user
 import PowerUser from "./screens/user/PowerUser";
+import Journey from "./screens/user/Journey";
 
 
 export class App extends Component {
@@ -147,6 +149,8 @@ export class App extends Component {
         {/* user */}
         <Route path={routeName.PowerUser} component={PowerUser}></Route>
         <Route path={'/BanManages'} component={BanManages}></Route>
+        <Route path={'/Journey'} component={Journey}></Route>
+
 
       </Router>
     );

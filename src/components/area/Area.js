@@ -19,7 +19,7 @@ import { tableName } from "../../database/TableConstant";
 export class Area extends Component {
   constructor(props) {
     super(props);
-    this.tbAreas = Firebase.firestore().collection(tableName.Areas);
+    this.tbAreas = Firebase.firestore().collection('AREAS');
     this.state = {
       ...this.props.fetchReducer.user,
       c1: [],
@@ -56,7 +56,7 @@ export class Area extends Component {
   }
   componentDidMount() {
     Firebase.firestore().collection('PROJECTS').onSnapshot(this.list_project);
-    this.tableName.onSnapshot(this.getModuleC);
+    this.tbAreas.onSnapshot(this.getModuleC);
 
     this.listProvinces();
     this.listDistrict(0)
