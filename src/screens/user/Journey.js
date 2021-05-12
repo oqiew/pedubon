@@ -16,29 +16,22 @@ export class Journey extends Component {
             ...this.props.fetchReducer.user,
             loading: false,
             select_number: '',
-
-            q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
-            q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
-            q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
+            q1: ["ท่านเข้าใจปัญหาชุมชนมากน้อยเพียงใด", "ท่านรู้แนวทางแก้ไขปัญหาในชุมชนมากน้อยเพียงใด"],
+            q2: ["ท่านมีความคิดสร้างสรรค์มากน้อยเพียงใด",
+                "ท่านมีความกล้าแสดงออกมากน้อยเพียงใด",
+                "ท่านมีแนวคิดหรือวิธีการใหม่ๆในการแก้ปัญหามากน้อยเพียงใด"],
+            q3: ["ท่ท่านสามารถพัฒนาตนเองมากน้อยเพียงใด",
                 "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
-                "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
-                "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
+                "ท่านสามารถเป็นแบบอย่างให้เพื่อนในทางที่ดีมากน้อยเพียงใด",
+                "ท่านคิดว่าตัวท่านกล้าคิด กล้าทำ กล้าตัดสินใจมากน้อยเพียงใด"],
             c1: [],
             c2: [],
             c3: [],
             C1: [],
             C2: [],
             C3: [],
-            J1: "",
-            J2: "",
-            J3: "",
-            J4: "",
             statusJ1: false,
             statusJ2: false,
-            statusJ3: false,
         }
     }
     componentDidMount() {
@@ -48,27 +41,24 @@ export class Journey extends Component {
     getJourney = (querySnapshot) => {
         let statusJ1 = false;
         let statusJ2 = false;
-        let statusJ3 = false;
         querySnapshot.forEach((doc) => {
-            const { C1, C2, C3, J1, J2, J3, J4, Time } = doc.data();
+            const { C1, C2, C3, Time } = doc.data();
             if (Time === 'ก่อนเข้าร่วมกิจกรรม') {
                 statusJ1 = true
-            } else if (Time === 'ระหว่างร่วมกิจกรรม') {
-                statusJ2 = true
             } else if (Time === 'หลังร่วมกิจกรรม') {
-                statusJ3 = true
+                statusJ2 = true
             }
         })
         this.setState({
-            statusJ1, statusJ2, statusJ3
+            statusJ1, statusJ2
         })
     }
     onSave = (e) => {
         e.preventDefault();
-        const { C1, C2, C3, select_number, J1, J2, J3, J4, uid } = this.state;
+        const { C1, C2, C3, select_number, uid } = this.state;
         this.tbJourney.add({
             uid, Create_date: Firebase.firestore.Timestamp.now(),
-            Time: select_number, C1, C2, C3, J1, J2, J3, J4
+            Time: select_number, C1, C2, C3,
 
         }).then(() => {
             console.log('sucess')
@@ -215,7 +205,7 @@ export class Journey extends Component {
 
     }
     render() {
-        const { select_number, J1, J2, J3, J4, statusJ1, statusJ2, statusJ3 } = this.state;
+        const { select_number, statusJ1, statusJ2, } = this.state;
         if (this.state.loading) {
             return (<Loading></Loading>)
         } else {
@@ -234,12 +224,9 @@ export class Journey extends Component {
                                         })}>ก่อนเข้าร่วมกิจกรรม</Button> :
                                         statusJ1 === true && statusJ2 === false ?
                                             <Button variant="primary" onClick={() => this.setState({
-                                                select_number: 'ระหว่างร่วมกิจกรรม'
-                                            })}>ระหว่างร่วมกิจกรรม</Button>
-                                            : statusJ1 === true && statusJ2 === true && statusJ3 === false ?
-                                                <Button variant="primary" onClick={() => this.setState({
-                                                    select_number: 'หลังร่วมกิจกรรม'
-                                                })}>หลังร่วมกิจกรรม</Button> : <></>}
+                                                select_number: 'หลังร่วมกิจกรรม'
+                                            })}>หลังร่วมกิจกรรม</Button>
+                                            : <h3>ท่านเก็บข้อมูล Journey เสร็จแล้ว</h3>}
                                 </>
                                 : <>
                                     <h1>{select_number}</h1>
@@ -297,36 +284,6 @@ export class Journey extends Component {
                                         {this.state.c3}
                                     </tbody>
                                 </Table>
-                                <div style={{ marginBottom: 10 }}>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">ความรู้ที่ได้รับ: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <textarea className="form-control" name="J1" value={J1} onChange={this.onChange}
-                                                cols="80" rows="5" required>{J1}</textarea>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">ความเข้าใจต่อเนื้อหาสาระ ของกิจกรรม: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <textarea className="form-control" name="J2" value={J2} onChange={this.onChange}
-                                                cols="80" rows="5" required>{J2}</textarea>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">ทักษะที่เกิดขึ้น: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <textarea className="form-control" name="J3" value={J3} onChange={this.onChange}
-                                                cols="80" rows="5" required>{J3}</textarea>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row}>
-                                        <Form.Label column sm="2">ทัศนคติ มุมมองต่อเรื่องที่เรียนรู้ ผ่านกิจกรรม: <label style={{ color: "red" }}>*</label></Form.Label>
-                                        <Col>
-                                            <textarea className="form-control" name="J4" value={J4} onChange={this.onChange}
-                                                cols="80" rows="5" required>{J4}</textarea>
-                                        </Col>
-                                    </Form.Group>
-                                </div>
                                 <center >
                                     <button type="submit" className="btn btn-success">บันทึก</button>
                                     <Button variant="danger" onClick={() => this.setState({

@@ -5,65 +5,17 @@ import { Row, Col } from 'react-bootstrap';
 import "react-datepicker/dist/react-datepicker.css";
 import { Link } from 'react-router-dom';
 import '../../App.css';
-import cw from '../../assets/children_walk.gif';
 import Firebase from '../../Firebase';
 import Topnav from '../top/Topnav';
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
-import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
 import { tableName } from '../../database/TableConstant';
 import Loading from '../Loading';
-import { routeName } from '../../route/RouteConstant';
-import { makeStyles, withStyles } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
+import ReactApexCharts from 'react-apexcharts'
 import LinearProgress from '@material-ui/core/LinearProgress';
 import CanvasJSReact from '../../canvasjs.react';
-import RadarChart from 'react-svg-radar-chart';
-import 'react-svg-radar-chart/build/css/index.css'
-import { Button } from 'react-bootstrap';
-var CanvasJSChart = CanvasJSReact.CanvasJSChart;
-const ColorNo1 = '#f19867';
-const ColorNo2 = '#3e9eff';
-const ColorNo3 = '#6ad500';
-const BorderLinearProgress1 = withStyles((theme) => ({
-    root: {
-        height: 10,
-        borderRadius: 5,
-    },
-    colorPrimary: {
-        backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-    },
-    bar: {
-        borderRadius: 5,
-        backgroundColor: ColorNo1,
-    },
-}))(LinearProgress);
-const BorderLinearProgress2 = withStyles((theme) => ({
-    root: {
-        height: 10,
-        borderRadius: 5,
-    },
-    colorPrimary: {
-        backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-    },
-    bar: {
-        borderRadius: 5,
-        backgroundColor: ColorNo2,
-    },
-}))(LinearProgress);
-const BorderLinearProgress3 = withStyles((theme) => ({
-    root: {
-        height: 10,
-        borderRadius: 5,
-    },
-    colorPrimary: {
-        backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-    },
-    bar: {
-        borderRadius: 5,
-        backgroundColor: ColorNo3,
-    },
-}))(LinearProgress);
 export class Register extends Component {
     constructor(props) {
         super(props);
@@ -71,36 +23,20 @@ export class Register extends Component {
         this.state = {
             ...this.props.fetchReducer.user,
             loading: false,
-            q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
-            q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
-            q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
+            q1: ["ท่านเข้าใจปัญหาชุมชนมากน้อยเพียงใด", "ท่านรู้แนวทางแก้ไขปัญหาในชุมชนมากน้อยเพียงใด"],
+            q2: ["ท่านมีความคิดสร้างสรรค์มากน้อยเพียงใด",
+                "ท่านมีความกล้าแสดงออกมากน้อยเพียงใด",
+                "ท่านมีแนวคิดหรือวิธีการใหม่ๆในการแก้ปัญหามากน้อยเพียงใด"],
+            q3: ["ท่ท่านสามารถพัฒนาตนเองมากน้อยเพียงใด",
                 "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
-                "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
-                "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
+                "ท่านสามารถเป็นแบบอย่างให้เพื่อนในทางที่ดีมากน้อยเพียงใด",
+                "ท่านคิดว่าตัวท่านกล้าคิด กล้าทำ กล้าตัดสินใจมากน้อยเพียงใด"],
             C11: [],
             C12: [],
             C13: [],
             C21: [],
             C22: [],
             C23: [],
-            C31: [],
-            C32: [],
-            C33: [],
-            J11: '',
-            J12: '',
-            J13: '',
-            J14: '',
-            J21: '',
-            J22: '',
-            J23: '',
-            J24: '',
-            J31: '',
-            J32: '',
-            J33: '',
-            J34: '',
             detail: false
         }
 
@@ -115,52 +51,22 @@ export class Register extends Component {
         let C21 = [];
         let C22 = [];
         let C23 = [];
-        let C31 = [];
-        let C32 = [];
-        let C33 = [];
-        let J11 = '';
-        let J12 = '';
-        let J13 = '';
-        let J14 = '';
-        let J21 = '';
-        let J22 = '';
-        let J23 = '';
-        let J24 = '';
-        let J31 = '';
-        let J32 = '';
-        let J33 = '';
-        let J34 = '';
+
         querySnapshot.forEach((doc) => {
-            const { C1, C2, C3, J1, J2, J3, J4, Time } = doc.data();
+            const { C1, C2, C3, Time } = doc.data();
             if (Time === 'ก่อนเข้าร่วมกิจกรรม') {
                 C11 = C1;
                 C12 = C2;
                 C13 = C3;
-                J11 = J1;
-                J12 = J2;
-                J13 = J3;
-                J14 = J4;
 
-            } else if (Time === 'ระหว่างร่วมกิจกรรม') {
+            } else if (Time === 'หลังร่วมกิจกรรม') {
                 C21 = C1;
                 C22 = C2;
                 C23 = C3;
-                J21 = J1;
-                J22 = J2;
-                J23 = J3;
-                J24 = J4;
-            } else if (Time === 'หลังร่วมกิจกรรม') {
-                C31 = C1;
-                C32 = C2;
-                C33 = C3;
-                J31 = J1;
-                J32 = J2;
-                J33 = J3;
-                J34 = J4;
             }
         })
         this.setState({
-            C11, C12, C13, C21, C22, C23, C31, C32, C33, J11, J12, J13, J14, J21, J22, J23, J24, J31, J32, J33, J34
+            C11, C12, C13, C21, C22, C23,
         })
     }
     render() {
@@ -169,30 +75,121 @@ export class Register extends Component {
         const { email, Name, Lastname, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday_format, Position, Role,
             Avatar_URL, area, User_type
-
         } = this.state;
+        const { C11, C12, C13, C21, C22, C23, } = this.state;
+        let series = [(((parseInt(C21[0], 10) * 20) + (parseInt(C21[1], 10) * 20)) / 2).toFixed(2),
+        (((parseInt(C22[0], 10) * 20) +
+            (parseInt(C22[1], 10) * 20) +
+            (parseInt(C22[2], 10) * 20)) / 3).toFixed(2),
+        (((parseInt(C23[0], 10) * 20) +
+            (parseInt(C23[1], 10) * 20) +
+            (parseInt(C23[2], 10) * 20)) / 3).toFixed(2)
+        ];
+        let options = {
+            chart: {
+                height: 390,
+                type: 'radialBar',
+            },
+            plotOptions: {
+                radialBar: {
+                    offsetY: 0,
+                    startAngle: 0,
+                    endAngle: 270,
+                    hollow: {
+                        margin: 5,
+                        size: '30%',
+                        background: 'transparent',
+                        image: undefined,
+                    },
+                    dataLabels: {
+                        name: {
+                            show: false,
+                        },
+                        value: {
+                            show: false,
+                        }
+                    }
+                }
+            },
+            colors: ['#1ab7ea', '#00e297', '#ff4646'],
+            labels: ['สำนึกรักชุมชน :' + series[0], 'ความคิดสร้างสรรค์ :' + series[1], 'ผู้นำการเปลี่ยนแปลง :' + series[2]],
+            legend: {
+                show: true,
+                floating: true,
+                fontSize: '16px',
+                position: 'left',
+                offsetX: 160,
+                offsetY: 15,
+                labels: {
+                    useSeriesColors: true,
+                },
+                markers: {
+                    size: 0
+                },
+                itemMargin: {
+                    vertical: 3
+                }
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    legend: {
+                        show: false
+                    }
+                }
+            }]
+        }
+        let seriesScore = [{
+            name: 'ก่อนเข้าร่วม',
+            data: [(parseInt(C11[0], 10) * 20),
+            (parseInt(C11[1], 10) * 20),
+            (parseInt(C12[0], 10) * 20),
+            (parseInt(C12[1], 10) * 20),
+            (parseInt(C12[2], 10) * 20),
+            (parseInt(C13[0], 10) * 20),
+            (parseInt(C13[1], 10) * 20),
+            (parseInt(C13[2], 10) * 20)],
+        }, {
+            name: 'หลังเข้าร่วม',
+            data: [(parseInt(C21[0], 10) * 20),
+            (parseInt(C21[1], 10) * 20),
+            (parseInt(C22[0], 10) * 20),
+            (parseInt(C22[1], 10) * 20),
+            (parseInt(C22[2], 10) * 20),
+            (parseInt(C23[0], 10) * 20),
+            (parseInt(C23[1], 10) * 20),
+            (parseInt(C23[2], 10) * 20)],
+        }]
+        let optionsScore = {
+            chart: {
+                height: 350,
+                type: 'radar',
+                dropShadow: {
+                    enabled: true,
+                    blur: 1,
+                    left: 1,
+                    top: 1
+                }
+            },
+            // title: {
+            //     text: ''
+            // },
+            stroke: {
+                width: 2
+            },
+            fill: {
+                opacity: 0.1
+            },
+            markers: {
+                size: 0
+            },
+            xaxis: {
+                categories: ['C11', 'C12', 'C21', 'C22', 'C23', 'C31', 'C32', 'C33']
+            }
+        }
 
-        const { C11, C12, C13, C21, C22, C23, C31, C32, C33, J11, J12, J13, J14, J21, J22, J23, J24, J31, J32, J33, J34 } = this.state;
-        let ShowC110 = 0;
-        let ShowC111 = 0;
-        let ShowC120 = 0;
-        let ShowC121 = 0;
-        let ShowC130 = 0;
-        let ShowC131 = 0;
-        if (!isEmptyValue(C11)) {
-            ShowC110 = (parseInt(C11[0], 10) * 100) / 5;
-            ShowC111 = (parseInt(C11[1], 10) * 100) / 5;
-        }
-        if (!isEmptyValue(C21)) {
-            ShowC120 = (parseInt(C21[0], 10) * 100) / 5;
-            ShowC121 = (parseInt(C21[1], 10) * 100) / 5;
-        }
-        if (!isEmptyValue(C31)) {
-            ShowC130 = (parseInt(C31[0], 10) * 100) / 5;
-            ShowC131 = (parseInt(C31[1], 10) * 100) / 5;
-        }
         const card_style = {
-            backgroundColor: '#91c8c8',
+            backgroundColor: '#f0f0f0',
             borderRadius: 10,
             boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
             transition: "0.3s",
@@ -218,157 +215,30 @@ export class Register extends Component {
                                     <h6 style={{ padding: 2 }}><strong>ประเภทผู้ใช้ : </strong>{User_type}<strong>  เบอร์โทรศัพท์มือถือ : </strong>{Phone_number}</h6>
                                     <h6 style={{ padding: 2 }}><strong>Facebook : </strong>{Facebook}<strong>  Line_ID : </strong>{Line_ID}</h6>
                                     <h6 style={{ padding: 2 }}><strong>ตำแหน่ง : </strong>{Position}</h6>
-                                    <h6 style={{ padding: 2 }}><strong>อปท : </strong>{area.area_name}</h6>
+                                    <h6 style={{ padding: 2 }}><strong>อปท : </strong>{area.Area_name}({area.Area_type})</h6>
 
                                 </Col>
                             </Row>
                             <center><Link className="btn btn-success" to={'/register'}>แก้ไข</Link></center>
                             <hr style={{ margin: 10 }}></hr>
-                            <Row>
+                            <div>
+                                <ReactApexCharts options={options} series={series} type="radialBar" height={390} />
+                            </div>
+                            <div>
                                 <Col>
-                                    <div style={{ height: 100 }}>
-                                        <span >C101 {this.state.q1[0]}</span>
-                                    </div>
-
-                                    <div style={{ flexDirection: 'row' }}>
-                                        <span>ก่อนเข้าร่วม</span>
-                                        <BorderLinearProgress1 variant="determinate" value={ShowC110} />
-                                    </div>
-                                    <div>
-                                        <span>ระหว่างเข้าร่วม</span>
-                                        <BorderLinearProgress2 variant="determinate" value={ShowC120} />
-                                    </div>
-                                    <div>
-                                        <span>หลังเข้าร่วม</span>
-                                        <BorderLinearProgress3 variant="determinate" value={ShowC130} />
-                                    </div>
+                                    <ReactApexCharts options={optionsScore} series={seriesScore} type="radar" height={350} />
                                 </Col>
-                                <Col>
-                                    <div style={{ height: 100 }}>
-                                        <span >C102 {this.state.q1[1]}</span>
-                                    </div>
-                                    <div style={{ flexDirection: 'row' }}>
-                                        <span>ก่อนเข้าร่วม</span>
-                                        <BorderLinearProgress1 variant="determinate" value={ShowC111} />
-                                    </div>
-                                    <div>
-                                        <span>ระหว่างเข้าร่วม</span>
-                                        <BorderLinearProgress2 variant="determinate" value={ShowC121} />
-                                    </div>
-                                    <div>
-                                        <span>หลังเข้าร่วม</span>
-                                        <BorderLinearProgress3 variant="determinate" value={ShowC131} />
-                                    </div>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <RadarChart
-
-                                        captions={{
-                                            // columns
-                                            Q1: 'C201',
-                                            Q2: 'C202',
-                                            Q3: 'C203',
-                                            Q4: 'C204',
-                                        }}
-                                        data={[
-                                            // data
-                                            {
-                                                data: {
-                                                    Q1: parseInt(C12[0], 10) * 0.2,
-                                                    Q2: parseInt(C12[1], 10) * 0.2,
-                                                    Q3: parseInt(C12[2], 10) * 0.2,
-                                                    Q4: parseInt(C12[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo1 }
-                                            }, {
-                                                data: {
-                                                    Q1: parseInt(C22[0], 10) * 0.2,
-                                                    Q2: parseInt(C22[1], 10) * 0.2,
-                                                    Q3: parseInt(C22[2], 10) * 0.2,
-                                                    Q4: parseInt(C22[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo2 }
-                                            },
-                                            {
-                                                data: {
-                                                    Q1: parseInt(C32[0], 10) * 0.2,
-                                                    Q2: parseInt(C32[1], 10) * 0.2,
-                                                    Q3: parseInt(C32[2], 10) * 0.2,
-                                                    Q4: parseInt(C32[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo3 }
-                                            },
-                                        ]}
-                                        size={this.state.detail ? 300 : 350}
-                                    />
-                                </Col>
-                                <Col>
-                                    <RadarChart
-
-                                        captions={{
-                                            // columns
-                                            Q1: 'C301',
-                                            Q2: 'C302',
-                                            Q3: 'C303',
-                                            Q4: 'C304',
-                                        }}
-                                        data={[
-                                            // data
-                                            {
-                                                data: {
-                                                    Q1: parseInt(C13[0], 10) * 0.2,
-                                                    Q2: parseInt(C13[1], 10) * 0.2,
-                                                    Q3: parseInt(C13[2], 10) * 0.2,
-                                                    Q4: parseInt(C13[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo1 }
-                                            }, {
-                                                data: {
-                                                    Q1: parseInt(C23[0], 10) * 0.2,
-                                                    Q2: parseInt(C23[1], 10) * 0.2,
-                                                    Q3: parseInt(C23[2], 10) * 0.2,
-                                                    Q4: parseInt(C23[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo2 }
-                                            },
-                                            {
-                                                data: {
-                                                    Q1: parseInt(C33[0], 10) * 0.2,
-                                                    Q2: parseInt(C33[1], 10) * 0.2,
-                                                    Q3: parseInt(C33[2], 10) * 0.2,
-                                                    Q4: parseInt(C33[3], 10) * 0.2,
-
-                                                },
-                                                meta: { color: ColorNo3 }
-                                            },
-                                        ]}
-                                        size={this.state.detail ? 300 : 350}
-
-                                    />
-                                </Col>
-                            </Row>
-                            <center>{this.state.detail === false ? <Button variant="info" onClick={() => this.setState({ detail: true })}>ข้อมูล</Button>
-                                : <Button variant="danger" onClick={() => this.setState({ detail: false })}>ปิด</Button>
-                            }</center>
-                            {this.state.detail && <Row>
-                                <Col>
-                                    {this.state.q2.map((element, i) =>
-                                        <h6>C20{i + 1}{element}</h6>
-                                    )}
-                                </Col>
-                                <Col>
-                                    {this.state.q3.map((element, i) =>
-                                        <h6>C30{i + 1}{element}</h6>
-                                    )}
-                                </Col>
-                            </Row>}
+                            </div>
+                            <div>
+                                <p>C11 : {this.state.q1[0]}</p>
+                                <p>C12 : {this.state.q1[1]}</p>
+                                <p>C21 : {this.state.q2[0]}</p>
+                                <p>C22 : {this.state.q2[1]}</p>
+                                <p>C23 : {this.state.q2[2]}</p>
+                                <p>C31 : {this.state.q3[0]}</p>
+                                <p>C32 : {this.state.q3[1]}</p>
+                                <p>C33 : {this.state.q3[2]}</p>
+                            </div>
                         </div>
 
                     </div>

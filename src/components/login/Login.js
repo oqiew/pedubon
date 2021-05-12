@@ -140,7 +140,7 @@ class Login extends Component {
                                 <Row className="wrap-inputRow">
                                     <div className="wrap-input100 validate-input" data-validate="Password is requir d">
 
-                                        <input className="input100" type={this.state.hiden_pass} name="Password" maxLength="8" placeholder="Password" onChange={this.onChange} />
+                                        <input className="input100" type={this.state.hiden_pass} name="Password" placeholder="Password" onChange={this.onChange} />
 
                                         <span className="focus-input100"></span>
                                         <span className="symbol-input100">

@@ -58,6 +58,7 @@ import Data_area from "./components/area/Data_area";
 
 // admin
 import Import_user from "./screens/admin/Import_user";
+import Import_sm from "./screens/admin/import_sm";
 import ManageJourney from "./screens/admin/ManageJourney";
 
 // ประเด็นข้อมูล
@@ -119,6 +120,7 @@ export class App extends Component {
         {/* <Route path="/export_data" component={Export_data}></Route> */}
         {/* admin */}
         <Route path="/import_user" component={Import_user}></Route>
+        <Route path="/import_sm" component={Import_sm}></Route>
         <Route path="/manage_journey" component={ManageJourney}></Route>
         {/* <Route path="/map_all" component={Map_all}></Route> */}
         <Route path="/orgc_manage" component={Orgc_manage}></Route>

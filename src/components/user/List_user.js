@@ -9,10 +9,10 @@ import { confirmAlert } from "react-confirm-alert"; // Import
 import "../../App.css";
 import { fetch_user } from "../../actions";
 import { connect } from "react-redux";
-import data_provinces from "../../data/provinces.json";
 import { isEmptyValue } from "../Methods";
-import { Button, Modal } from "antd";
+import { Modal } from "antd";
 import { tableName } from "../../database/TableConstant";
+import Loading from "../Loading";
 
 
 export class List_user extends Component {
@@ -23,6 +23,7 @@ export class List_user extends Component {
     this.state = {
       ...this.props.fetchReducer.user,
       list_user: [],
+      loading: false,
       query_list_users: [],
       SUser_type: "",
       visible: false,
@@ -37,28 +38,40 @@ export class List_user extends Component {
     };
   }
 
-  setArea = async (Area_ID) => {
-    return new Promise((resolve, reject) => {
-      Firebase.firestore().collection(tableName.Areas).doc(Area_ID).get().then((doc) => {
-        if (doc.exists) {
-          resolve({ ID: doc.id, ...doc.data() })
-        } else {
-          reject('')
+  setArea(Area_ID) {
+    let result = '';
+    const areas = this.props.fetchReducer.areas
+    if (!isEmptyValue(areas)) {
+      areas.forEach(element => {
+        if (element.ID === Area_ID) {
+          result = element;
+
         }
-      })
-    })
+      });
+    }
+
+    return result
   }
-  getUsers = async (querySnapshot) => {
+  getUsers = (querySnapshot) => {
     const query_list_users = [];
     let count = 1;
+    this.setState({
+      loading: true
+    })
     const users = querySnapshot.docs;
     for (const user of users) {
       if (isEmptyValue(this.state.Role)) {
         const {
-          Name, Lastname, Nickname, Position, Department, Email,
+          Name, Lastname, Nickname, Position,
           Avatar_URL, User_type, Area_ID
         } = user.data();
-        const Area = await this.setArea(Area_ID);
+        let Area = '';
+        try {
+          Area = this.setArea(Area_ID);
+        } catch (error) {
+          console.log(error, Name, Area_ID)
+        }
+
         query_list_users.push({
           number: count++,
           Avatar_URL: (
@@ -75,10 +88,15 @@ export class List_user extends Component {
 
       } else if (this.state.Role === 'admin') {
         const {
-          Name, Lastname, Nickname, Position, Department, Email, Birthday,
+          Name, Lastname, Nickname, Position, Birthday,
           Avatar_URL, User_type, Area_ID
         } = user.data();
-        const Area = await this.setArea(Area_ID);
+        let Area = '';
+        try {
+          Area = this.setArea(Area_ID);
+        } catch (error) {
+          console.log(error, Name, Area_ID)
+        }
         var d1 = new Date(Birthday.seconds * 1000);
         let bd =
           d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
@@ -109,7 +127,8 @@ export class List_user extends Component {
 
     this.setState({
       query_list_users,
-      list_user: query_list_users
+      list_user: query_list_users,
+      loading: false
     });
   };
   onViewCancel() {
@@ -225,7 +244,7 @@ export class List_user extends Component {
     }
   };
   render() {
-    const { view_data, list_user } = this.state;
+    const { view_data } = this.state;
     const data = {
       columns: [
         {
@@ -233,12 +252,14 @@ export class List_user extends Component {
           field: "number",
           sort: "asc",
           width: 50
-        }, {
-          label: "รูป",
-          field: "Avatar_URL",
-          sort: "asc",
-          width: 50
-        }, {
+        },
+        // {
+        //   label: "รูป",
+        //   field: "Avatar_URL",
+        //   sort: "asc",
+        //   width: 50
+        // },
+        {
           label: "ชื่อ",
           field: "Name",
           sort: "asc",
@@ -267,64 +288,69 @@ export class List_user extends Component {
       ],
       rows: this.state.list_user
     };
-    const { SUser_type, User_types } = this.state;
-    return (
-      <div>
-        <Topnav></Topnav>
-        <div className="main_component">
-          {/* <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}> */}
-          <center>
-            <h5>ทำเนียบด้านเด็กและเยาวชน จังหวัดอุบลราชธานี</h5>
-            <br></br>
-            <select
-              className="form-control"
-              id="sel1"
-              name="SUser_type"
-              value={SUser_type}
-              onChange={this.onChange}
-              required
+    const { SUser_type, loading } = this.state;
+    if (loading) {
+      return (<Loading></Loading>);
+    } else {
+
+      return (
+        <div>
+          <Topnav></Topnav>
+          <div className="main_component">
+            {/* <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}> */}
+            <center>
+              <h5>ทำเนียบด้านเด็กและเยาวชน จังหวัดอุบลราชธานี</h5>
+              <br></br>
+              <select
+                className="form-control"
+                id="sel1"
+                name="SUser_type"
+                value={SUser_type}
+                onChange={this.onChange}
+                required
+              >
+                <option value="">ทั้งหมด</option>
+                <option value="ผู้บริหาร">ผู้บริหาร</option>
+                <option value="พี่เลี้ยง">พี่เลี้ยง</option>
+                <option value="แกนนำเด็ก">แกนนำเด็ก</option>
+              </select>
+            </center>
+            <Modal
+              title={view_data.Name + " " + view_data.Lastname + "(" + view_data.Nickname + ")"}
+              visible={this.state.visible}
+              onOk={this.onViewCancel.bind(this)}
+              onCancel={this.onViewCancel.bind(this)}
             >
-              <option value="">ทั้งหมด</option>
-              <option value="ผู้บริหาร">ผู้บริหาร</option>
-              <option value="พี่เลี้ยง">พี่เลี้ยง</option>
-              <option value="แกนนำเด็ก">แกนนำเด็ก</option>
-            </select>
-          </center>
-          <Modal
-            title={view_data.Name + " " + view_data.Lastname + "(" + view_data.Nickname + ")"}
-            visible={this.state.visible}
-            onOk={this.onViewCancel.bind(this)}
-            onCancel={this.onViewCancel.bind(this)}
-          >
-            <img
-              style={{ widtha: 100, height: 100, cursor: "pointer" }}
-              alt="avatar"
-              src={view_data.Avatar_URL}
-            ></img>
-            <p>ตำแหน่ง :{view_data.Position}  หน่วยงาน :{view_data.Area.Dominance + view_data.Area.Area_name}</p>
-            <p>อำเภอ {view_data.Area.District_name} จังหวัด {view_data.Area.Province_name}</p>
-            {this.state.Role === 'admin' &&
-              <>
-                <p>Email :{view_data.Email} เบอร์โทร :{view_data.Phone_number}</p>
-                <p>ประเภทผู้ใช้ :{view_data.User_type} วันเกิด :{view_data.bd}</p>
-                <p>Facebok :{view_data.Facebook} Line ID :{view_data.Line_ID}</p>
-              </>
-            }
-          </Modal>
-          <MDBDataTable
-            striped
-            bordered
-            small
-            searchLabel="ค้นหา"
-            paginationLabel={["ก่อนหน้า", "ถัดไป"]}
-            infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
-            entriesLabel="แสดง รายการ"
-            data={data}
-          />
-          {/* </div> */}
+              <img
+                style={{ widtha: 100, height: 100, cursor: "pointer" }}
+                alt="avatar"
+                src={view_data.Avatar_URL}
+              ></img>
+              <p>ตำแหน่ง :{view_data.Position}  หน่วยงาน :{view_data.Area.Dominance + view_data.Area.Area_name}</p>
+              <p>อำเภอ {view_data.Area.District_name} จังหวัด {view_data.Area.Province_name}</p>
+              {this.state.Role === 'admin' &&
+                <>
+                  <p>Email :{view_data.Email} เบอร์โทร :{view_data.Phone_number}</p>
+                  <p>ประเภทผู้ใช้ :{view_data.User_type} วันเกิด :{view_data.bd}</p>
+                  <p>Facebok :{view_data.Facebook} Line ID :{view_data.Line_ID}</p>
+                </>
+              }
+            </Modal>
+            <MDBDataTable
+              striped
+              bordered
+              small
+              searchLabel="ค้นหา"
+              paginationLabel={["ก่อนหน้า", "ถัดไป"]}
+              infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
+              entriesLabel="แสดง รายการ"
+              data={data}
+            />
+            {/* </div> */}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 }
 //Used to add reducer's into the props

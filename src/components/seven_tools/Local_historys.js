@@ -353,8 +353,7 @@ class Local_historys extends React.Component {
             <center>
               <h2>
                 <strong>
-                  ประวัติศาสตร์ชุมชน : {this.state.Ban_name}หมู่ที่
-                {this.state.Area_ID + 1}
+                  ประวัติศาสตร์ชุมชน : {selected_ban.Name}
                 </strong>{" "}
               </h2>
               <hr></hr>

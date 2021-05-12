@@ -56,7 +56,7 @@ export class Register_email extends Component {
                 .then(doc => {
                     this.props.fetch_user({
                         uid: doc.user.uid,
-                        Email: doc.user.email
+                        email: doc.user.email
                     });
                     confirmAlert({
                         title: 'บันทึกสำเร็จ',

@@ -1,18 +1,15 @@
 import React, { Component } from 'react'
 import Topnav from '../../components/top/Topnav'
-import XLSX from 'xlsx';
-import { make_cols } from '../../components/excel/MakeColumns';
-import SheetJSFT from '../../components/excel/Excel_type';
 import Firebase from '../../Firebase';
 import data_provinces from "../../data/provinces.json";
 import { GetCurrentDate, isEmptyValue } from '../../components/Methods';
 import { Form, Col, Row } from 'react-bootstrap';
-import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
-import user from '../../assets/user.png';
+import { tableName } from '../../database/TableConstant';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField';
 export class Import_user extends Component {
     constructor(props) {
         super(props);
-        console.log(new Date(1936, 7, 28))
         this.state = {
             file: {},
             list_users: [],
@@ -21,7 +18,7 @@ export class Import_user extends Component {
             Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
             Avatar_URL: '',
             Add_date: '', Area_ID: '', Role: '',
-            Area_PID: '', Area_DID: '', Area_SDID: '', User_type: '',
+            Area_PID: '', Area_DID: '', Area_SDID: '', User_type: '', Avatar_URL: '',
             Birthday: '',
             Provinces: [],
             Districts: [],
@@ -31,11 +28,30 @@ export class Import_user extends Component {
             tumbon: '',
             count: 0,
             massage: '',
+            dominance: '',
+            areas: [],
+            query_areas: [],
+            doc_ID: '',
+            set_Area_ID: '',
         }
     }
     componentDidMount() {
+        Firebase.firestore().collection('USERS').onSnapshot(this.getOldUser)
+        Firebase.firestore().collection(tableName.Areas).onSnapshot(this.onUpdateAreas);
         this.listProvinces();
         this.listDistrict(0);
+    }
+    getOldUser = (query) => {
+        const list_users = [];
+        query.forEach((doc) => {
+            list_users.push({
+                ID: doc.id,
+                ...doc.data()
+            })
+        })
+        this.setState({
+            list_users
+        })
     }
     listProvinces = () => {
         const Provinces = [];
@@ -126,90 +142,7 @@ export class Import_user extends Component {
             this.listSub_district(this.state.Province_ID, this.state.District_ID);
         }
     }
-    handleChangeUsername = event =>
-        this.setState({ username: event.target.value });
-    handleUploadStart = () => this.setState({ isUploading: true, progress: 0 });
-    handleProgress = progress => this.setState({ progress });
-    handleUploadError = error => {
-        this.setState({ isUploading: false });
-        console.error(error);
-    };
-    handleUploadSuccess = filename => {
-        this.setState({ Avatar_name: filename, progress: 100, isUploading: false, uploaded: true });
-        Firebase
-            .storage()
-            .ref("Avatar")
-            .child(filename)
-            .getDownloadURL()
-            .then(url => this.setState({ Avatar_URL: url, massage: <p style={{ color: 'green' }}>อัพโหลดรูปสำเร็จ</p> }));
 
-    };
-    handleChange(e) {
-        const files = e.target.files;
-        if (files && files[0]) this.setState({ file: files[0] });
-    };
-    handleFile() {
-        /* Boilerplate to set up FileReader */
-        // firebase.auth().onAuthStateChanged((user) => {
-        //      console.log(user)
-        // })
-        const reader = new FileReader();
-        const rABS = !!reader.readAsBinaryString;
-
-        reader.onload = (e) => {
-            /* Parse data */
-            const bstr = e.target.result;
-            const wb = XLSX.read(bstr, { type: rABS ? 'binary' : 'array', bookVBA: true });
-            /* Get first worksheet */
-            const wsname = wb.SheetNames[0];
-            const ws = wb.Sheets[wsname];
-            /* Convert array of arrays */
-            const data = XLSX.utils.sheet_to_json(ws);
-            /* Update state */
-            this.setState({ data: data, cols: make_cols(ws['!ref']) });
-            let list_users = [];
-
-            if (this.state.Tb_name !== '') {
-
-                // const tb = Firebase.firestore().collection(this.state.Tb_name);
-
-                this.state.data.forEach((element, i) => {
-
-                    list_users.push({
-                        Email: element.Email, Name: element.Name, Last_name: element.Last_name,
-                        Nickname: element.Nickname, Sex: element.Sex, Phone_number: "0" + element.Phone_number,
-                        Line_ID: element.lineID || '', Facebook: element.Facebook || '',
-                        Position: element.Position, Department: element.Department,
-                        // Province_ID:element., District_ID:element., Sub_district_ID:element., 
-                        Avatar_URL: '',
-                        Birthday: element.Birthday,
-                        Add_date: GetCurrentDate('/'),
-                        Area_ID: '',
-                        Role: '',
-                        User_type: element.User_type,
-                        Area_PID: '',
-                        Area_DID: '',
-                        Area_SDID: '',
-                        district: element.District,
-                        tumbon: element.tumbon,
-                        Avatar_name: '',
-
-                    })
-                });
-            }
-            this.setState({
-                list_users,
-            })
-
-
-        };
-
-        if (rABS) {
-            reader.readAsBinaryString(this.state.file);
-        } else {
-            reader.readAsArrayBuffer(this.state.file);
-        };
-    }
     onChange = (e) => {
         const state = this.state
         state[e.target.name] = e.target.value;
@@ -218,92 +151,128 @@ export class Import_user extends Component {
     onSubmit = (e) => {
         e.preventDefault();
         const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Position, Department, Password, Birthday,
-            Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-            Area_ID, Role, User_type, Area_PID, Area_DID, Area_SDID
+            Line_ID, Facebook, Position, Birthday,
+            Email, Avatar_URL,
+            set_Area_ID, Role, User_type, doc_ID
         } = this.state;
 
         // if (Avatar_URL !== '' || Avatar_URL !== undefined) {
-
+        const date = new Date(Birthday.seconds * 1000)
+        const Birthday_format = ("0" + date.getDate()).slice(-2) + "-" + (parseInt(date.getMonth(), 10) + 1) + "-" + date.getFullYear();
         if (Sex != '') {
-            if (!isEmptyValue(this.state.uid)) {
-                // if (true) {
-                // var temp_list_avatar_url = Avatar_URL.split(this.state.uid
-                // );
-                // var temp_avatar_url = temp_list_avatar_url[0] + this.state.uid
-                //     + "_200x200" + temp_list_avatar_url[1];
-                Firebase.firestore().collection('USERS').add({
-                    Birthday,
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Position, Department,
-                    Province_ID, District_ID, Sub_district_ID, Email,
-                    // Avatar_URL: temp_avatar_url,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role,
-                    User_type, Area_PID, Area_DID, Area_SDID,
-                }).then((d) => {
 
-                    Firebase.auth()
-                        .signOut()
-                        .then(() => {
-                            this.setState({
-                                uid: '',
-                                massage: <p style={{ color: 'green' }}>สำเร็จ</p>
-                            })
-                        }
-                        );
-                }).catch(error => {
-                    console.log('error', error)
-                })
+            // if (true) {
+            // var temp_list_avatar_url = Avatar_URL.split(this.state.uid
+            // );
+            // var temp_avatar_url = temp_list_avatar_url[0] + this.state.uid
+            //     + "_200x200" + temp_list_avatar_url[1];
+            let temp_avatar_url = "";
+            if (!isEmptyValue(Avatar_URL)) {
+                temp_avatar_url = Avatar_URL
             }
+            Firebase.firestore().collection(tableName.Users).doc(doc_ID).set({
+                Birthday,
+                Name,
+                Lastname: Last_name,
+                Nickname,
+                Sex,
+                Phone_number,
+                Line_ID,
+                Facebook,
+                Position,
+                Email,
+                Avatar_URL: temp_avatar_url,
+                Add_date: GetCurrentDate("/"),
+                Update_date: Firebase.firestore.Timestamp.now(),
+                Create_date: Firebase.firestore.Timestamp.now(),
+                Birthday_format,
+                Area_ID: set_Area_ID,
+                Role,
+                User_type,
+            }).then((d) => {
+                console.log('success');
+                this.setState({
+                    Area_ID: '',
+                    massage: 'success',
+                    doc_ID: '',
+                    dominance: '',
+                    set_Area_ID: '',
+                    areas: this.state.query_areas
+                })
+
+            }).catch(error => {
+                console.log('error', error)
+            })
 
         } else {
             this.setState({
                 massage: <p style={{ color: 'red' }}>ข้อมูลไม่ครบ</p>
             })
         }
+
     }
-    onLogin = (e) => {
-        e.preventDefault();
-        const { Email } = this.state;
-        Firebase.auth().createUserWithEmailAndPassword(Email, '12345678')
-            .then(doc => {
-                this.setState({
-                    uid: doc.user.uid,
-                    massage: <p style={{ color: 'green' }}>เข้าสู่ระบบ{doc.user.uid} </p>
-                })
-            }).catch(error => {
-                console.log('error', error)
+    onChangeDominance = (value) => {
+        const dominance = value.target.value;
+
+        if (dominance === '') {
+            return [];
+        }
+        const { query_areas } = this.state;
+        const regex = new RegExp(`${dominance.trim()}`, 'i');
+        const areas = query_areas.filter(area => area.Dominance.search(regex) >= 0)
+        this.setState({
+            areas,
+            dominance
+        })
+    }
+    onUpdateAreas = (querySnapshot) => {
+        this.setState({
+            loading: true
+        })
+        const query_areas = []
+        querySnapshot.forEach(element => {
+            query_areas.push({
+                areaID: element.id,
+                title: element.data().Area_name,
+                ...element.data()
             })
+        });
+        this.setState({
+            query_areas,
+            loading: false
+        })
     }
     onNext(num) {
         const { list_users } = this.state;
-
-        if (num <= list_users.length) {
-            console.log(list_users[num])
-            this.setState({
-                Email: list_users[num].Email,
-                Name: list_users[num].Name,
-                Last_name: list_users[num].Last_name,
-                Nickname: list_users[num].Nickname,
-                Sex: list_users[num].Sex,
-                Phone_number: list_users[num].Phone_number,
-                Line_ID: list_users[num].Line_ID,
-                Facebook: list_users[num].Facebook,
-                Birthday: list_users[num].Birthday,
-                Position: list_users[num].Position,
-                Department: list_users[num].Department,
-                district: list_users[num].district,
-                tumbon: list_users[num].tumbon,
-                // District_ID: list_users[num].Name,
-                // district: list_users[num].district,
-                User_type: list_users[num].User_type,
-                Avatar_URL: '',
-                Avatar_name: '',
-                count: num + 1,
-                massage: ''
-            })
+        if (list_users.length > 0) {
+            if (num <= list_users.length) {
+                console.log(list_users[num])
+                this.setState({
+                    Email: list_users[num].Email,
+                    Avatar_URL: list_users[num].Avatar_URL,
+                    Name: list_users[num].Name,
+                    Last_name: list_users[num].Last_name,
+                    Nickname: list_users[num].Nickname,
+                    Sex: list_users[num].Sex,
+                    Phone_number: list_users[num].Phone_number,
+                    Line_ID: list_users[num].Line_ID,
+                    Facebook: list_users[num].Facebook,
+                    Birthday: list_users[num].Birthday,
+                    Position: list_users[num].Position,
+                    Department: list_users[num].Department,
+                    district: list_users[num].district,
+                    tumbon: list_users[num].tumbon,
+                    // District_ID: list_users[num].Name,
+                    // district: list_users[num].district,
+                    User_type: list_users[num].User_type,
+                    Avatar_name: '',
+                    count: num + 1,
+                    massage: ''
+                })
+            }
         }
     }
+
 
     render() {
         //step create Email
@@ -312,7 +281,7 @@ export class Import_user extends Component {
         const { Name, Last_name, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday, Position, Department,
             Province_ID, District_ID, Sub_district_ID,
-            Role, User_type,
+            Role, User_type, Avatar_URL, dominance, areas, doc_ID
         } = this.state;
         const style = {
             display: 'flex',
@@ -321,22 +290,16 @@ export class Import_user extends Component {
             justifyContent: 'center'
         }
         const { Provinces, Districts, Sub_districts } = this.state;
+
         return (
             <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <Topnav></Topnav>
                 <div className="area_detail">
-                    <label htmlFor="file">Upload an excel to Process Triggers</label>
-                    <br />
-                    <input type="file" className="form-control" id="file" accept={SheetJSFT} onChange={this.handleChange.bind(this)} />
-                    <button type="button" className='btn btn-success' onClick={this.handleFile.bind(this)}>โหลดข้อมูล</button>
-
-                    <hr></hr>
-                    <center><h1>จำนวนข้อมูล {this.state.list_users.length}</h1></center>
-                    <button type="button" className='btn btn-success' onClick={this.onNext.bind(this, this.state.count)}>next{this.state.count}</button>
-                    <button type="button" className="btn btn-success" onClick={this.onLogin.bind(this)}>เข้าสู่ระบบ</button>
-                    <hr></hr>
+                    <div style={{ flexDirection: 'row', display: 'flex', alignItems: 'center' }}><h5>จำนวนข้อมูล {this.state.list_users.length}</h5>
+                        <button type="button" className='btn btn-success' onClick={this.onNext.bind(this, this.state.count)}>next{this.state.count}</button>
+                    </div>
                     <form onSubmit={this.onSubmit} >
-                        <h3>{Email}</h3>
+                        <h3>{Email} </h3>
                         <hr></hr>
                         <Row>
                             {/* <Col>
@@ -365,6 +328,16 @@ export class Import_user extends Component {
                                 </div>
                             </Col> */}
                             <Col sm={9}>
+                                <Form.Group as={Row}>
+                                    <Form.Label column sm="2">ภาพ: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Col>
+                                        {!isEmptyValue(Avatar_URL) && <img className="avatar" alt="avatar" src={Avatar_URL} />}
+                                    </Col>
+                                    <Form.Label column sm="2">doc_ID: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Col>
+                                        <input type="text" className="form-control" name="doc_ID" value={doc_ID} onChange={this.onChange} required />
+                                    </Col>
+                                </Form.Group>
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="2">ชื่อ: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
@@ -395,11 +368,6 @@ export class Import_user extends Component {
                                     <Col>
                                         <input type="text" className="form-control" name="Birthday" value={Birthday} onChange={this.onChange} required />
                                     </Col>
-                                    <Form.Label column sm="2"></Form.Label>
-                                    <Col>
-                                    </Col>
-                                </Form.Group>
-                                <Form.Group as={Row}>
                                     <Form.Label column sm="2">ประเภทผู้ใช้: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
                                         <select className="form-control" id="User_type" name="User_type" value={User_type} onChange={this.onChange} required>
@@ -411,7 +379,6 @@ export class Import_user extends Component {
                                         </select>
                                     </Col>
                                 </Form.Group>
-
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="2">เบอร์โทรศัพท์มือถือ: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
@@ -457,27 +424,31 @@ export class Import_user extends Component {
                                     </Col>
                                 </Form.Group>
                                 <Form.Group as={Row}>
-                                    <Form.Label column sm="2">{this.state.district}: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Form.Label column sm="2">รูปแบบ อปท : <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
-                                        <select className="form-control" id="District_ID" name="District_ID" value={District_ID} onChange={this.onSelectDistrict} required>
-                                            <option key='0' value=""></option>
-                                            {Districts.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.value}</option>
-                                            )}
-
+                                        <select className="form-control" id="dominance" name="dominance"
+                                            value={dominance} onChange={str => this.onChangeDominance(str)}>
+                                            <option key={0} value="เลือกรูปแบบ อปท"></option>
+                                            <option key={1} value="องค์การบริหารส่วนจังหวัด">องค์การบริหารส่วนจังหวัด</option>
+                                            <option key={2} value="เทศบาลนคร">เทศบาลนคร</option>
+                                            <option key={3} value="เทศบาลเมือง">เทศบาลเมือง</option>
+                                            <option key={4} value="เทศบาลตำบล">เทศบาลตำบล</option>
+                                            <option key={5} value="องค์การบริหารส่วนตำบล">องค์การบริหารส่วนตำบล</option>
                                         </select>
                                     </Col>
-                                    <Form.Label column sm="2">{this.state.tumbon}: <label style={{ color: "red" }}>*</label></Form.Label>
+                                    <Form.Label column sm="2">ชื่ออปท: </Form.Label>
                                     <Col>
-                                        <select className="form-control" id="Sub_district_ID" name="Sub_district_ID" value={Sub_district_ID} onChange={this.onChange} required>
-                                            <option key='0' value=""></option>
-                                            {Sub_districts.map((data, i) =>
-                                                <option key={i + 1} value={data.Key}>{data.value}</option>
-                                            )}
-                                        </select>
+                                        <Autocomplete
+                                            options={areas}
+                                            getOptionLabel={(option) => option.title}
+                                            style={{ width: 'auto' }}
+                                            onChange={(e, val) => this.setState({ set_Area_ID: val.areaID })}
+                                            renderInput={(params) =>
+                                                <TextField {...params} variant="outlined" />
+                                            }
+                                        />
                                     </Col>
                                 </Form.Group>
-
 
                                 {this.state.Role === "admin" ?
                                     <Form.Group as={Row}>
@@ -499,10 +470,11 @@ export class Import_user extends Component {
 
 
                         </Row>
-                        <center><br />
+                        <center>
                             {this.state.massage}
                             <button type="submit" className="btn btn-success">บันทึก</button>
-                            <br></br><br></br>
+                            <button type="button" className='btn btn-success' onClick={this.onNext.bind(this, this.state.count)}>next{this.state.count}</button>
+
                         </center>
                     </form>
                 </div>

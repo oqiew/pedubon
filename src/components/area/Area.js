@@ -16,15 +16,97 @@ import { Modal, Button } from 'antd';
 import { database } from "firebase";
 import { tableName } from "../../database/TableConstant";
 // ทำเพิ่มหมู่บ้าน เข้ากับ อปท
+import LinearProgress from '@material-ui/core/LinearProgress';
+import CanvasJSReact from '../../canvasjs.react';
+import RadarChart from 'react-svg-radar-chart';
+import 'react-svg-radar-chart/build/css/index.css'
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+// map
+import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
+import accident from '../../assets/accident.png';
+import flag_danger from '../../assets/flag_danger.png';
+import flag_good from '../../assets/flag_good.png';
+import home from '../../assets/home.png';
+import organization from '../../assets/organization.png';
+import resource from '../../assets/resource.png';
+var CanvasJSChart = CanvasJSReact.CanvasJSChart;
+const ColorNo1 = '#f19867';
+const ColorNo2 = '#3e9eff';
+const ColorNo3 = '#6ad500';
+const BorderLinearProgress1 = withStyles((theme) => ({
+  root: {
+    height: 10,
+    borderRadius: 5,
+  },
+  colorPrimary: {
+    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
+  },
+  bar: {
+    borderRadius: 5,
+    backgroundColor: ColorNo1,
+  },
+}))(LinearProgress);
+const BorderLinearProgress2 = withStyles((theme) => ({
+  root: {
+    height: 10,
+    borderRadius: 5,
+  },
+  colorPrimary: {
+    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
+  },
+  bar: {
+    borderRadius: 5,
+    backgroundColor: ColorNo2,
+  },
+}))(LinearProgress);
+const BorderLinearProgress3 = withStyles((theme) => ({
+  root: {
+    height: 10,
+    borderRadius: 5,
+  },
+  colorPrimary: {
+    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
+  },
+  bar: {
+    borderRadius: 5,
+    backgroundColor: ColorNo3,
+  },
+}))(LinearProgress);
 export class Area extends Component {
   constructor(props) {
     super(props);
-    this.tbAreas = Firebase.firestore().collection('AREAS');
+    this.tbAreas = Firebase.firestore().collection(tableName.Areas);
+    this.tbJourney = Firebase.firestore().collection(tableName.Journey);
+    this.tbSocialMaps = Firebase.firestore().collection(tableName.Social_maps);
     this.state = {
       ...this.props.fetchReducer.user,
+      // journey
       c1: [],
       c2: [],
       c3: [],
+      q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
+      q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
+        "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
+        "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
+        "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
+      q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
+        "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
+        "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
+        "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
+      C11: [],
+      C12: [],
+      C13: [],
+      C21: [],
+      C22: [],
+      C23: [],
+      C31: [],
+      C32: [],
+      C33: [],
+      num1: 0,
+      num2: 0,
+      num3: 0,
+      detail: false,
+
       addAllcomponent: '',
       list_area: [],
       add_status: false,
@@ -51,13 +133,120 @@ export class Area extends Component {
       bans: [false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false,],
-
+      area_detail: {
+        area_name: '',
+        arae_number1: 0,
+        arae_number2: 0,
+        arae_number3: 0,
+        child_number: 0,
+        population: 0
+      },
+      // map
+      showingInfoWindow: false,
+      activeMarker: {},
+      selectedPlace: {},
+      position: { lat: 15.229399, lng: 104.857126 },
+      zoomMap: 12,
+      listshowMarker: [],
+      sall: true,
+      shome: false,
+      sresource: false,
+      sorganization: false,
+      sflag_good: false,
+      sflag_danger: false,
+      saccident: false,
+      shome_num: 0,
+      sresource_num: 0,
+      sorganization_num: 0,
+      sflag_good_num: 0,
+      sflag_danger_num: 0,
+      saccident_num: 0,
     };
+    this.onMarkerClick = this.onMarkerClick.bind(this);
+    this.onMapClicked = this.onMapClicked.bind(this);
+  }
+  getJourney = (querySnapshot) => {
+    let C11 = [0, 0];
+    let C12 = [0, 0, 0, 0];
+    let C13 = [0, 0, 0, 0];
+    let C21 = [0, 0];
+    let C22 = [0, 0, 0, 0];
+    let C23 = [0, 0, 0, 0];
+    let C31 = [0, 0];
+    let C32 = [0, 0, 0, 0];
+    let C33 = [0, 0, 0, 0];
+    let num1 = 0;
+    let num2 = 0;
+    let num3 = 0;
+    querySnapshot.forEach((doc) => {
+      const { C1, C2, C3, Time } = doc.data();
+      if (Time === 'ก่อนเข้าร่วมกิจกรรม') {
+        if (!isEmptyValue(C1)) {
+          C11[0] += parseInt(C1[0], 10);
+          C11[1] += parseInt(C1[1], 10);
+        }
+        if (!isEmptyValue(C2)) {
+          C12[0] += parseInt(C2[0], 10);
+          C12[1] += parseInt(C2[1], 10);
+          C12[2] += parseInt(C2[2], 10);
+          C12[3] += parseInt(C2[3], 10);
+        }
+        if (!isEmptyValue(C3)) {
+          C13[0] += parseInt(C3[0], 10);
+          C13[1] += parseInt(C3[1], 10);
+          C13[2] += parseInt(C3[2], 10);
+          C13[3] += parseInt(C3[3], 10);
+        }
+        num1++;
+
+      } else if (Time === 'ระหว่างร่วมกิจกรรม') {
+        if (!isEmptyValue(C1)) {
+          C21[0] += parseInt(C1[0], 10);
+          C21[1] += parseInt(C1[1], 10);
+        }
+        if (!isEmptyValue(C2)) {
+          C22[0] += parseInt(C2[0], 10);
+          C22[1] += parseInt(C2[1], 10);
+          C22[2] += parseInt(C2[2], 10);
+          C22[3] += parseInt(C2[3], 10);
+        }
+        if (!isEmptyValue(C3)) {
+          C23[0] += parseInt(C3[0], 10);
+          C23[1] += parseInt(C3[1], 10);
+          C23[2] += parseInt(C3[2], 10);
+          C23[3] += parseInt(C3[3], 10);
+        }
+        num2++;
+      } else if (Time === 'หลังร่วมกิจกรรม') {
+        if (!isEmptyValue(C1)) {
+          C31[0] += parseInt(C1[0], 10);
+          C31[1] += parseInt(C1[1], 10);
+        }
+        if (!isEmptyValue(C2)) {
+          C32[0] += parseInt(C2[0], 10);
+          C32[1] += parseInt(C2[1], 10);
+          C32[2] += parseInt(C2[2], 10);
+          C32[3] += parseInt(C2[3], 10);
+        }
+        if (!isEmptyValue(C3)) {
+          C33[0] += parseInt(C3[0], 10);
+          C33[1] += parseInt(C3[1], 10);
+          C33[2] += parseInt(C3[2], 10);
+          C33[3] += parseInt(C3[3], 10);
+        }
+        num3++;
+      }
+    })
+
+    this.setState({
+      C11, C12, C13, C21, C22, C23, C31, C32, C33, num1, num2, num3
+    })
   }
   componentDidMount() {
     Firebase.firestore().collection('PROJECTS').onSnapshot(this.list_project);
+    this.tbSocialMaps.onSnapshot(this.ListMark);
+    this.tbJourney.onSnapshot(this.getJourney);
     this.tbAreas.onSnapshot(this.getModuleC);
-
     this.listProvinces();
     this.listDistrict(0)
   }
@@ -117,8 +306,6 @@ export class Area extends Component {
       });
     }
   };
-
-
   onSelectProvince = (e) => {
     const state = this.state
     state[e.target.name] = e.target.value;
@@ -271,82 +458,86 @@ export class Area extends Component {
     }
   };
 
-  getModuleC = querySnapshot => {
+  getModuleC = async querySnapshot => {
     const c1 = [];
     const c2 = [];
     const c3 = [];
     const list_area = [];//ตาราวข้อมูลทั้งหมด
-    querySnapshot.forEach(doc => {
-      const Province = data_provinces[doc.data().AProvince_ID][0];
-      const District = data_provinces[doc.data().AProvince_ID][1][doc.data().ADistrict_ID][0];
+    try {
+      for (const doc of querySnapshot.docs) {
+        // const Province = data_provinces[doc.data().AProvince_ID][0];
+        // const District = data_provinces[doc.data().AProvince_ID][1][doc.data().ADistrict_ID][0];
+        var stb = 0;
+        if (doc.data().bans !== undefined) {
+          doc.data().bans.forEach((d) => {
+            if (d) {
+              stb++;
+            }
+          })
+        }
 
-      var stb = 0;
-      if (doc.data().bans !== undefined) {
-        doc.data().bans.forEach((d) => {
-          if (d) {
-            stb++;
-          }
-        })
+        // list_area.push({
+        //   ID: doc.id,
+        //   Province,
+        //   District,
+        //   ...doc.data(),
+        //   nban: stb,
+        //   edit: (
+        //     <div>
+        //       <button
+        //         className="btn btn-pimary"
+        //         onClick={this.handleOpen.bind(this, { ID: doc.id, Province, District, ...doc.data() })}
+        //       >
+        //         เปิด
+        //     </button>
+        //       <button
+        //         className="btn btn-success"
+        //         onClick={this.edit.bind(this, doc.data(), doc.id)}
+        //       >
+        //         แก้ไข
+        //     </button>
+        //       <button
+        //         className="btn btn-danger"
+        //         onClick={this.delete_area.bind(this, doc.id)}
+        //       >
+        //         ลบ
+        //     </button>
+        //     </div>
+
+        //   )
+        // })
+        if (doc.data().Area_type === 'พื้นที่พัฒนา') {
+
+          c1.push({
+            ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data()
+            , Project_name: this.get_project(doc.id),
+            edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
+
+          });
+        } else if (doc.data().Area_type === 'พื้นที่นำร่อง') {
+          c2.push({
+            ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
+            edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
+          });
+        } else if (doc.data().Area_type === 'พื้นที่ต้นแบบ') {
+          c3.push({
+            ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
+            edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            // course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
+            edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
+          });
+        }
       }
-
-      list_area.push({
-        ID: doc.id,
-        Province,
-        District,
-        ...doc.data(),
-        nban: stb,
-        edit: (
-          <div>
-            <button
-              className="btn btn-pimary"
-              onClick={this.handleOpen.bind(this, { ID: doc.id, Province, District, ...doc.data() })}
-            >
-              เปิด
-          </button>
-            <button
-              className="btn btn-success"
-              onClick={this.edit.bind(this, doc.data(), doc.id)}
-            >
-              แก้ไข
-          </button>
-            <button
-              className="btn btn-danger"
-              onClick={this.delete_area.bind(this, doc.id)}
-            >
-              ลบ
-          </button>
-          </div>
-
-        )
-      })
-
-      if (doc.data().Area_type === 'พื้นที่พัฒนา') {
-        c1.push({
-          ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
-          edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
-
-        });
-      } else if (doc.data().Area_type === 'พื้นที่นำร่อง') {
-        c2.push({
-          ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
-          edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
-        });
-      } else if (doc.data().Area_type === 'พื้นที่ต้นแบบ') {
-        c3.push({
-          ID: doc.id, Name: doc.data().Dominance + doc.data().Area_name, ...doc.data(), Project_name: this.get_project(doc.id),
-          edit: (<Link to={`/project_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit2: (<Link to={`/activity_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          course: (<Link to={`/course_manage/${doc.id}`} className="btn btn-success">เปิด</Link>),
-          edit3: (<Link to={`/data_area/${doc.id}`} className="btn btn-success">เปิด</Link>),
-        });
-      }
-    });
+    } catch (error) {
+      console.log('error', error)
+    }
 
     this.setState({
       c1, c2, c3, list_area
@@ -456,8 +647,42 @@ export class Area extends Component {
   //   };
   // }
   //end  imnport file
-  clicked(area) {
-    console.log(area.name);
+  areaClicked(area) {
+    let area_name = "";
+    let arae_number1 = 0;
+    let arae_number2 = 0;
+    let arae_number3 = 0;
+    let child_number = 0;
+    let population = 0;
+    const { c1, c2, c3 } = this.state;
+    for (let index = 0; index < 20; index++) {
+      if (index < 15) {
+        if (c1[index].District_name === area.name) {
+          arae_number1++;
+        }
+        if (c2[index].District_name === area.name) {
+          arae_number2++;
+        }
+        if (c3[index].District_name === area.name) {
+          arae_number3++;
+        }
+      } else {
+        if (c1[index].District_name === area.name) {
+          arae_number1++;
+        }
+      }
+    }
+    this.setState({
+      area_detail:
+      {
+        area_name: area.name,
+        arae_number1,
+        arae_number2,
+        arae_number3,
+        child_number,
+        population,
+      }
+    })
     // this.setState({
     // 	msg: `You clicked on ${area.shape} at coords ${JSON.stringify(
     // 		area.coords
@@ -523,11 +748,165 @@ export class Area extends Component {
     })
 
   }
+  // map
+  onFocusMarker(lat, lng) {
+    setTimeout(() => {
+      this.setState({
+        position: { lat, lng },
+        zoomMap: 18
+      });
 
+    }, 100);
+  }
+  onMarkMap(lat, lng) {
+    this.setState({
+      position: {
+        lat: lat,
+        lng: lng
+      }
+    });
+  }
+  //  map
+  ListMark = (querySnapshot) => {
+    const geoMaps = [];
+    const listshowMarker = [];
+    let shome_num = 0;
+    let sresource_num = 0;
+    let sorganization_num = 0;
+    let sflag_good_num = 0;
+    let sflag_danger_num = 0;
+    let saccident_num = 0;
+    let count = 0;
+    if (querySnapshot.size !== 0) {
+      const { Geo_map_position } = querySnapshot.docs[0].data();
+      this.setState({
+        position: Geo_map_position,
+        area_position: Geo_map_position
+      })
+    }
+    querySnapshot.forEach((doc) => {
+      const { Geo_map_position, Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Informer_name, } = doc.data();
+      var icon_m = '';
+      var name_type = '';
+      // "home"=บ้าน
+      // "resource"=แหล่งทรัพยากร
+      // "organization"=องค์กร
+      // "flag_good"=จุดดี
+      // "flag_danger"=จุดเสี่ยง
+      // "accident"=จุดอุบัติเหตุ
+      if (Geo_map_type === 'home') {
+        icon_m = home; name_type = 'บ้าน';
+        shome_num++;
+      } else if (Geo_map_type === 'resource') {
+        icon_m = resource; name_type = 'แหล่งทรัพยากร';
+        sresource_num++;
+      } else if (Geo_map_type === 'organization') {
+        icon_m = organization; name_type = 'องค์กร';
+        sorganization_num++;
+      } else if (Geo_map_type === 'flag_good') {
+        icon_m = flag_good; name_type = 'จุดดี';
+        sflag_good_num++;
+      } else if (Geo_map_type === 'flag_danger') {
+        icon_m = flag_danger; name_type = 'จุดเสี่ยง';
+        sflag_danger_num++;
+      } else if (Geo_map_type === 'accident') {
+        icon_m = accident; name_type = 'จุดอุบัติเหตุ';
+        saccident_num++;
+      }
+      if (!isEmptyValue(Geo_map_position)) {
+        listshowMarker.push(
+          <Marker key={count}
+            onClick={this.onMarkerClick}
+            name={Geo_map_name + ""}
+            position={Geo_map_position}
+            description={Geo_map_description}
+            image={Map_image_URL}
+            icon={icon_m}
+          // animation={this.props.google.maps.Animation.DROP}
+          // label={count}
+          />
+        );
+      }
+      count++;
+    })
+
+    this.setState({
+      listshowMarker,
+      shome_num,
+      sresource_num,
+      sorganization_num,
+      sflag_good_num,
+      sflag_danger_num,
+      saccident_num,
+    });
+  }
+  onMarkerClick(props, marker) {
+
+    this.setState({
+      selectedPlace: props,
+      activeMarker: marker,
+      showingInfoWindow: true,
+    });
+  }
+
+  onMapClicked(t, map, coord) {
+    const { latLng } = coord;
+    const lat = latLng.lat();
+    const lng = latLng.lng();
+
+    if (this.state.showingInfoWindow) {
+      this.setState({
+        showingInfoWindow: false,
+        activeMarker: null
+      })
+    }
+    setTimeout(() => {
+      this.setState({
+        position: { lat, lng }
+      });
+    }, 100);
+  }
   render() {
     const { c1, c2, c3, Role, selectLocalData } = this.state;
     const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Provinces, Districts, SubDistricts,
       Dominance, Area_type, Area_name, LGO_ID } = this.state;
+    // map
+    const { shome_num,
+      sresource_num,
+      sorganization_num,
+      sflag_good_num,
+      sflag_danger_num,
+      saccident_num, } = this.state;
+    // area
+    const { area_detail } = this.state;
+    // power
+    const { C11, C12, C13, C21, C22, C23, C31, C32, C33, num1, num2, num3 } = this.state;
+    let ShowC110 = 0;
+    let ShowC111 = 0;
+    let ShowC120 = 0;
+    let ShowC121 = 0;
+    let ShowC130 = 0;
+    let ShowC131 = 0;
+    if (!isEmptyValue(C11)) {
+      ShowC110 = ((C11[0] / num1) * 100) / 5;
+      ShowC111 = ((C11[1] / num1) * 100) / 5;
+    }
+    if (!isEmptyValue(C21)) {
+      ShowC120 = ((C21[0] / num1) * 100) / 5;
+      ShowC121 = ((C21[1] / num1) * 100) / 5;
+    }
+    if (!isEmptyValue(C31)) {
+      ShowC130 = ((C31[0] / num3) * 100) / 5;
+      ShowC131 = ((C31[1] / num3) * 100) / 5;
+    }
+    const card_style = {
+      backgroundColor: '#91c8c8',
+      borderRadius: 10,
+      boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+      transition: "0.3s",
+      padding: 30
+
+    }
     const data = {
       columns: [
         {
@@ -595,16 +974,17 @@ export class Area extends Component {
           field: "edit",
           sort: "asc"
         },
-        {
-          label: "กิจกรรม",
-          field: "edit2",
-          sort: "asc"
-        },
-        {
-          label: "หลักสูตร",
-          field: "course",
-          sort: "asc"
-        },
+
+        // {
+        //   label: "กิจกรรม",
+        //   field: "edit2",
+        //   sort: "asc"
+        // },
+        // {
+        //   label: "หลักสูตร",
+        //   field: "course",
+        //   sort: "asc"
+        // },
         {
           label: "ข้อมูลพื้นที่",
           field: "edit3",
@@ -635,16 +1015,17 @@ export class Area extends Component {
           field: "edit",
           sort: "asc"
         },
-        {
-          label: "กิจกรรม",
-          field: "edit2",
-          sort: "asc"
-        },
-        {
-          label: "หลักสูตร",
-          field: "course",
-          sort: "asc"
-        },
+
+        // {
+        //   label: "กิจกรรม",
+        //   field: "edit2",
+        //   sort: "asc"
+        // },
+        // {
+        //   label: "หลักสูตร",
+        //   field: "course",
+        //   sort: "asc"
+        // },
         {
           label: "ข้อมูลพื้นที่",
           field: "edit3",
@@ -675,16 +1056,17 @@ export class Area extends Component {
           field: "edit",
           sort: "asc"
         },
-        {
-          label: "กิจกรรม",
-          field: "edit2",
-          sort: "asc"
-        },
-        {
-          label: "หลักสูตร",
-          field: "course",
-          sort: "asc"
-        },
+
+        // {
+        //   label: "กิจกรรม",
+        //   field: "edit2",
+        //   sort: "asc"
+        // },
+        // {
+        //   label: "หลักสูตร",
+        //   field: "course",
+        //   sort: "asc"
+        // },
         {
           label: "ข้อมูลพื้นที่",
           field: "edit3",
@@ -721,17 +1103,6 @@ export class Area extends Component {
         { name: "ม่วงสามสิบ", shape: "poly", coords: [153, 180, 165, 162, 167, 145, 182, 141, 203, 145, 237, 166, 235, 199, 218, 220, 188, 220] },
         { name: "เขื่องใน", shape: "poly", coords: [178, 262, 116, 251, 122, 237, 109, 216, 117, 185, 151, 181, 175, 198, 188, 222, 186, 241] },
         { name: "เมืองอุบลราชธานี", shape: "poly", coords: [190, 274, 209, 267, 230, 267, 269, 258, 280, 248, 276, 232, 266, 228, 263, 243, 228, 220, 194, 223, 183, 251, 182, 268] },
-      ]
-    }
-    const URL = "https://c1.staticflickr.com/5/4052/4503898393_303cfbc9fd_b.jpg";
-    const MAP = {
-      name: "my-map",
-      areas: [
-        { name: "1", shape: "poly", coords: [25, 33, 27, 300, 128, 240, 128, 94], preFillColor: "green", fillColor: "blue" },
-        { name: "2", shape: "poly", coords: [219, 118, 220, 210, 283, 210, 284, 119], preFillColor: "pink" },
-        { name: "3", shape: "poly", coords: [381, 241, 383, 94, 462, 53, 457, 282], fillColor: "yellow" },
-        { name: "4", shape: "poly", coords: [245, 285, 290, 285, 274, 239, 249, 238], preFillColor: "red" },
-        { name: "5", shape: "circle", coords: [170, 100, 25] },
       ]
     }
     if (this.state.add_status) {
@@ -840,7 +1211,6 @@ export class Area extends Component {
                     <option key='1' value="พื้นที่พัฒนา">พื้นที่พัฒนา</option>
                     <option key='2' value="พื้นที่นำร่อง">พื้นที่นำร่อง</option>
                     <option key='3' value="พื้นที่ต้นแบบ">พื้นที่ต้นแบบ</option>
-
                   </select>
                 </Col>
               </Form.Group>
@@ -878,7 +1248,7 @@ export class Area extends Component {
                      </button>
             </Row>
             <br></br>
-            <MDBDataTable
+            {/* <MDBDataTable
               striped
               bordered
               small
@@ -887,9 +1257,7 @@ export class Area extends Component {
               infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
               entriesLabel="แสดง รายการ"
               data={data}
-            />
-
-
+            /> */}
           </div>
         </center >
       )
@@ -898,23 +1266,205 @@ export class Area extends Component {
         <center>
           <Topnav></Topnav>
           <div className="area_detail">
-            <div style={{ position: "relative", }}>
-              <ImageMapper src={require('../../assets/map.jpg')} map={map} width={600} height={600}
-                // <ImageMapper src={URL} map={MAP} width={500}
-                onClick={area => console.log(area)}
-                onMouseEnter={area => console.log(area)}
-                // onImageClick={(area, _, evt) => console.log(area, evt)}
-                onMouseMove={(area, _, evt) => console.log(evt.nativeEvent.layerX, evt.nativeEvent.layerY)}
-              // onMouseLeave={area => console.log(area)}
+            {/* แสดง กราฟ สรุปพลัง  */}
+            <Row>
+              <h5>จำนวนข้อมูล ก่อนเข้าร่วม {num1}</h5>
+              <h5>จำนวนข้อมูล ระหว่างเข้าร่วม {num2}</h5>
+              <h5>จำนวนข้อมูล หลังเข้าร่วม {num3}</h5>
+            </Row>
+            <Row>
+              <Col>
+                <div style={{ height: 100 }}>
+                  <span >C101 {this.state.q1[0]}</span>
+                </div>
 
-              >
+                <div style={{ flexDirection: 'row' }}>
+                  <span>ก่อนเข้าร่วม {ShowC110}%</span>
+                  <BorderLinearProgress1 variant="determinate" value={ShowC110} />
+                </div>
+                <div>
+                  <span>ระหว่างเข้าร่วม {ShowC120}%</span>
+                  <BorderLinearProgress2 variant="determinate" value={ShowC120} />
+                </div>
+                <div>
+                  <span>หลังเข้าร่วม {ShowC130}%</span>
+                  <BorderLinearProgress3 variant="determinate" value={ShowC130} />
+                </div>
+              </Col>
+              <Col>
+                <div style={{ height: 100 }}>
+                  <span >C102 {this.state.q1[1]}</span>
+                </div>
+                <div style={{ flexDirection: 'row' }}>
+                  <span>ก่อนเข้าร่วม {ShowC111}%</span>
+                  <BorderLinearProgress1 variant="determinate" value={ShowC111} />
+                </div>
+                <div>
+                  <span>ระหว่างเข้าร่วม {ShowC121}%</span>
+                  <BorderLinearProgress2 variant="determinate" value={ShowC121} />
+                </div>
+                <div>
+                  <span>หลังเข้าร่วม{ShowC131}%</span>
+                  <BorderLinearProgress3 variant="determinate" value={ShowC131} />
+                </div>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <RadarChart
+                  captions={{
+                    // columns
+                    Q1: 'C201',
+                    Q2: 'C202',
+                    Q3: 'C203',
+                    Q4: 'C204',
+                  }}
+                  data={[
+                    // data
+                    {
+                      data: {
+                        Q1: C12[0] / num1 * 0.2,
+                        Q2: (C12[1] / num1) * 0.2,
+                        Q3: (C12[2] / num1) * 0.2,
+                        Q4: (C12[3] / num1) * 0.2,
 
-              </ImageMapper >
+                      },
+                      meta: { color: ColorNo1 }
+                    }, {
+                      data: {
+                        Q1: (C22[0] / num2) * 0.2,
+                        Q2: (C22[1] / num2) * 0.2,
+                        Q3: (C22[2] / num2) * 0.2,
+                        Q4: (C22[3] / num2) * 0.2,
 
-            </div>
+                      },
+                      meta: { color: ColorNo2 }
+                    },
+                    {
+                      data: {
+                        Q1: (C32[0] / num3) * 0.2,
+                        Q2: (C32[0] / num3) * 0.2,
+                        Q3: (C32[0] / num3) * 0.2,
+                        Q4: (C32[0] / num3) * 0.2,
+
+                      },
+                      meta: { color: ColorNo3 }
+                    },
+                  ]}
+                  size={this.state.detail ? 300 : 350}
+                />
+              </Col>
+              <Col>
+                <RadarChart
+                  captions={{
+                    // columns
+                    Q1: 'C301',
+                    Q2: 'C302',
+                    Q3: 'C303',
+                    Q4: 'C304',
+                  }}
+                  data={[
+                    // data
+                    {
+                      data: {
+                        Q1: (C13[0] / num1) * 0.2,
+                        Q2: (C13[1] / num1) * 0.2,
+                        Q3: (C13[2] / num1) * 0.2,
+                        Q4: (C13[3] / num1) * 0.2,
+                      },
+                      meta: { color: ColorNo1 }
+                    }, {
+                      data: {
+                        Q1: (C23[0] / num2) * 0.2,
+                        Q2: (C23[1] / num2) * 0.2,
+                        Q3: (C23[2] / num2) * 0.2,
+                        Q4: (C23[3] / num2) * 0.2,
+                      },
+                      meta: { color: ColorNo2 }
+                    },
+                    {
+                      data: {
+                        Q1: (C33[0] / num3) * 0.2,
+                        Q2: (C33[1] / num3) * 0.2,
+                        Q3: (C33[2] / num3) * 0.2,
+                        Q4: (C33[3] / num3) * 0.2,
+                      },
+                      meta: { color: ColorNo3 }
+                    },
+                  ]}
+                  size={this.state.detail ? 300 : 350}
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <div style={{ position: "relative", }}>
+                  <ImageMapper src={require('../../assets/map.jpg')} map={map} width={600} height={600}
+                    onClick={area => this.areaClicked(area)}
+                  // onMouseEnter={area => console.log(area)}
+                  // onImageClick={(area, _, evt) => console.log(area, evt)}
+                  // onMouseMove={(area, _, evt) => console.log(evt.nativeEvent.layerX, evt.nativeEvent.layerY)}  
+                  // onMouseLeave={area => console.log(area)}
+                  >
+                  </ImageMapper >
+                </div>
+              </Col>
+              <Col style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div>
+                  <h1 style={{ marginBottom: 30 }}><strong>{area_detail.area_name}</strong></h1>
+                  <h5><strong>พื้นที่ต้นแบบ</strong> {area_detail.arae_number1} พื้นที่</h5>
+                  <h5><strong>พื้นที่นำร่อง</strong> {area_detail.arae_number2} พื้นที่</h5>
+                  <h5><strong>พื้นที่พัฒนา</strong> {area_detail.arae_number3} พื้นที่</h5>
+                  <h5><strong>ประชากร</strong> {area_detail.population} คน</h5>
+                  <h5><strong>เด็กและเยาวชน</strong> {area_detail.child_number} คน</h5>
+                </div>
+              </Col>
+            </Row>
+            <Row>
+              <Col sm={8} style={{ height: 500, alignItems: 'center' }}>
+                <Map google={this.props.google}
+                  zoom={this.state.zoomMap}
+                  center={{
+                    lat: this.state.position.lat,
+                    lng: this.state.position.lng
+                  }}
+
+                  style={{ width: '90%', height: '100%' }}
+                  onClick={this.onMapClicked}
+                >
+                  <Marker
+                    name="add Marker"
+                    onClick={this.onMarkerClick}
+                    position={{
+                      lat: this.state.position.lat,
+                      lng: this.state.position.lng
+                    }}
+                  />
+                  {this.state.listshowMarker}
+
+                  <InfoWindow
+                    marker={this.state.activeMarker}
+                    visible={this.state.showingInfoWindow}>
+                    <div style={{ overflow: 'hidden', justifyContent: 'center' }}>
+                      <img alt="infoMap" style={{ width: 150, height: 150 }} src={this.state.selectedPlace.image} />
+                      <h5>{this.state.selectedPlace.description}</h5>
+                    </div>
+                  </InfoWindow>
+                </Map>
+              </Col>
+              <Col style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div>
+                  <h5><strong>บ้าน จำนวน</strong> {shome_num} จุด</h5>
+                  <h5><strong>ทรัพยากรชุมชน จำนวน</strong> {sresource_num} จุด</h5>
+                  <h5><strong>องค์กร จำนวน</strong> {sorganization_num} จุด</h5>
+                  <h5><strong>จุดดี จำนวน</strong> {sflag_good_num} จุด</h5>
+                  <h5><strong>จุดเสี่ยง จำนวน</strong> {sflag_danger_num} จุด</h5>
+                  <h5><strong>จุดอุบัติเหตุ จำนวน</strong> {saccident_num} จุด</h5>
+                </div>
+              </Col>
 
 
-
+            </Row>
             {Role === 'admin' ?
               <Row style={{ justifyContent: 'flex-end' }}>
                 <button
@@ -930,7 +1480,6 @@ export class Area extends Component {
             <Row style={{ padding: 20 }}>
               <h1>พื้นที่พัฒนา {c1.length}</h1>
             </Row>
-
             <MDBDataTable
               striped
               bordered
@@ -946,11 +1495,9 @@ export class Area extends Component {
                   <div key={i}><p style={{ textAlign: 'left' }}>{i + 1} {element.Dominance}{element.Area_name}</p></div>
                 )}
               </div> */}
-
             <Row style={{ padding: 20 }}>
               <h1>พื้นที่นำร่อง {c2.length}</h1>
             </Row>
-
             <MDBDataTable
               striped
               bordered
@@ -970,7 +1517,6 @@ export class Area extends Component {
             <Row style={{ padding: 20 }}>
               <h1>พื้นที่ต้นแบบ {c3.length}</h1>
             </Row>
-
             <MDBDataTable
               striped
               bordered
@@ -986,12 +1532,10 @@ export class Area extends Component {
                   <div key={i}><p style={{ textAlign: 'left' }}>{i + 1} {element.Dominance}{element.Area_name}</p></div>
                 )}
               </div> */}
-
           </div>
         </center >
       );
     }
-
   }
 }
 
@@ -1004,5 +1548,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   fetch_user
 };
-
-export default connect(mapStateToProps, mapDispatchToProps)(Area);
+export default
+  connect(mapStateToProps, mapDispatchToProps)
+    ((GoogleApiWrapper({ apiKey: ('AIzaSyDsS-9RgGFhZBq1FsaC6nG5dURMeiOCqa8'), language: 'th' }))(Area));

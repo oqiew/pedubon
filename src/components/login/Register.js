@@ -113,7 +113,7 @@ export class Register extends Component {
         this.setState({
             loading: true
         })
-        const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
+        const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type, Role,
             Line_ID, Facebook, Birthday, Birthday_format, Position, Area_ID, Avatar_URL, newAvatarUpload } = this.state;
         var temp_Avatar_URL = "";
         if (newAvatarUpload) {
@@ -126,7 +126,7 @@ export class Register extends Component {
             if (this.state.profile) {
                 this.tbUsers.doc(this.state.uid).update({
                     Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
-                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, Role: '',
+                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, Role,
                     Birthday_format,
                     Update_date: Firebase.firestore.Timestamp.now()
                 }).then((docRef) => {

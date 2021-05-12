@@ -379,9 +379,8 @@ export class Main_map_admin extends Component {
 
         return (
             <div>
-                <div className='main_component'>
+                <div>
                     <Container>
-
                         <Row>
                             <Col sm={8} style={{ height: 500, alignItems: 'center' }}>
                                 <Map google={this.props.google}

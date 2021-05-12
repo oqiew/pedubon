@@ -1,7 +1,8 @@
 // functions
 import {
     FETCHING_DATA, FETCHING_DATA_FAILURE, FETCHING_DATA_SUCCESS,
-    FETCHING_DATA_FAILURE_NETWORK, FETCHING_DATA_NETWORK, FETCHING_DATA_SUCCESS_NETWORK
+    FETCHING_DATA_FAILURE_NETWORK, FETCHING_DATA_NETWORK, FETCHING_DATA_SUCCESS_NETWORK,
+    FETCHING_AREA_DATA, FETCHING_AREA_DATA_FAILURE, FETCHING_AREA_DATA_SUCCESS
 } from '../constans'
 import { isEmptyValue } from '../components/Methods'
 export const setStageToScuccess = (payload) => ({
@@ -13,6 +14,16 @@ export const setStageToFetching = (payload) => ({
 })
 export const setStageToFailure = (payload) => ({
     type: FETCHING_DATA_FAILURE,
+})
+export const setStageAreaToScuccess = (payload) => ({
+    type: FETCHING_AREA_DATA_SUCCESS,
+    payload
+})
+export const setStageAreaToFetching = (payload) => ({
+    type: FETCHING_AREA_DATA,
+})
+export const setStageAreaToFailure = (payload) => ({
+    type: FETCHING_AREA_DATA_FAILURE,
 })
 export const setStageNetworkToScuccess = (payload) => ({
     type: FETCHING_DATA_SUCCESS_NETWORK,
@@ -35,6 +46,12 @@ export const fetch_user = (data) => {
             dispatch(setStageToFetching());
         }
 
+    }
+}
+export const fetch_arae = (data) => {
+    return (dispatch) => {
+        dispatch(setStageAreaToFetching());
+        dispatch(setStageAreaToScuccess(data));
     }
 }
 export const fetch_user_network = (data) => {

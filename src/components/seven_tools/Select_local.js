@@ -50,8 +50,6 @@ export class Select_local extends Component {
                   เปิดเครื่องมือ
                 </Link>
               </div>
-
-
               <hr></hr>
               <Main_map_admin></Main_map_admin>
             </center>

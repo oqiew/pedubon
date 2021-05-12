@@ -12,8 +12,8 @@ import { connect } from "react-redux";
 import { isEmptyValue } from "../../components/Methods";
 import { tableName } from '../../database/TableConstant';
 import Loading from '../../components/Loading';
-
-
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField';
 export class ManageJourney extends Component {
     constructor(props) {
         super(props);
@@ -23,15 +23,14 @@ export class ManageJourney extends Component {
             ...this.props.fetchReducer.user,
             loading: false,
             select_number: '',
-            q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
-            q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-                "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
-            q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
+            q1: ["ท่านเข้าใจปัญหาชุมชนมากน้อยเพียงใด", "ท่านรู้แนวทางแก้ไขปัญหาในชุมชนมากน้อยเพียงใด"],
+            q2: ["ท่านมีความคิดสร้างสรรค์มากน้อยเพียงใด",
+                "ท่านมีความกล้าแสดงออกมากน้อยเพียงใด",
+                "ท่านมีแนวคิดหรือวิธีการใหม่ๆในการแก้ปัญหามากน้อยเพียงใด"],
+            q3: ["ท่ท่านสามารถพัฒนาตนเองมากน้อยเพียงใด",
                 "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
-                "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
-                "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
+                "ท่านสามารถเป็นแบบอย่างให้เพื่อนในทางที่ดีมากน้อยเพียงใด",
+                "ท่านคิดว่าตัวท่านกล้าคิด กล้าทำ กล้าตัดสินใจมากน้อยเพียงใด"],
             c1: [],
             c2: [],
             c3: [],
@@ -42,21 +41,66 @@ export class ManageJourney extends Component {
             J2: "",
             J3: "",
             J4: "",
+            query_user: [],
+            select_user_j: ''
         }
 
     }
     componentDidMount() {
         this.setQuestions();
+        this.tbUsers.onSnapshot(this.getUserJourney);
+    }
+    getUserJourney = (query) => {
+        const query_user = [];
+        query.forEach(async (doc) => {
+            const dataJ = await this.checkJourney(doc.id)
+            if (dataJ.length !== 3) {
+                query_user.push({
+                    uid: doc.id,
+                    title: doc.data().Name + " " + doc.data().Lastname,
+                    ...doc.data(),
+                    dataJ
+                })
+            }
+        })
+
+        this.setState({
+            query_user
+        })
+    }
+    checkJourney(id) {
+        return new Promise((resolve, reject) => {
+            const dataJ = [];
+            Firebase.firestore().collection(tableName.Journey).where('uid', '==', id).onSnapshot((query) => {
+                query.forEach((doc) => {
+                    dataJ.push({
+                        ID: doc.id,
+                        ...doc.data()
+                    })
+                })
+                console.log(dataJ)
+                resolve(dataJ)
+            })
+        })
     }
     onSave = (e) => {
         e.preventDefault();
-        const { C1, C2, C3, select_number, J1, J2, J3, J4, uid } = this.state;
+        const { C1, C2, C3, select_number, } = this.state;
+        const uid = this.state.select_user_j.uid;
         this.tbJourney.add({
             uid, Create_date: Firebase.firestore.Timestamp.now(),
-            Time: select_number, C1, C2, C3, J1, J2, J3, J4
+            Time: select_number, C1, C2, C3,
 
         }).then(() => {
             console.log('sucess')
+            this.tbUsers.onSnapshot(this.getUserJourney);
+            this.setState({
+                C1: [],
+                C2: [],
+                C3: [],
+                select_number: '',
+                select_user_j: ''
+            })
         }).catch((error) => {
             console.log('error', error)
         })
@@ -199,7 +243,7 @@ export class ManageJourney extends Component {
 
     }
     render() {
-        const { select_number, J1, J2, J3, J4, statusJ1, statusJ2, statusJ3 } = this.state;
+        const { select_number, J1, J2, J3, J4, query_user, select_user_j } = this.state;
         if (this.state.loading) {
             return <Loading></Loading>
         } else {
@@ -212,6 +256,18 @@ export class ManageJourney extends Component {
                             <hr></hr>
                             {isEmptyValue(select_number) ?
                                 <>
+                                    <Autocomplete
+                                        options={query_user}
+                                        getOptionLabel={(option) => option.title}
+                                        style={{ width: 'auto' }}
+                                        onChange={(e, val) => this.setState({ select_user_j: val })}
+                                        renderInput={(params) =>
+                                            <TextField {...params} variant="outlined" />
+                                        }
+                                    />
+                                    {!isEmptyValue(select_user_j) && select_user_j.dataJ.map((element, i) =>
+                                        <h4 key={i}>{element.Time}</h4>
+                                    )}
                                     <Button variant="primary"
                                         onClick={() => this.setState({
                                             select_number: 'ก่อนเข้าร่วมกิจกรรม'
@@ -225,7 +281,7 @@ export class ManageJourney extends Component {
                                     })}>หลังร่วมกิจกรรม</Button>
                                 </>
                                 : <>
-                                    <h1>{select_number}</h1>
+                                    <h1>{select_user_j.Name + " " + select_user_j.Lastname + " "}{select_number}</h1>
                                     <Button variant="danger" onClick={() => this.setState({
                                         select_number: ''
                                     })}>ยกเลิก</Button>

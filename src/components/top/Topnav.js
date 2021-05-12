@@ -52,7 +52,7 @@ class Topnav extends Component {
                 {!isEmptyValue(Role) && Role === 'admin' ? 'เครื่องมือชุมชน' : 'แผนที่ข้อมูลชุมชน'}
               </Nav.Link>
               {!isEmptyValue(Name) ?
-                <NavDropdown title="ข้อมูลพื้นที่" id="collasible-nav-dropdown">
+                <NavDropdown title="สรุปข้อมูล" id="collasible-nav-dropdown">
                   <NavDropdown.Item href="/area">จัดการข้อมูลพื้นที่</NavDropdown.Item>
                   {!isEmptyValue(Role) && Role === 'admin' &&
                     <NavDropdown.Item href="/projects">ตรวจสอบโครงการ</NavDropdown.Item>}
@@ -79,6 +79,7 @@ class Topnav extends Component {
                   </NavDropdown>
                   <NavDropdown title="จัดการข้อมูล" id="collasible-nav-dropdown">
                     <NavDropdown.Item href="/import_user">เพิ่มบัญชีผู้ใช้</NavDropdown.Item>
+                    <NavDropdown.Item href="/import_sm">เพิ่มพื้นที่</NavDropdown.Item>
                   </NavDropdown>
                 </>}
               <Nav.Link href="/cdata_manage" className="white-text">

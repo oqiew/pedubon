@@ -505,7 +505,7 @@ export class Main_seven_tools extends Component {
                 });
             } else {
                 this.tbSocialMaps.doc(new_id).set({
-                    Geo_map_position: position, Informer_name: this.state.Name, Area_ID,
+                    Geo_map_position: position, Informer_name: this.state.Name,
                     Create_date: Firebase.firestore.Timestamp.now(),
                     Update_date: Firebase.firestore.Timestamp.now(),
                     Map_image_URL: temp_Map_image_URL, Geo_map_name, Geo_map_type, Geo_map_description, Create_By_ID: this.state.uid,
@@ -599,10 +599,8 @@ export class Main_seven_tools extends Component {
                         <TabST></TabST>
                         <hr></hr>
                         <Container>
-
                             <Row>
                                 <Col sm={8} style={{ height: 500, alignItems: 'center' }}>
-                                    <br></br><br></br><br></br>
                                     <Map google={this.props.google}
                                         zoom={this.state.zoomMap}
                                         center={{
