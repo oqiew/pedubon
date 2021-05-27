@@ -100,7 +100,7 @@ export class Course_manage extends Component {
         if (isEmptyValue(this.state.edit)) {
             this.tbCourse.add({
                 Course_name, Description,
-                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
+                Create_date: Firebase.firestore.Timestamp.now(), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
                 Area_local_dominance: Dominance, File_name, File_URL, Area_local_type: Area_type
             }).then((doc) => {
                 this.setState({
@@ -113,7 +113,7 @@ export class Course_manage extends Component {
         } else {
             this.tbCourse.doc(this.state.edit).update({
                 Course_name, Description,
-                Create_date: GetCurrentDate("/"), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
+                Create_date: Firebase.firestore.Timestamp.now(), Area_local_ID, Informer_name: Name, Create_By_ID: uid, Area_local_name: Area_name,
                 Area_local_dominance: Dominance, File_name, File_URL, Area_local_type: Area_type
             }).then((doc) => {
             }).then((doc) => {

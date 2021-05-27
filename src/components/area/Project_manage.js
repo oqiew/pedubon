@@ -8,10 +8,11 @@ import { isEmptyValue, GetCurrentDate } from "../Methods";
 import CustomUploadButton from 'react-firebase-file-uploader/lib/CustomUploadButton';
 import { connect } from "react-redux";
 import { fetch_user } from "../../actions";
+import { tableName } from '../../database/TableConstant';
 export class Project_manage extends Component {
     constructor(props) {
         super(props);
-        this.tbProject = Firebase.firestore().collection('PROJECTS')
+        this.tbProject = Firebase.firestore().collection(tableName.Projects)
         this.state = {
             AProvince_ID: '', ADistrict_ID: '', Dominance: '', Area_type: '', Create_date: '',
             Informer_name: '', Create_By_ID: '', LGO_ID: '', Area_name: '', Activity: '', Project_name: '',
@@ -23,15 +24,15 @@ export class Project_manage extends Component {
         }
     }
     componentDidMount() {
-        Firebase.firestore().collection('AREAS').doc(this.props.match.params.id).get().then((doc) => {
-            Firebase.firestore().collection('USERS').where('User_type', '==', 'แกนนำเด็ก')
-                .where('Area_PID', '==', doc.data().AProvince_ID).where('Area_DID', '==', doc.data().ADistrict_ID).onSnapshot(this.list_leader);
-            Firebase.firestore().collection('USERS').where('User_type', '==', 'พี่เลี้ยง')
-                .where('Area_PID', '==', doc.data().AProvince_ID).where('Area_DID', '==', doc.data().ADistrict_ID).onSnapshot(this.list_leader);
+        Firebase.firestore().collection(tableName.Areas).doc(this.props.match.params.id).get().then((doc) => {
+            // Firebase.firestore().collection('USERS').where('User_type', '==', 'แกนนำเด็ก')
+            //     .where('Area_PID', '==', doc.data().AProvince_ID).where('Area_DID', '==', doc.data().ADistrict_ID).onSnapshot(this.list_leader);
+            // Firebase.firestore().collection('USERS').where('User_type', '==', 'พี่เลี้ยง')
+            //     .where('Area_PID', '==', doc.data().AProvince_ID).where('Area_DID', '==', doc.data().ADistrict_ID).onSnapshot(this.list_leader);
             this.tbProject.where('Area_local_ID', '==', this.props.match.params.id).onSnapshot(this.get_list_project);
             this.setState({
-                Province: data_provinces[doc.data().AProvince_ID][0],
-                District: data_provinces[doc.data().AProvince_ID][1][doc.data().ADistrict_ID][0],
+                Province: doc.data().Province_name,
+                District: doc.data().District_name,
                 ...doc.data(),
             })
         })
@@ -116,14 +117,13 @@ export class Project_manage extends Component {
     }
     onSubmitP = (e) => {
         e.preventDefault();
-
         console.log('save')
         const { Description, File_name, File_URL,
             Project_name, Name, uid,
             Leader1, Leader2, Leader3, Mentor } = this.state;
         if (isEmptyValue(this.state.edit)) {
             this.tbProject.add({
-                Create_date: GetCurrentDate("/"), Area_local_ID: this.props.match.params.id,
+                Create_date: Firebase.firestore.Timestamp.now(), Area_local_ID: this.props.match.params.id,
                 Informer_name: Name, Create_By_ID: uid,
                 Leader1, Leader2, Leader3, Mentor, Description, Project_name, File_name, File_URL,
             }).then((doc) => {
@@ -139,7 +139,7 @@ export class Project_manage extends Component {
             })
         } else {
             this.tbProject.doc(this.state.edit).update({
-                Create_date: GetCurrentDate("/"), Area_local_ID: this.props.match.params.id,
+                Create_date: Firebase.firestore.Timestamp.now(), Area_local_ID: this.props.match.params.id,
                 Informer_name: Name, Create_By_ID: uid,
                 Leader1, Leader2, Leader3, Mentor, Description, Project_name, File_name, File_URL,
             }).then((doc) => {
@@ -211,7 +211,7 @@ export class Project_manage extends Component {
                                             cols="80" rows="5" required>{Description}</textarea>
                                     </Col>
                                 </Form.Group>
-                                <Form.Group as={Row}>
+                                {/* <Form.Group as={Row}>
                                     <Form.Label column sm="5" style={{ fontSize: 24 }}>พี่เลี้ยง: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>
                                         <select className="form-control" id="sel1" name="Mentor" value={Mentor} onChange={this.onChange} >
@@ -255,7 +255,7 @@ export class Project_manage extends Component {
                                             )}
                                         </select>
                                     </Col>
-                                </Form.Group>
+                                </Form.Group> */}
                                 <Form.Group as={Row}>
                                     <Form.Label column sm="5" style={{ fontSize: 24 }}>อัพโหลดไฟล์โครงการ: <label style={{ color: "red" }}>*</label></Form.Label>
                                     <Col>

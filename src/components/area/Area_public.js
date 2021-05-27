@@ -208,7 +208,7 @@ export class Area extends Component {
         e.preventDefault();
         const { AProvince_ID, ADistrict_ID, Dominance, Area_type, Name, uid, LGO_ID, Area_name, Activity } = this.state;
         Firebase.firestore().collection('AREAS').doc(LGO_ID).set({
-            AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: GetCurrentDate("/"),
+            AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: Firebase.firestore.Timestamp.now(),
             Informer_name: Name, Create_By_ID: uid, LGO_ID, Area_name, Activity,
         }).then((doc) => {
             console.log('insert success');

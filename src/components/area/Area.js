@@ -16,11 +16,7 @@ import { Modal, Button } from 'antd';
 import { database } from "firebase";
 import { tableName } from "../../database/TableConstant";
 // ทำเพิ่มหมู่บ้าน เข้ากับ อปท
-import LinearProgress from '@material-ui/core/LinearProgress';
-import CanvasJSReact from '../../canvasjs.react';
-import RadarChart from 'react-svg-radar-chart';
-import 'react-svg-radar-chart/build/css/index.css'
-import { makeStyles, withStyles } from '@material-ui/core/styles';
+
 // map
 import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
 import accident from '../../assets/accident.png';
@@ -29,95 +25,30 @@ import flag_good from '../../assets/flag_good.png';
 import home from '../../assets/home.png';
 import organization from '../../assets/organization.png';
 import resource from '../../assets/resource.png';
-var CanvasJSChart = CanvasJSReact.CanvasJSChart;
-const ColorNo1 = '#f19867';
-const ColorNo2 = '#3e9eff';
-const ColorNo3 = '#6ad500';
-const BorderLinearProgress1 = withStyles((theme) => ({
-  root: {
-    height: 10,
-    borderRadius: 5,
-  },
-  colorPrimary: {
-    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-  },
-  bar: {
-    borderRadius: 5,
-    backgroundColor: ColorNo1,
-  },
-}))(LinearProgress);
-const BorderLinearProgress2 = withStyles((theme) => ({
-  root: {
-    height: 10,
-    borderRadius: 5,
-  },
-  colorPrimary: {
-    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-  },
-  bar: {
-    borderRadius: 5,
-    backgroundColor: ColorNo2,
-  },
-}))(LinearProgress);
-const BorderLinearProgress3 = withStyles((theme) => ({
-  root: {
-    height: 10,
-    borderRadius: 5,
-  },
-  colorPrimary: {
-    backgroundColor: theme.palette.grey[theme.palette.type === 'light' ? 200 : 700],
-  },
-  bar: {
-    borderRadius: 5,
-    backgroundColor: ColorNo3,
-  },
-}))(LinearProgress);
+
 export class Area extends Component {
   constructor(props) {
     super(props);
     this.tbAreas = Firebase.firestore().collection(tableName.Areas);
     this.tbJourney = Firebase.firestore().collection(tableName.Journey);
     this.tbSocialMaps = Firebase.firestore().collection(tableName.Social_maps);
+    this.tbProjects = Firebase.firestore().collection(tableName.Projects);
     this.state = {
       ...this.props.fetchReducer.user,
       // journey
       c1: [],
       c2: [],
       c3: [],
-      q1: ["ท่านมีส่วนร่วมกับกิจกรรมต่าง ๆที่ชุมชนจัดขึ้นมากน้อยเพียงใด", "ท่านมีความรู้เกี่ยวกับบริบทต่าง ๆของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชนมากน้อยเพียงใด"],
-      q2: ["ท่านสามารถหาวิธีแก้ไขปัญหาหรือส่งเสริมเสริมปัญญาจากต้นทุนของชุมชนซึ่งมีแนวโน้มที่จะสร้างให้เกิดการเปลี่ยนแปลงในชุมชนได้มากน้อยเพียงใด",
-        "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างรวดเร็วภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-        "ท่านสามารถค้นหาวิธีการแก้ไขปัญหาหรือส่งเสริมปัญญาจากต้นทุนของชุมชนได้อย่างหลาหลายภายใต้เงื่อนไขของเวลาในการพัฒนาข้อเสนอโครงการ มากน้อยเพียงใด",
-        "ท่านสามารถแจกแจงรายละเอียดในการดำเนินงานในโครงการได้ มากน้อยเพียงใด"],
-      q3: ["ท่านมีความรู้ความเข้าใจในบริบทแวดล้อมของชุมชน เช่น โครงสร้าง ต้นทุนทางสังคมและวัฒนธรรม สภาพแวดล้อม สุขภาวะของคนและชุมชน ที่มีความแตกต่างหลากหลายพร้อมทำงานร่วมกับผู้อื่น",
-        "ท่านสามารถมองเห็นปัญหาและปัญญาจากต้นทุนของชุมชนและนำปัญหาหรือปัญญานั้นมาพัฒนาเป็นแนวคิดหรือวิธีการใหม่ๆ",
-        "ท่านมีความรับผิดชอบต่อส่วนรวมมากน้อยเพียงใด",
-        "ท่านมีการพัฒนาตัวเองและผู้อื่นอย่างสม่ำเสมอ"],
-      C11: [],
-      C12: [],
-      C13: [],
-      C21: [],
-      C22: [],
-      C23: [],
-      C31: [],
-      C32: [],
-      C33: [],
-      num1: 0,
-      num2: 0,
-      num3: 0,
-      detail: false,
-
       addAllcomponent: '',
-      list_area: [],
+
       add_status: false,
       Provinces: [],
       Districts: [],
       SubDistricts: [],
       // data Area
       Area_name: '',
-      AProvince_ID: 0,
-      ADistrict_ID: '',
-      ASubDistrict_ID: '',
+      Province_name: '',
+      District_name: '',
       Dominance: '',
       Area_type: '',
       LGO_ID: '',
@@ -125,7 +56,8 @@ export class Area extends Component {
       Projects: [],
       file: [],
       iarea: [],
-
+      list_area: [],
+      query_list_area: [],
       // model add ban
       visible: false,
       selectLocalData: {},
@@ -243,98 +175,15 @@ export class Area extends Component {
     })
   }
   componentDidMount() {
-    Firebase.firestore().collection('PROJECTS').onSnapshot(this.list_project);
+    this.tbProjects.onSnapshot(this.list_project);
     this.tbSocialMaps.onSnapshot(this.ListMark);
     this.tbJourney.onSnapshot(this.getJourney);
     this.tbAreas.onSnapshot(this.getModuleC);
-    this.listProvinces();
-    this.listDistrict(0)
-  }
-  listProvinces = () => {
-    const Provinces = [];
-    data_provinces.forEach((doc, i) => {
-      // console.log(doc)
-      Provinces.push({
-        Key: i,
-        value: doc[0]
-      })
-    })
-    this.setState({
-      Provinces
-    })
-  }
-  listDistrict = (pid) => {
-    const Districts = [];
-
-    data_provinces[pid][1].forEach((doc, i) => {
-      //  console.log(doc)
-      Districts.push({
-        Key: i,
-        value: doc[0]
-      })
-    })
-    if (this.state.Name !== '') {
-      this.setState({
-        Districts,
-
-      })
-    } else {
-      this.setState({
-        Districts,
-        ADistrict_ID: '',
-      })
-    }
 
   }
-  listSubDistrict = (pid, did) => {
-    const SubDistricts = [];
 
-    data_provinces[pid][1][did][2][0].forEach((doc, i) => {
-      SubDistricts.push({
-        Key: i,
-        value: doc[0]
-      });
-    });
-    if (this.state.uid !== "") {
-      this.setState({
-        SubDistricts
-      });
-    } else {
-      this.setState({
-        SubDistricts,
-        Area_SDID: ""
-      });
-    }
-  };
-  onSelectProvince = (e) => {
-    const state = this.state
-    state[e.target.name] = e.target.value;
-    this.setState(state);
-    if (this.state.AProvince_ID === '') {
-      this.setState({
-        Districts: [],
-        ADistrict_ID: '',
-      })
-    } else {
-      this.listDistrict(this.state.AProvince_ID);
-    }
-  }
-  onSelectDistrict = e => {
-    const state = this.state;
-    state[e.target.name] = e.target.value;
-    this.setState(state);
-    if (this.state.ADistrict_ID === "") {
-      this.setState({
-        SubDistricts: [],
-        ASubDistrict_ID: "",
-      });
-    } else {
-      this.listSubDistrict(this.state.AProvince_ID, this.state.ADistrict_ID);
-    }
-  };
+
   edit(data, id) {
-    this.listDistrict(data.AProvince_ID);
-    this.listSubDistrict(data.AProvince_ID, data.ADistrict_ID);
     this.setState({ ...data, LGO_ID: id })
   }
   onChange = (e) => {
@@ -342,122 +191,6 @@ export class Area extends Component {
     state[e.target.name] = e.target.value;
     this.setState(state);
   }
-  handleCancel = e => {
-    this.setState({
-      visible: false,
-      addAllcomponent: '',
-      selectLocalData: {},
-      list_bans: '',
-      bans: [false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false,],
-    });
-  };
-  handleOk = e => {
-    var temp_bans = [];
-    //ข้อมูลพื้นที่ ที่กดเปิด
-    const { selectLocalData } = this.state;
-    if (selectLocalData.ID !== undefined || selectLocalData.ID !== '') {
-      Firebase.firestore().collection('AREAS').doc(selectLocalData.ID).update({
-        bans: this.state.bans
-      }).then((r) => {
-        this.setState({
-          visible: false,
-          addAllcomponent: '',
-          selectLocalData: {},
-          list_bans: '',
-          bans: [false, false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false, false, false,],
-        });
-        console.log("update ban sucess");
-      }).catch((error) => {
-        console.log("error update ban");
-      })
-    }
-
-  };
-
-  Tempbans = (index) => {
-    var tempstate = this.state.bans;
-    tempstate[index] = !tempstate[index];
-
-    this.setState({
-      bans: tempstate,
-      list_bans: <>
-        {data_provinces[this.state.selectLocalData.AProvince_ID][1][this.state.selectLocalData.ADistrict_ID][2][0][this.state.selectLocalData.ASubDistrict_ID][1][0].map((element, i) =>
-          <Row>
-            <Col>หมู่ที่ {element[2]}</Col>
-            <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
-            <Col>
-              <Button onClick={this.Tempbans.bind(this, i)} style={tempstate[i] ? { color: 'red' } : { color: 'green' }}>{(tempstate[i]) ? "ลบ" : "เพิ่ม"}</Button>
-            </Col>
-          </Row>
-
-        )}
-      </>
-    })
-    console.log(this.state.bans)
-  }
-  addBansAll(size) {
-    console.log(size)
-    var tempstate = this.state.bans;
-    for (let index = 0; index < size; index++) {
-      tempstate[index] = true;
-
-    }
-    console.log(tempstate)
-    this.setState({
-      bans: tempstate,
-      list_bans: <>
-        {data_provinces[this.state.selectLocalData.AProvince_ID][1][this.state.selectLocalData.ADistrict_ID][2][0][this.state.selectLocalData.ASubDistrict_ID][1][0].map((element, i) =>
-          <Row>
-            <Col>หมู่ที่ {element[2]}</Col>
-            <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
-            <Col>
-              <Button onClick={this.Tempbans.bind(this, i)} style={tempstate[i] ? { color: 'red' } : { color: 'green' }}>{(tempstate[i]) ? "ลบ" : "เพิ่ม"}</Button>
-            </Col>
-          </Row>
-
-        )}
-      </>
-    })
-  }
-  handleOpen = (data) => {
-    // console.log(data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0])
-    // console.log(data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0], data.ASubDistrict_ID)
-    if (data.ASubDistrict_ID !== "" && data.ASubDistrict_ID !== undefined) {
-      var tb = this.state.bans;
-
-      if (data.bans !== "" && data.bans !== undefined) {
-
-        tb = data.bans;
-
-      }
-
-      this.setState({
-        visible: true,
-        selectLocalData: data,
-        bans: tb,
-        addAllcomponent: <Button onClick={this.addBansAll.bind(this, data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0].length)}>เพิ่มทั้งหมด</Button>,
-        list_bans: <>
-          {data_provinces[data.AProvince_ID][1][data.ADistrict_ID][2][0][data.ASubDistrict_ID][1][0].map((element, i) =>
-            <Row>
-              <Col>หมู่ที่ {element[2]}</Col>
-              <Col><h6 key={i} value={i}>{element[1]}</h6></Col>
-              <Col>
-
-                <Button onClick={this.Tempbans.bind(this, i)} style={tb[i] ? { color: 'red' } : { color: 'green' }}>{tb[i] ? "ลบ" : "เพิ่ม"}</Button>
-              </Col>
-            </Row>
-
-          )}
-        </>
-      })
-    }
-  };
-
   getModuleC = async querySnapshot => {
     const c1 = [];
     const c2 = [];
@@ -465,47 +198,30 @@ export class Area extends Component {
     const list_area = [];//ตาราวข้อมูลทั้งหมด
     try {
       for (const doc of querySnapshot.docs) {
-        // const Province = data_provinces[doc.data().AProvince_ID][0];
-        // const District = data_provinces[doc.data().AProvince_ID][1][doc.data().ADistrict_ID][0];
         var stb = 0;
-        if (doc.data().bans !== undefined) {
-          doc.data().bans.forEach((d) => {
-            if (d) {
-              stb++;
-            }
-          })
-        }
+        const { Province_name, District_name } = doc.data();
 
-        // list_area.push({
-        //   ID: doc.id,
-        //   Province,
-        //   District,
-        //   ...doc.data(),
-        //   nban: stb,
-        //   edit: (
-        //     <div>
-        //       <button
-        //         className="btn btn-pimary"
-        //         onClick={this.handleOpen.bind(this, { ID: doc.id, Province, District, ...doc.data() })}
-        //       >
-        //         เปิด
-        //     </button>
-        //       <button
-        //         className="btn btn-success"
-        //         onClick={this.edit.bind(this, doc.data(), doc.id)}
-        //       >
-        //         แก้ไข
-        //     </button>
-        //       <button
-        //         className="btn btn-danger"
-        //         onClick={this.delete_area.bind(this, doc.id)}
-        //       >
-        //         ลบ
-        //     </button>
-        //     </div>
+        list_area.push({
+          ID: doc.id,
+          ...doc.data(),
+          edit: (
+            <div>
+              <button
+                className="btn btn-success"
+                onClick={this.edit.bind(this, doc.data(), doc.id)}
+              >
+                แก้ไข
+            </button>
+              <button
+                className="btn btn-danger"
+                onClick={this.delete_area.bind(this, doc.id)}
+              >
+                ลบ
+            </button>
+            </div>
 
-        //   )
-        // })
+          )
+        })
         if (doc.data().Area_type === 'พื้นที่พัฒนา') {
 
           c1.push({
@@ -540,7 +256,7 @@ export class Area extends Component {
     }
 
     this.setState({
-      c1, c2, c3, list_area
+      c1, c2, c3, list_area, query_list_area: list_area
     })
   }
   list_project = querySnapshot => {
@@ -580,7 +296,7 @@ export class Area extends Component {
   // }
 
   delete_area(id) {
-    Firebase.firestore().collection('AREAS').doc(id).delete().
+    this.tbAreas.doc(id).delete().
       then(function () {
         console.log("delete file sucess");
       }).catch(function (error) {
@@ -717,10 +433,16 @@ export class Area extends Component {
   }
   onSubmit = (e) => {
     e.preventDefault();
-    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Dominance, Area_type, Name, uid, LGO_ID, Area_name, } = this.state;
-    Firebase.firestore().collection('AREAS').doc(LGO_ID).set({
-      AProvince_ID, ADistrict_ID, Dominance, Area_type, Create_date: GetCurrentDate("/"), ASubDistrict_ID,
-      Informer_name: Name, Create_By_ID: uid, Area_name, Address: '', Zip_code: ''
+    const { Dominance, Province_name, District_name, Area_type, Name, uid, LGO_ID, Area_name, } = this.state;
+    this.tbAreas.doc(LGO_ID).set({
+      Province_name,
+      District_name,
+      Dominance, Area_type,
+      Create_date: Firebase.firestore.Timestamp.now(),
+      Informer_name: Name,
+      Create_By_ID: uid,
+      Area_name,
+      Zip_code: ''
     }).then((doc) => {
       console.log('insert success');
     }).catch((error) => {
@@ -729,11 +451,11 @@ export class Area extends Component {
   }
   update_data() {
     this.state.iarea.forEach((element) => {
-      Firebase.firestore().collection('AREAS').doc(element.ID + "").set({
+      this.tbAreas.doc(element.ID + "").set({
         AProvince_ID: element.AProvince_ID,
         ADistrict_ID: element.ADistrict_ID,
         Dominance: element.Dominance,
-        Create_date: GetCurrentDate("/"),
+        Create_date: Firebase.firestore.Timestamp.now(),
         Informer_name: element.Informer_name,
         Create_By_ID: element.Create_By_ID,
         Area_name: element.Area_name,
@@ -866,9 +588,17 @@ export class Area extends Component {
       });
     }, 100);
   }
+  onChangeAreaType = (value) => {
+    const { query_list_area } = this.state;
+    const regex = new RegExp(`${value.trim()}`, 'i');
+    const areas = query_list_area.filter(data => data.Area_type.search(regex) >= 0)
+    this.setState({
+      list_area: areas
+    })
+  }
   render() {
-    const { c1, c2, c3, Role, selectLocalData } = this.state;
-    const { AProvince_ID, ADistrict_ID, ASubDistrict_ID, Provinces, Districts, SubDistricts,
+    const { c1, c2, c3, Role, } = this.state;
+    const { Province_name, District_name,
       Dominance, Area_type, Area_name, LGO_ID } = this.state;
     // map
     const { shome_num,
@@ -879,34 +609,6 @@ export class Area extends Component {
       saccident_num, } = this.state;
     // area
     const { area_detail } = this.state;
-    // power
-    const { C11, C12, C13, C21, C22, C23, C31, C32, C33, num1, num2, num3 } = this.state;
-    let ShowC110 = 0;
-    let ShowC111 = 0;
-    let ShowC120 = 0;
-    let ShowC121 = 0;
-    let ShowC130 = 0;
-    let ShowC131 = 0;
-    if (!isEmptyValue(C11)) {
-      ShowC110 = ((C11[0] / num1) * 100) / 5;
-      ShowC111 = ((C11[1] / num1) * 100) / 5;
-    }
-    if (!isEmptyValue(C21)) {
-      ShowC120 = ((C21[0] / num1) * 100) / 5;
-      ShowC121 = ((C21[1] / num1) * 100) / 5;
-    }
-    if (!isEmptyValue(C31)) {
-      ShowC130 = ((C31[0] / num3) * 100) / 5;
-      ShowC131 = ((C31[1] / num3) * 100) / 5;
-    }
-    const card_style = {
-      backgroundColor: '#91c8c8',
-      borderRadius: 10,
-      boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
-      transition: "0.3s",
-      padding: 30
-
-    }
     const data = {
       columns: [
         {
@@ -916,12 +618,12 @@ export class Area extends Component {
         },
         {
           label: "จังหวัด",
-          field: "Province",
+          field: "Province_name",
           sort: "asc"
         },
         {
           label: "อำเภอ",
-          field: "District",
+          field: "District_name",
           sort: "asc"
         },
         {
@@ -937,11 +639,6 @@ export class Area extends Component {
         {
           label: "ประเภทพื้นที่",
           field: "Area_type",
-          sort: "asc"
-        },
-        {
-          label: "หมู่บ้าน",
-          field: "nban",
           sort: "asc"
         },
         {
@@ -1130,65 +827,15 @@ export class Area extends Component {
                      </button> */}
             </Row>
             <hr></hr>
-            <Modal
-              title={selectLocalData.Dominance + selectLocalData.Area_name}
-              visible={this.state.visible}
-              onOk={this.handleOk}
-              onCancel={this.handleCancel}
-            >
-              <div>
-                {this.state.addAllcomponent}
-                {this.state.list_bans}
-              </div>
-
-            </Modal>
             <form onSubmit={this.onSubmit} >
               <Form.Group as={Row}>
                 <Form.Label column sm="2" style={{ padding: 5 }}>จังหวัด: </Form.Label>
                 <Col>
-                  <select className="form-control" id="AProvince_ID" name="AProvince_ID" value={AProvince_ID} onChange={this.onSelectProvince} required>
-                    <option key='0' value=""></option>
-                    {Provinces.map((data, i) =>
-                      <option key={i + 1} value={data.Key}>{data.value}</option>
-                    )}
-
-                  </select>
+                  <input type="text" className="form-control" name="Province_name" value={Province_name} onChange={this.onChange} required />
                 </Col>
                 <Form.Label column sm="2" style={{ padding: 5 }}>อำเภอ: </Form.Label>
                 <Col>
-                  <select className="form-control" id="ADistrict_ID" name="ADistrict_ID" value={ADistrict_ID} onChange={this.onSelectDistrict} required>
-                    <option key='0' value=""></option>
-                    {Districts.map((data, i) =>
-                      <option key={i + 1} value={data.Key}>{data.value}</option>
-                    )}
-
-                  </select>
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Form.Label column sm="2" style={{ padding: 5 }}>ตำบล: </Form.Label>
-                <Col>
-                  <select className="form-control" id="ASubDistrict_ID" name="ASubDistrict_ID" value={ASubDistrict_ID} onChange={this.onChange} required>
-                    <option key='0' value=""></option>
-                    {SubDistricts.map((data, i) =>
-                      <option key={i + 1} value={data.Key}>{data.value}</option>
-                    )}
-
-                  </select>
-                </Col>
-                <Form.Label column sm="2" style={{ padding: 5 }}> </Form.Label>
-                <Col>
-
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row}>
-                <Form.Label column sm="2" style={{ padding: 5 }}>รหัสพื้นที่: </Form.Label>
-                <Col>
-                  <input type="text" className="form-control" name="LGO_ID" value={LGO_ID} onChange={this.onChange} required />
-                </Col>
-                <Form.Label column sm="2" style={{ padding: 5 }}>ชื่อ: </Form.Label>
-                <Col>
-                  <input type="text" className="form-control" name="Area_name" value={Area_name} onChange={this.onChange} required />
+                  <input type="text" className="form-control" name="District_name" value={District_name} onChange={this.onChange} required />
                 </Col>
               </Form.Group>
               <Form.Group as={Row}>
@@ -1203,6 +850,16 @@ export class Area extends Component {
                     <option key='5' value="เทศบาลตำบล">เทศบาลตำบล</option>
                     <option key='6' value="รูปแบบพิเศษ">รูปแบบพิเศษ</option>
                   </select>
+                </Col>
+                <Form.Label column sm="2" style={{ padding: 5 }}>ชื่ออปท: </Form.Label>
+                <Col>
+                  <input type="text" className="form-control" name="Area_name" value={Area_name} onChange={this.onChange} required />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row}>
+                <Form.Label column sm="2" style={{ padding: 5 }}>รหัสพื้นที่: </Form.Label>
+                <Col>
+                  <input type="text" className="form-control" name="LGO_ID" value={LGO_ID} onChange={this.onChange} required />
                 </Col>
                 <Form.Label column sm="2" style={{ padding: 5 }}>ประเภทพื้นที่: </Form.Label>
                 <Col>
@@ -1224,31 +881,31 @@ export class Area extends Component {
             <Row>
               <button
                 className="btn btn-info"
-                onClick={() => Firebase.firestore().collection("AREAS").onSnapshot(this.getModuleC)}
+                onClick={() => this.onSnapshot(this.getModuleC)}
               >
                 ทั้งหมด
                      </button>
               <button
                 className="btn btn-info"
-                onClick={() => Firebase.firestore().collection("AREAS").where('Area_type', '==', 'พื้นที่พัฒนา').onSnapshot(this.getModuleC)}
+                onClick={() => this.onChangeAreaType('พื้นที่พัฒนา')}
               >
                 พื้นที่พัฒนา
                      </button>
               <button
                 className="btn btn-info"
-                onClick={() => Firebase.firestore().collection("AREAS").where('Area_type', '==', 'พื้นที่นำร่อง').onSnapshot(this.getModuleC)}
+                onClick={() => this.onChangeAreaType('พื้นที่นำร่อง')}
               >
                 พื้นที่นำร่อง
                      </button>
               <button
                 className="btn btn-info"
-                onClick={() => Firebase.firestore().collection("AREAS").where('Area_type', '==', 'พื้นที่ต้นแบบ').onSnapshot(this.getModuleC)}
+                onClick={() => this.onChangeAreaType('พื้นที่ต้นแบบ')}
               >
                 พื้นที่ต้นแบบ
                      </button>
             </Row>
             <br></br>
-            {/* <MDBDataTable
+            <MDBDataTable
               striped
               bordered
               small
@@ -1257,7 +914,7 @@ export class Area extends Component {
               infoLabel={["แสดง", "ถึง", "จาก", "รายการ"]}
               entriesLabel="แสดง รายการ"
               data={data}
-            /> */}
+            />
           </div>
         </center >
       )
@@ -1267,135 +924,7 @@ export class Area extends Component {
           <Topnav></Topnav>
           <div className="area_detail">
             {/* แสดง กราฟ สรุปพลัง  */}
-            <Row>
-              <h5>จำนวนข้อมูล ก่อนเข้าร่วม {num1}</h5>
-              <h5>จำนวนข้อมูล ระหว่างเข้าร่วม {num2}</h5>
-              <h5>จำนวนข้อมูล หลังเข้าร่วม {num3}</h5>
-            </Row>
-            <Row>
-              <Col>
-                <div style={{ height: 100 }}>
-                  <span >C101 {this.state.q1[0]}</span>
-                </div>
 
-                <div style={{ flexDirection: 'row' }}>
-                  <span>ก่อนเข้าร่วม {ShowC110}%</span>
-                  <BorderLinearProgress1 variant="determinate" value={ShowC110} />
-                </div>
-                <div>
-                  <span>ระหว่างเข้าร่วม {ShowC120}%</span>
-                  <BorderLinearProgress2 variant="determinate" value={ShowC120} />
-                </div>
-                <div>
-                  <span>หลังเข้าร่วม {ShowC130}%</span>
-                  <BorderLinearProgress3 variant="determinate" value={ShowC130} />
-                </div>
-              </Col>
-              <Col>
-                <div style={{ height: 100 }}>
-                  <span >C102 {this.state.q1[1]}</span>
-                </div>
-                <div style={{ flexDirection: 'row' }}>
-                  <span>ก่อนเข้าร่วม {ShowC111}%</span>
-                  <BorderLinearProgress1 variant="determinate" value={ShowC111} />
-                </div>
-                <div>
-                  <span>ระหว่างเข้าร่วม {ShowC121}%</span>
-                  <BorderLinearProgress2 variant="determinate" value={ShowC121} />
-                </div>
-                <div>
-                  <span>หลังเข้าร่วม{ShowC131}%</span>
-                  <BorderLinearProgress3 variant="determinate" value={ShowC131} />
-                </div>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <RadarChart
-                  captions={{
-                    // columns
-                    Q1: 'C201',
-                    Q2: 'C202',
-                    Q3: 'C203',
-                    Q4: 'C204',
-                  }}
-                  data={[
-                    // data
-                    {
-                      data: {
-                        Q1: C12[0] / num1 * 0.2,
-                        Q2: (C12[1] / num1) * 0.2,
-                        Q3: (C12[2] / num1) * 0.2,
-                        Q4: (C12[3] / num1) * 0.2,
-
-                      },
-                      meta: { color: ColorNo1 }
-                    }, {
-                      data: {
-                        Q1: (C22[0] / num2) * 0.2,
-                        Q2: (C22[1] / num2) * 0.2,
-                        Q3: (C22[2] / num2) * 0.2,
-                        Q4: (C22[3] / num2) * 0.2,
-
-                      },
-                      meta: { color: ColorNo2 }
-                    },
-                    {
-                      data: {
-                        Q1: (C32[0] / num3) * 0.2,
-                        Q2: (C32[0] / num3) * 0.2,
-                        Q3: (C32[0] / num3) * 0.2,
-                        Q4: (C32[0] / num3) * 0.2,
-
-                      },
-                      meta: { color: ColorNo3 }
-                    },
-                  ]}
-                  size={this.state.detail ? 300 : 350}
-                />
-              </Col>
-              <Col>
-                <RadarChart
-                  captions={{
-                    // columns
-                    Q1: 'C301',
-                    Q2: 'C302',
-                    Q3: 'C303',
-                    Q4: 'C304',
-                  }}
-                  data={[
-                    // data
-                    {
-                      data: {
-                        Q1: (C13[0] / num1) * 0.2,
-                        Q2: (C13[1] / num1) * 0.2,
-                        Q3: (C13[2] / num1) * 0.2,
-                        Q4: (C13[3] / num1) * 0.2,
-                      },
-                      meta: { color: ColorNo1 }
-                    }, {
-                      data: {
-                        Q1: (C23[0] / num2) * 0.2,
-                        Q2: (C23[1] / num2) * 0.2,
-                        Q3: (C23[2] / num2) * 0.2,
-                        Q4: (C23[3] / num2) * 0.2,
-                      },
-                      meta: { color: ColorNo2 }
-                    },
-                    {
-                      data: {
-                        Q1: (C33[0] / num3) * 0.2,
-                        Q2: (C33[1] / num3) * 0.2,
-                        Q3: (C33[2] / num3) * 0.2,
-                        Q4: (C33[3] / num3) * 0.2,
-                      },
-                      meta: { color: ColorNo3 }
-                    },
-                  ]}
-                  size={this.state.detail ? 300 : 350}
-                />
-              </Col>
-            </Row>
             <Row>
               <Col>
                 <div style={{ position: "relative", }}>

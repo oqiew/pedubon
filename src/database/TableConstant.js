@@ -10,5 +10,6 @@ export const tableName = {
     Journey: 'Journey',
     Journey_users: 'Journey_users',
     log_history: 'log_history',
-    Bans: 'Bans'
+    Bans: 'Bans',
+    Projects: 'Projects'
 }

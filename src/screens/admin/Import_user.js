@@ -182,7 +182,6 @@ export class Import_user extends Component {
                 Position,
                 Email,
                 Avatar_URL: temp_avatar_url,
-                Add_date: GetCurrentDate("/"),
                 Update_date: Firebase.firestore.Timestamp.now(),
                 Create_date: Firebase.firestore.Timestamp.now(),
                 Birthday_format,
